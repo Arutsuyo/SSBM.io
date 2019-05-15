@@ -5,6 +5,7 @@
 class Controller
 {
 public:
+    // The order must match _btnNames[]
     static enum Button
     {
         A = 0,

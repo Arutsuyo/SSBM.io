@@ -1,8 +1,8 @@
 #include "Controller.h"
 using namespace std;
 
-const string* Controller::_btnNames =
-{
+// The order must match enum Button
+const std::string* Controller::_btnNames[] = {
     "A",
     "B",
     "X",
@@ -66,8 +66,6 @@ void Controller::setStick(bool stick, float valX, float valY)
         _CStickY = valY;
     }
 }
-
-
 
 Controller::~Controller()
 {
