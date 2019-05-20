@@ -4,10 +4,18 @@
 
 class Handler
 {
-    int pid;
+    static std::string dolphinexe;
+    static std::string dolphinuser;
+    static std::string _dolphinLoc;
+    static std::string _ssbmisoLoc;
+    std::string _customINI;
 
-    Config* cfg;
-    Controller* ctrl;
+    bool initialized = false;
+    int pid = -1;
+
+    Config* cfg = NULL;
+    Controller* ctrl = NULL;
+
 public:
 
     bool StartDolphin();

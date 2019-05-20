@@ -13,17 +13,15 @@ public:
         Human = 2
     };
 
-    Config(vsType vType, std::string dPath, std::string isoPath);
+    Config(vsType vType);
     ~Config();
 
     std::string getConfig();
-    std::string getPipeConfig(int player, int pipe);
+    std::string getPipeConfig(int pipe);
+    std::string getPipeLoc(int pipe);
 
     bool IsInitialized();
 private:
-    std::string _dolphinLoc = "";
-    std::string _ssbmisoLoc = "";
-
     bool _dual_core;
     bool _gfx;
     bool _fullscreen;

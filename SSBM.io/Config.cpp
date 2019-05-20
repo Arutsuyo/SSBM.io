@@ -3,12 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-#ifdef WIN32
 #define _GFX_BACKEND "D3D"
-#else
-#define _GFX_BACKEND "OGL"
-#endif
-
 #define _DUAL_CORE_DEFAULT 1
 #define _GFX_DEFAULT false
 #define _FULLSCREEN_DEFAULT false
@@ -37,42 +32,8 @@ string AIController =
 "C - Stick / Left = `Axis C X - `\n"
 "C - Stick / Right = `Axis C X + `\n";
 
-/* Helper Functions */
-inline bool exists_test(const string& name) {
-    if (FILE * file = fopen(name.c_str(), "r")) {
-        fclose(file);
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-Config::Config(vsType vType = vsType::Self, 
-    string dPath = "%dolphin%\Dolphin.exe", 
-    string isoPath = "%dolphin%\iso\ssbm.gcm")
+Config::Config(vsType vType = vsType::Self)
 {
-    // Check for existing paths
-    if (!exists_test(dPath))
-    {
-        fprintf(stderr, 
-            "Error: Path to Dolphin exec does not exist:\n%s\n", dPath);
-        initialized = false;
-        return;
-    }
-    else
-        _dolphinLoc = dPath;
-
-    if (!exists_test(isoPath))
-    {
-        fprintf(stderr, 
-            "Error: Path to ssbm iso does not exist:\n%s\n", isoPath);
-        initialized = false;
-        return;
-    }
-    else
-        _ssbmisoLoc = isoPath;
-
     // Set the vs type
     _vs = vType;
 
@@ -94,13 +55,20 @@ Config::Config(vsType vType = vsType::Self,
     initialized = true;
 }
 
-
-string Config::getPipeConfig(int player, int pipe)
+string Config::getPipeConfig(int pipe)
 {
     char buff[256];
-    sprintf(buff, "[GCPad%d]\nDevice = Pipe/%d/pipe%d\n", player, pipe, player);
+    sprintf(buff, "[GCPad1]\nDevice = Pipe/0/pipe%d\n", pipe);
     string pipeOut(buff);
     pipeOut += AIController;
+    return pipeOut;
+}
+
+string Config::getPipeLoc(int pipe)
+{
+    char buff[256];
+    sprintf(buff, "Pipe/pipe%d\n", pipe);
+    string pipeOut(buff);
     return pipeOut;
 }
 
@@ -138,15 +106,9 @@ string Config::getConfig()
             "MSAA = 3\n"
             "SSAA = False\n"
             "[Video_Enhancements]\n"
-            "MaxAnisotropy = 3"
+            "MaxAnisotropy = 3\n"
             "[DSP]\n"
-#ifdef WIN32
-            "Backend = XAudio2\n"
-#else
-            // "Backend = OpenAL\n"
-            "Backend = Pulse\n"
-#endif;
-            ;
+            "Backend = XAudio2\n";
     }
     else
     {
