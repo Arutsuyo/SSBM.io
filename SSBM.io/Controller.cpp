@@ -1,24 +1,8 @@
 #include "Controller.h"
 using namespace std;
 
-// The order must match enum Button
-const std::string* Controller::_btnNames[] = {
-    "A",
-    "B",
-    "X",
-    "Z",
-    "L"
-};
-
-Controller::Controller(const char* pipePath)
+Controller::Controller()
 {
-    if ((outPipe = fopen(pipePath, 'w')) == NULL)
-    {
-        fprintf(stderr, "Could not open pipe: %s", pipePath);
-        initialized = false;
-        return;
-    }
-
     _MainStickX = 0.5f;
     _MainStickY = 0.5f;
 
@@ -37,7 +21,11 @@ string Controller::GetState()
     // buttons
     for (unsigned int i = 0; i < _NUM_BUTTONS; i++)
     {
-        sprintf(buff, "%s %s \n", _Buttons[i] ? "PRESS" : "RELEASE", _btnNames[i]);
+        sprintf(
+            buff, 
+            "%s %s \n", 
+            _Buttons[i] ? "PRESS" : "RELEASE", 
+            ButtonNames[i]);
         output += buff;
     }
 
@@ -46,16 +34,22 @@ string Controller::GetState()
 
 void Controller::SendState()
 {
+    if (!initialized)
+    {
+        fprintf(stderr, "Cannot send input, please set path");
+        return;
+    }
+
     fprintf(outPipe, GetState().c_str());
 }
 
-void Controller::setButton(Button btn, bool state)
+void Controller::setButton(Button btn = Button::None)
 {
     for (int i = 0; i < _NUM_BUTTONS; i++)
-        _Buttons[btn] = i == btn ? state : false;
+        _Buttons[btn] = i == btn ? true : false;
 }
 
-void Controller::setStick(float valX, float valY)
+void Controller::setSticks(float valX, float valY)
 {
     _MainStickX = valX;
     _MainStickY = valY;
@@ -70,4 +64,15 @@ Controller::~Controller()
 {
     if (outPipe)
         fclose(outPipe);
+}
+
+void Controller::SetControllerPath(const char* pipePath)
+{
+    if ((outPipe = fopen(pipePath, 'w')) == NULL)
+    {
+        fprintf(stderr, "Could not open pipe: %s", pipePath);
+        initialized = false;
+        return;
+    }
+    initialized = true;
 }
