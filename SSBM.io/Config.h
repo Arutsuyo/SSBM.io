@@ -3,6 +3,8 @@
 
 class Config
 {
+    bool initialized;
+
 public:
     static enum vsType
     {
@@ -11,14 +13,13 @@ public:
         Human = 2
     };
 
-    Config(vsType pType, std::string dPath, std::string isoPath);
+    Config(vsType vType, std::string dPath, std::string isoPath);
     ~Config();
 
     std::string getConfig();
+    std::string getPipeConfig(int player, int pipe);
 
-    void setPlayType(vsType typ);
-    void setISOLocation(std::string path);
-    void setDolphinLocation(std::string path);
+    bool IsInitialized();
 private:
     std::string _dolphinLoc = "";
     std::string _ssbmisoLoc = "";

@@ -16,8 +16,6 @@
 using namespace std;
 
 string AIController =
-"[GCPad1]\n"
-"Device = Pipe / 0 / pipe1\n"
 "Buttons / A = `Button A`\n"
 "Buttons / B = `Button B`\n"
 "Buttons / X = `Button X`\n"
@@ -50,38 +48,68 @@ inline bool exists_test(const string& name) {
     }
 }
 
-Config::Config(vsType pType, 
+Config::Config(vsType vType = vsType::Self, 
     string dPath = "%dolphin%\Dolphin.exe", 
     string isoPath = "%dolphin%\iso\ssbm.gcm")
 {
     // Check for existing paths
     if (!exists_test(dPath))
     {
-        cerr << "Error: Path to Dolphin exec does not exist:\n"
-            << dPath << endl;
+        fprintf(stderr, 
+            "Error: Path to Dolphin exec does not exist:\n%s\n", dPath);
+        initialized = false;
+        return;
     }
     else
         _dolphinLoc = dPath;
 
     if (!exists_test(isoPath))
     {
-        cerr << "Error: Path to ssbm iso does not exist:\n"
-            << isoPath << endl;
+        fprintf(stderr, 
+            "Error: Path to ssbm iso does not exist:\n%s\n", isoPath);
+        initialized = false;
+        return;
     }
     else
         _ssbmisoLoc = isoPath;
 
+    // Set the vs type
+    _vs = vType;
+
     // Set default values
     _dual_core = _DUAL_CORE_DEFAULT;
-    _gfx = _GFX_DEFAULT;
-    _fullscreen = _FULLSCREEN_DEFAULT;
+
+    // Do we need to render?
+    if (_vs == vsType::Human)
+    {
+        _gfx = true;
+        _fullscreen = true;
+    }
+    else
+    {
+        _gfx = _GFX_DEFAULT;
+        _fullscreen = _FULLSCREEN_DEFAULT;
+    }
+
+    initialized = true;
 }
 
-Config::~Config()
+
+string Config::getPipeConfig(int player, int pipe)
 {
+    char buff[256];
+    sprintf(buff, "[GCPad%d]\nDevice = Pipe/%d/pipe%d\n", player, pipe, player);
+    string pipeOut(buff);
+    pipeOut += AIController;
+    return pipeOut;
 }
 
-std::string Config::getConfig()
+bool Config::IsInitialized()
+{
+    return initialized;
+}
+
+string Config::getConfig()
 {
     char buff[256];
     string output = string();
@@ -126,22 +154,9 @@ std::string Config::getConfig()
             "EmulationSpeed = 0\n";
     }
 
+    return output;
 }
 
-void Config::setPlayType(vsType typ)
+Config::~Config()
 {
-    _vs = typ;
 }
-
-void Config::setISOLocation(string path)
-{
-    if (exists_test(path))
-        _ssbmisoLoc = path;
-}
-
-void Config::setDolphinLocation(string path)
-{
-    if (exists_test(path))
-        _dolphinLoc = path;
-}
-
