@@ -6,28 +6,26 @@ const std::string* Controller::_btnNames[] = {
     "A",
     "B",
     "X",
-    "Y",
     "Z",
-    "L",
-    "R",
-    "D_UP",
-    "D_LEFT",
-    "D_RIGHT",
-    "D_DOWN",
-    "START"
+    "L"
 };
 
-Controller::Controller()
+Controller::Controller(const char* pipePath)
 {
+    if ((outPipe = fopen(pipePath, 'w')) == NULL)
+    {
+        fprintf(stderr, "Could not open pipe: %s", pipePath);
+        initialized = false;
+        return;
+    }
+
     _MainStickX = 0.5f;
     _MainStickY = 0.5f;
-    _CStickX = 0.5f;
-    _CStickY = 0.5f;
 
     memset(_Buttons, false, sizeof(bool) * _NUM_BUTTONS);
 }
 
-string Controller::getState()
+string Controller::GetState()
 {
     char buff[256];
     string output = string();
@@ -36,37 +34,40 @@ string Controller::getState()
     sprintf(buff, "SET MAIN %.2f %.2f\n", _MainStickX, _MainStickY);
     output += buff;
 
-    // C Stick
-    sprintf(buff, "SET C %.2f %.2f\n", _CStickX, _CStickY);
-    output += buff;
-
     // buttons
     for (unsigned int i = 0; i < _NUM_BUTTONS; i++)
     {
         sprintf(buff, "%s %s \n", _Buttons[i] ? "PRESS" : "RELEASE", _btnNames[i]);
         output += buff;
     }
+
+    return output;
+}
+
+void Controller::SendState()
+{
+    fprintf(outPipe, GetState().c_str());
 }
 
 void Controller::setButton(Button btn, bool state)
 {
-    _Buttons[btn] = state;
+    for (int i = 0; i < _NUM_BUTTONS; i++)
+        _Buttons[btn] = i == btn ? state : false;
 }
 
-void Controller::setStick(bool stick, float valX, float valY)
+void Controller::setStick(float valX, float valY)
 {
-    if (stick)
-    {
-        _MainStickX = valX;
-        _MainStickY = valY;
-    }
-    else
-    {
-        _CStickX = valX;
-        _CStickY = valY;
-    }
+    _MainStickX = valX;
+    _MainStickY = valY;
+}
+
+bool Controller::IsInitialized()
+{
+    return initialized;
 }
 
 Controller::~Controller()
 {
+    if (outPipe)
+        fclose(outPipe);
 }
