@@ -8,18 +8,17 @@ int main()
 {
     printf("Creating Handler\n");
     Handler hnd();
-    bool initialized = hnd.IsInitialized();
+    Controller* ctrl = hnd.getController();
+    hnd.StartDolphin();
 
-    if (!initialized)
+    if (!hnd.IsInitialized())
     {
+        hnd().KillDolphin();
         fprintf(stderr, "Handler not initialized\n");
         exit(EXIT_FAILURE);
     }
 
-    hnd.StartDolphin();
     hnd.WaitForDolphinClose();
-
-    Controller* ctrl = hnd.getController();
 
     printf("Press enter to spam A\n");
     char inp = 'a';

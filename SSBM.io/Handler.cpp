@@ -1,8 +1,8 @@
 #include "Handler.h"
-#define _POSIX_SOURCE
 #include <signal.h>
 #include <fstream>
 #ifndef WIN32
+#include <sys/wait.h>
 #include <unistd.h>
 #else
 #define SIGKILL 9
@@ -13,8 +13,8 @@ int wait(int* status) {};
 
 using namespace std;
 
-string Handler::dolphinexe = "/mnt/f/Program\ Files/Dolphin-x64/";
-string Handler::dolphinuser = "/mnt/f/Nara/OneDrive/Documents/Dolphin\ Emulator/";
+string Handler::dolphinexe = "/mnt/f/Program Files/Dolphin-x64/";
+string Handler::dolphinuser = "/mnt/f/Nara/OneDrive/Documents/Dolphin Emulator/";
 
 /* Helper Functions */
 inline bool exists_test(const string& name) {
@@ -51,7 +51,7 @@ bool Handler::StartDolphin()
     copyFile(
         configLoc.c_str(),
         (configLoc + ".bkp").c_str());
-    FILE * ini = fopen(configLoc.c_str(), 'w');
+    FILE * ini = fopen(configLoc.c_str(), "w");
     fwrite(dolphinCFG.c_str(), dolphinCFG.size() * sizeof(char), dolphinCFG.size(), ini);
     fclose(ini);
 
@@ -61,13 +61,13 @@ bool Handler::StartDolphin()
     copyFile(
         padLoc.c_str(),
         (padLoc + ".bkp").c_str());
-    FILE * ini = fopen(padLoc.c_str(), 'w');
+    ini = fopen(padLoc.c_str(), "w");
     fwrite(padCFG.c_str(), padCFG.size() * sizeof(char), padCFG.size(), ini);
     fclose(ini);
 
-    ctrl->SetControllerPath(padCFG.c_str());
+    ctrl->SetControllerPath((dolphinuser + "Pipe/AI1").c_str());
     if (!ctrl->IsInitialized())
-        return;
+        return false;
 
     pid = fork();
     // Child
@@ -91,7 +91,7 @@ bool Handler::StartDolphin()
     return true;
 }
 
-bool Handler::KillDolphin()
+void Handler::KillDolphin()
 {
     printf("Sending kill signal\n");
     kill(pid, SIGKILL);
@@ -116,6 +116,7 @@ Controller* Handler::getController()
 {
     if (ctrl && ctrl->IsInitialized())
         return ctrl;
+    return NULL;
 }
 
 bool Handler::IsInitialized()
@@ -156,8 +157,8 @@ Handler::Handler(int numAI, int numCPU, int numHuman)
         _ssbmisoLoc = _ssbmisoLoc;
 
 
-    cfg = new Config(Config::Human);
-    ctrl = new Controller("%Dolphin%\Pipe\1\AI1");
+    cfg = new Config(VsType::Human);
+    ctrl = new Controller();
 
     initialized = IsInitialized();
 }

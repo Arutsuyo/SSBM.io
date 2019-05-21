@@ -2,7 +2,14 @@
 
 #define _NUM_BUTTONS 5
 
-static enum Button
+enum VsType
+{
+    Self = 0,
+    CPU = 1,
+    Human = 2
+};
+
+enum Button
 {
     A = 0,
     B = 1,
@@ -13,7 +20,7 @@ static enum Button
 };
 
 // The order must match enum Button
-static char ButtonNames[] = {
+char ButtonNames[] = {
     'A',
     'B',
     'X',

@@ -1,19 +1,13 @@
 #pragma once
 #include <string>
+#include "Types.h"
 
 class Config
 {
     bool initialized;
 
 public:
-    static enum vsType
-    {
-        Self = 0,
-        CPU = 1,
-        Human = 2
-    };
-
-    Config(vsType vType);
+    Config(VsType vType);
     ~Config();
 
     std::string getConfig();
@@ -26,6 +20,6 @@ private:
     bool _gfx;
     bool _fullscreen;
 
-    vsType _vs;
+    VsType _vs;
 };
 

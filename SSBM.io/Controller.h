@@ -20,7 +20,7 @@ public:
     Controller();
     ~Controller();
 
-    void SetControllerPath(const char* pipePath);
+    bool SetControllerPath(const char* pipePath);
 
     // This should only be explicitly called for debug use, 
     // otherwise it's use internally to send the state

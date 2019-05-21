@@ -19,7 +19,7 @@ class Handler
 public:
 
     bool StartDolphin();
-    bool KillDolphin();
+    void KillDolphin();
     bool WaitForDolphinClose();
 
     Controller* getController();
