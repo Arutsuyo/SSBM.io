@@ -1,4 +1,7 @@
 #pragma once
+#ifndef _CONFIG_
+#define _CONFIG_
+
 #include <string>
 #include "Types.h"
 
@@ -23,3 +26,5 @@ private:
     VsType _vs;
 };
 
+
+#endif

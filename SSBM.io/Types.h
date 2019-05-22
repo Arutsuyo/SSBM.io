@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef _TYPES_
+#define _TYPES_
+
 #define _NUM_BUTTONS 5
 
 enum VsType
@@ -19,11 +22,4 @@ enum Button
     None
 };
 
-// The order must match enum Button
-char ButtonNames[] = {
-    'A',
-    'B',
-    'X',
-    'Z',
-    'L'
-};
+#endif

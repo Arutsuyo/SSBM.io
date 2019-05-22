@@ -7,13 +7,13 @@
 int main()
 {
     printf("Creating Handler\n");
-    Handler hnd();
-    Controller* ctrl = hnd.getController();
+    Handler hnd;
+
     hnd.StartDolphin();
 
     if (!hnd.IsInitialized())
     {
-        hnd().KillDolphin();
+        //hnd.KillDolphin();
         fprintf(stderr, "Handler not initialized\n");
         exit(EXIT_FAILURE);
     }
@@ -21,6 +21,7 @@ int main()
     hnd.WaitForDolphinClose();
 
     printf("Press enter to spam A\n");
+    Controller* ctrl = hnd.getController();
     char inp = 'a';
     while ((inp = getchar()) != 'q')
     {

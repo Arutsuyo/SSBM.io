@@ -1,7 +1,16 @@
 #include "Controller.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <cerrno>
 using namespace std;
+
+char Controller::_ButtonNames[] = {
+        'A',
+        'B',
+        'X',
+        'Z',
+        'L'
+};
 
 Controller::Controller()
 {
@@ -28,7 +37,7 @@ string Controller::GetState()
             buff,
             "%s %c \n",
             _Buttons[i] ? "PRESS" : "RELEASE",
-            ButtonNames[i]);
+            _ButtonNames[i]);
         output += buff;
     }
 
@@ -71,19 +80,21 @@ Controller::~Controller()
 
 bool Controller::SetControllerPath(const char* pipePath)
 {
+    printf("Setting up controller fifo\n");
     if (mkfifo(pipePath, 0777))
     {
-        fprintf(stderr, "Could not create pipe: %s", pipePath);
+        perror("Could not create pipe");
         initialized = false;
         return false;
     }
     if ((outPipe = fopen(pipePath, "w")) == NULL)
     {
-        fprintf(stderr, "Could not open pipe: %s", pipePath);
+        fprintf(stderr, "Could not open pipe: %s\n", pipePath);
         initialized = false;
         return false;
     }
-    
+
+    printf("Controller Initialized\n");
     initialized = true;
     return true;
 }

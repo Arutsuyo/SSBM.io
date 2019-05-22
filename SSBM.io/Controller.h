@@ -1,10 +1,16 @@
 #pragma once
+#ifndef _CONTROLLER_
+#define _CONTROLLER_
+
 #include <string>
 #include <stdio.h>
 #include "Types.h"
 
 class Controller
 {
+    // The order must match enum Button
+    static char _ButtonNames[];
+
     bool initialized = false;
 
     FILE* outPipe;
@@ -43,3 +49,5 @@ public:
 private:
 };
 
+
+#endif
