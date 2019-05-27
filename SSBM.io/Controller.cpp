@@ -1,12 +1,24 @@
 #include "Controller.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <cerrno>
 using namespace std;
+
+char Controller::_ButtonNames[] = {
+        'A',
+        'B',
+        'X',
+        'Z',
+        'L'
+};
 
 Controller::Controller()
 {
     _MainStickX = 0.5f;
     _MainStickY = 0.5f;
 
-    memset(_Buttons, false, sizeof(bool) * _NUM_BUTTONS);
+    for (int i = 0; i < _NUM_BUTTONS; i++)
+        _Buttons[i] = false;
 }
 
 string Controller::GetState()
@@ -22,10 +34,10 @@ string Controller::GetState()
     for (unsigned int i = 0; i < _NUM_BUTTONS; i++)
     {
         sprintf(
-            buff, 
-            "%s %s \n", 
-            _Buttons[i] ? "PRESS" : "RELEASE", 
-            ButtonNames[i]);
+            buff,
+            "%s %c \n",
+            _Buttons[i] ? "PRESS" : "RELEASE",
+            _ButtonNames[i]);
         output += buff;
     }
 
@@ -40,7 +52,7 @@ void Controller::SendState()
         return;
     }
 
-    fprintf(outPipe, GetState().c_str());
+    fwrite(GetState().c_str(), sizeof(char), GetState().size(), outPipe);
 }
 
 void Controller::setButton(Button btn = Button::None)
@@ -66,13 +78,23 @@ Controller::~Controller()
         fclose(outPipe);
 }
 
-void Controller::SetControllerPath(const char* pipePath)
+bool Controller::SetControllerPath(const char* pipePath)
 {
-    if ((outPipe = fopen(pipePath, 'w')) == NULL)
+    printf("Setting up controller fifo\n");
+    if (mkfifo(pipePath, 0777))
     {
-        fprintf(stderr, "Could not open pipe: %s", pipePath);
+        perror("Could not create pipe");
         initialized = false;
-        return;
+        return false;
     }
+    if ((outPipe = fopen(pipePath, "w")) == NULL)
+    {
+        fprintf(stderr, "Could not open pipe: %s\n", pipePath);
+        initialized = false;
+        return false;
+    }
+
+    printf("Controller Initialized\n");
     initialized = true;
+    return true;
 }

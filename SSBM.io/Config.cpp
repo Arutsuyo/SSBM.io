@@ -32,7 +32,7 @@ string AIController =
 "C - Stick / Left = `Axis C X - `\n"
 "C - Stick / Right = `Axis C X + `\n";
 
-Config::Config(vsType vType = vsType::Self)
+Config::Config(VsType vType = VsType::Self)
 {
     // Set the vs type
     _vs = vType;
@@ -41,7 +41,7 @@ Config::Config(vsType vType = vsType::Self)
     _dual_core = _DUAL_CORE_DEFAULT;
 
     // Do we need to render?
-    if (_vs == vsType::Human)
+    if (_vs == VsType::Human)
     {
         _gfx = true;
         _fullscreen = true;
@@ -58,7 +58,7 @@ Config::Config(vsType vType = vsType::Self)
 string Config::getPipeConfig(int pipe)
 {
     char buff[256];
-    sprintf(buff, "[GCPad1]\nDevice = Pipe/0/pipe%d\n", pipe);
+    sprintf(buff, "[GCPad1]\nDevice = Pipe/1/AI%d\n", pipe);
     string pipeOut(buff);
     pipeOut += AIController;
     return pipeOut;

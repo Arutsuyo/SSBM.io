@@ -1,8 +1,18 @@
 #pragma once
 
+#ifndef _TYPES_
+#define _TYPES_
+
 #define _NUM_BUTTONS 5
 
-static enum Button
+enum VsType
+{
+    Self = 0,
+    CPU = 1,
+    Human = 2
+};
+
+enum Button
 {
     A = 0,
     B = 1,
@@ -12,11 +22,4 @@ static enum Button
     None
 };
 
-// The order must match enum Button
-static char ButtonNames[] = {
-    'A',
-    'B',
-    'X',
-    'Z',
-    'L'
-};
+#endif
