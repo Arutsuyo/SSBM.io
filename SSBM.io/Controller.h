@@ -1,11 +1,17 @@
 #pragma once
+#ifndef _CONTROLLER_
+#define _CONTROLLER_
+
 #include <string>
 #include <stdio.h>
-#define _NUM_BUTTONS 5
+#include "Types.h"
 
 class Controller
 {
-    bool initialized;
+    // The order must match enum Button
+    static char _ButtonNames[];
+
+    bool initialized = false;
 
     FILE* outPipe;
 
@@ -13,24 +19,14 @@ class Controller
     float _MainStickX;
     float _MainStickY;
 
-    // A B X Y Z L R D_UP D_LEFT D_RIGHT D_DOWN START
-    static const std::string* _btnNames[];
-    bool _Buttons[12];
+    bool _Buttons[_NUM_BUTTONS];
 
 public:
-    // The order must match _btnNames[]
-    static enum Button
-    {
-        A = 0,
-        B = 1,
-        X = 2,
-        Z = 3,
-        L = 4,
-        None
-    };
 
-    Controller(const char* pipePath);
+    Controller();
     ~Controller();
+
+    bool SetControllerPath(const char* pipePath);
 
     // This should only be explicitly called for debug use, 
     // otherwise it's use internally to send the state
@@ -41,15 +37,17 @@ public:
 
     // Sets only the designated button to true, 
     // all other buttons will be set to false
-    void setButton(Button btn, bool state);
+    void setButton(Button btn);
     
     /* setStick
      * float valX/Y:
      *  Must be between 0-1. 0.5 is default resting position
      */
-    void setStick(float valX = 0.5f, float valY = 0.5f);
+    void setSticks(float valX = 0.5f, float valY = 0.5f);
 
     bool IsInitialized();
 private:
 };
 
+
+#endif

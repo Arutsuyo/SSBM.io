@@ -17,6 +17,7 @@
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
+CMakeFiles/
 x64/
 x86/
 bld/
@@ -64,6 +65,7 @@ StyleCopReport.xml
 *.ilk
 *.meta
 *.obj
+*.o
 *.iobj
 *.pch
 *.pdb
@@ -328,3 +330,9 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+CMakeCache\.txt
+
+*.cmake
+
+SSBM

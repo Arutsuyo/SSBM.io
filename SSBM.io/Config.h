@@ -1,33 +1,30 @@
 #pragma once
+#ifndef _CONFIG_
+#define _CONFIG_
+
 #include <string>
+#include "Types.h"
 
 class Config
 {
     bool initialized;
 
 public:
-    static enum vsType
-    {
-        Self = 0,
-        CPU = 1,
-        Human = 2
-    };
-
-    Config(vsType vType, std::string dPath, std::string isoPath);
+    Config(VsType vType);
     ~Config();
 
     std::string getConfig();
-    std::string getPipeConfig(int player, int pipe);
+    std::string getPipeConfig(int pipe);
+    std::string getPipeLoc(int pipe);
 
     bool IsInitialized();
 private:
-    std::string _dolphinLoc = "";
-    std::string _ssbmisoLoc = "";
-
     bool _dual_core;
     bool _gfx;
     bool _fullscreen;
 
-    vsType _vs;
+    VsType _vs;
 };
 
+
+#endif
