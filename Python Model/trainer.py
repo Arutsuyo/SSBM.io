@@ -59,7 +59,8 @@ while True:
 		input_k = raw_input()
 		if input_k == "-1 -1":
 			break
-		model.fit(x_input, y_input, epochs=1)
+		vv = [float(x) for x in input_k.split(" ")]
+		model.fit(vv[0:8], vv[8:], epochs=1)
 	except:
 		break
 	

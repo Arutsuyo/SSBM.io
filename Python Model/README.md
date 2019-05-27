@@ -8,7 +8,7 @@ To use this software:
 	
 	On the following line, it will expect another number (0 or 1), to specify whether it should be creating a new neural net to train or if it should attempt to load the previously saved net.
 	
-	To train, it expects 8 numbers (floats, but may be ints)
+	To train, it expects 8+7=15 numbers (floats, but may be ints)
 		Player 1's HP (0 - 999)
 		Player 1's Facing Direction (-1 and +1)
 		Player 1's X position (? bounds)
@@ -17,6 +17,13 @@ To use this software:
 		Player 2's Facing Direction (-1 and +1)
 		Player 2's X position (? bounds)
 		Player 2's Y position (? bounds)
+		Pressing X (+1/0)
+		Pressing Y (+1/0)
+		Pressing A (+1/0)
+		Pressing B (+1/0)
+		Pressing L (+1/0)
+		Tilt Left (-1 - +1)
+		Tilt Right (-1 - +1)
 		
 	All of these should be on the same line, seperated by a space and the decimal seperator should be a '.' and not a ','.
 	
