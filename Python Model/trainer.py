@@ -3,7 +3,9 @@ import sys
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM
+from tensorflow.keras.utils import plot_model
 from collections import deque
+import numpy as np
 """
 Author: Chase M. Craig
 Purpose: For being able to accept input from an application to train a neural network.
@@ -28,7 +30,7 @@ try:
 except:
 	debugPrint("Unable to import CuDNNLSTM, using fallback of LSTM with tanh activator.")
 	
-debugPrint("Hello! New (0) model or Load (1) model (directory: ./models/ssbm): ")
+debugPrint("Hello! New (0) model or Load (1) model (directory: ./models/ssbm.h5) or Run (2) model (just predict mode): ")
 
 
 class DQN:
@@ -38,9 +40,9 @@ class DQN:
 		self.gamma = 0.95
 		self.epsilon = 1.0
 		self.epsilon_min = 0.01
-		self.epsilon_decay = 0.995
+		self.epsilon_decay = 0.9975 # takes a LONG time to train...
 		self.learning_rate = 0.01
-		self.input_size = 10
+		self.input_size = 8
 		self.tau = .05
 		self.actions = [[0,0,0,0,0,0]]*30
 		c = 0
@@ -116,25 +118,27 @@ class DQN:
 	def load_model(self, fn):
 		self.model = tf.keras.models.load_model(fn)
 		self.target_model = tf.keras.models.load_model(fn)
+	def test(self, fn):
+		plot_model(self.model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
 
 
 
 export_dir = os.path.join("models","ssbm.h5")
 choice = input()
-if choice != '0' and choice != '1':
+if choice != '0' and choice != '1' and choice != '2':
 	debugPrint("That was neither! Exiting.")
 	sys.exit(1)
 
 # BUILD MODEL SECTION!
 agent = None
-if choice == '1':
+if choice == '1' or choice == '2':
 	debugPrint("Loading model from file...")
 	agent = DQN()
 	agent.load_model(export_dir)
 else:
 	debugPrint("Building model:")
 	agent = DQN() # Prebuilds...
-
+agent.test("cool")
 debugPrint("Finished building/loading! Please input data in the form of P1-HP P1-FD P1-X P1-Y P2-HP P2-FD P2-X P2-Y (as specified ")
 # Train...until we hit an end of file...
 pa = [0,0,0,0,0,0,0,0]
@@ -143,19 +147,20 @@ while True:
 		input_k = input()
 		if input_k == "-1 -1":
 			break
-		action = agent.act(pa) 
-		# It is 6 values, brute force
-		print(action[0] + " " + action[1] + " " + action[2] + " " + action[3] + " " + action[4] + " " + action[5])
-		# Output action....
-		
-		vv = [float(x) for x in input_k.split(" ")] # Cur state!
+	except:
+		break
+	action = agent.act(pa) 
+	# It is 6 values, brute force
+	print(action[0],action[1],action[2],action[3],action[4],action[5])
+	# Output action....
+	
+	vv = [float(x) for x in input_k.split(" ")] # Cur state!
+	if choice != '2':
 		reward = agent.get_Score(pa, vv)
 		agent.remember(pa, action, reward, vv, False)
 		agent.replay()
 		agent.target_train()
-		pa = [x for x in vv]
-	except:
-		break
+	pa = [x for x in vv]
 	
 
 # Save!

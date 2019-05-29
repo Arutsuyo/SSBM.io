@@ -8,7 +8,7 @@ To use this software (learner.py):
 	
 	On the following line, it will expect another number (0 or 1), to specify whether it should be creating a new neural net to train or if it should attempt to load the previously saved net.
 	
-	To train, it expects 8+7=15 numbers (floats, but may be ints)
+	To train, it expects 8+6=14 numbers (floats, but may be ints)
 		Player 1's HP (0 - 999)
 		Player 1's Facing Direction (-1 and +1)
 		Player 1's X position (? bounds)
