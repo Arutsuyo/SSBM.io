@@ -5,7 +5,9 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM
 from tensorflow.keras.utils import plot_model
 from collections import deque
+import zc.lockfile as lf
 import numpy as np
+from time import sleep
 """
 Author: Chase M. Craig
 Purpose: For being able to accept input from an application to train a neural network.
@@ -36,7 +38,7 @@ debugPrint("Hello! New (0) model or Load (1) model (directory: ./models/ssbm.h5)
 class DQN:
 	def __init__(self):
 		self.memory  = deque(maxlen=2000)
-		
+		self.game_score = 0
 		self.gamma = 0.95
 		self.epsilon = 1.0
 		self.epsilon_min = 0.01
@@ -58,15 +60,22 @@ class DQN:
 	def get_Score(self, prev_state, new_state):
 		reward = 0
 		if prev_state[4] > new_state[4] and new_state[4] == 0:
-			reward = reached + 100 # :D Not enough to overcome suicide.
+			reward = reward + 100 # :D Not enough to overcome suicide.
 		if prev_state[0] > new_state[0] and new_state[0] == 0:
 			reward = reward - 500 # Died, get a reward of -500
 		else:
 			reward = reward - (new_state[0] - prev_state[0])*.1*new_state[0] # So reward penalty gets worse for getting hit
 			reward = reward + (new_state[4] - prev_state[4])*.5*new_state[4] # Reward if hitting!
 		reward = reward - ((abs(new_state[2] - new_state[6]) * .25) + (abs(new_state[3] - new_state[7])*.1)) # Slight penalty for going away from the user.
-		reward = reward - (10 * abs(new_state[1] - new_state[5]))
+		self.add_OverallScore(prev_state[0] > new_state[0], prev_state[4] > new_state[4], new_state[0]-prev_state[0], new_state[4]-prev_state[4])
 		return reward
+	def add_OverallScore(self, hasDied, otherDied, myHP, theirHP):
+		self.game_score = self.game_score + (-500 if hasDied == 1 else 0) + (500 if otherDied == 1 else 0)
+		#(-myHP * .2) + (theirHP * .15)
+		if !hasDied:
+			self.game_score = self.game_score + (-myHP * .2)
+		if !otherDied:
+			self.game_score = self.game_score + (myHP * .15)
 	def create_model(self):
 		model = Sequential()
 		model.add(fallbackLSTM(30,input_shape=(self.input_size,1), activation='tanh', return_sequences=True))
@@ -124,6 +133,7 @@ class DQN:
 
 
 export_dir = os.path.join("models","ssbm.h5")
+best_file = os.path.join("models", "modelscore.txt")
 choice = input()
 if choice != '0' and choice != '1' and choice != '2':
 	debugPrint("That was neither! Exiting.")
@@ -162,9 +172,31 @@ while True:
 		agent.target_train()
 	pa = [x for x in vv]
 	
-
-# Save!
-debugPrint("End of file reached. Saving model.")
-agent.save_model(export_dir)
-debugPrint("Finished saving...exiting...")
-# train
+if choice != '2':
+	# Save!
+	debugPrint("End of file reached. Saving model.")
+	while True:
+		lock = None
+		try: 
+			lock = lf.LockFile('lock.lck')
+			# We got it fam
+			e = os.path.isfile(best_file)
+			if e:
+				f = open(best_file, 'r')
+				s = f.read()
+				f.close()
+				if float(s) > agent.game_score:
+					debugPrint("A worse score was recorded! Not going to save this model.")
+					lock.close()
+					break
+			f = open(best_file, 'w+')
+			f.write(agent.game_score + "")
+			f.close()
+			agent.save_model(export_dir)
+			lock.close()
+			break
+		except lf.LockError:
+			sleep(0.05)			
+	debugPrint("Finished saving...exiting...")
+print(-1,-1)
+	# train
