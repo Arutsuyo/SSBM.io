@@ -113,18 +113,16 @@ bool Controller::CreateFifo(string& inPipePath, int &pipe_count)
     printf("Creating pipe\n");
     // Make the pipe
     pipePath = inPipePath;
-    int step = 0;
     pipe_count = 0;
     while (mkfifo(inPipePath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == -1)
     {
         perror("mkfifo failed");
         pipe_count++;
-        inPipePath = pipePath + to_string(step++);
+        inPipePath = pipePath + to_string(pipe_count);
     }
     // Save the final pipe path
     pipePath = inPipePath;
     printf("Pipe Created: %s\n", pipePath.c_str());
-
 }
 
 bool Controller::SetControllerPath(string &inPipePath)
