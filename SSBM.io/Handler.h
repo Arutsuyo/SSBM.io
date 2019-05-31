@@ -8,11 +8,12 @@
 
 class Handler
 {
-    static std::string dolphinexe;
-    static std::string dolphinuser;
-    static std::string _dolphinLoc;
-    static std::string _ssbmisoLoc;
-    static std::string _customINI;
+    static std::string _ssbmisoLocs[];
+    static int _isoidx;
+
+    // Important Locations
+    std::string dolphinUser;
+    std::string dolphinShared;
 
     bool initialized = false;
     int pid = -1;
@@ -20,6 +21,7 @@ class Handler
     Config* cfg = NULL;
     Controller* ctrl = NULL;
 
+    std::string getPipePath(std::string id);
 public:
 
     bool StartDolphin();
@@ -30,7 +32,7 @@ public:
 
     bool IsInitialized();
 
-    Handler();
+    Handler(VsType vs);
     ~Handler();
 };
 

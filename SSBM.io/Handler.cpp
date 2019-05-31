@@ -4,6 +4,9 @@
 #ifndef WIN32
 #include <sys/wait.h>
 #include <unistd.h>
+#include <fcntl.h>
+// Included for PW
+#include <pwd.h>
 #else
 #define SIGKILL 9
 int fork() {};
@@ -13,11 +16,14 @@ int wait(int* status) {};
 
 using namespace std;
 
-string Handler::dolphinexe = "/mnt/f/Program Files/Dolphin-x64/";
-string Handler::_dolphinLoc = "/mnt/f/Program Files/Dolphin-x64/Dolphin.exe";
-string Handler::_ssbmisoLoc = "/mnt/f/Program Files/Dolphin-x64/iso/ssbm.gcm";
-string Handler::dolphinuser = "/mnt/f/Nara/OneDrive/Documents/Dolphin Emulator/";
-string Handler::_customINI = "/mnt/f/Nara/OneDrive/Documents/Dolphin Emulator/Config/";
+// ISO locations, will step through
+string Handler::_ssbmisoLocs[] = { 
+    "/mnt/f/Program Files/Dolphin-x64/iso/ssbm.gcm",
+    "/mnt/c/Program Files/Dolphin-x64/iso/ssbm.gcm",
+    "/mnt/c/User/Nara/Desktop/Dolphin-x64/iso/ssbm.gcm",
+};
+
+int Handler::_isoidx = -1;
 
 /* Helper Functions */
 inline bool exists_test(const string& name) {
@@ -30,54 +36,66 @@ inline bool exists_test(const string& name) {
     }
 }
 
-void copyFile(const char* src, const char* dst)
-{
-    printf("Copying %s to %s\n", src, dst);
-    ifstream  op(src, ios::binary);
-    ofstream  cp(dst, ios::binary);
+string getFileName(const string& s) {
 
-    cp << op.rdbuf();
+    char sep = '/';
+
+#ifdef _WIN32
+    sep = '\\';
+#endif
+
+    size_t i = s.rfind(sep, s.length());
+    if (i != string::npos) {
+        return(s.substr(i + 1, s.length() - i));
+    }
+
+    return("");
+}
+
+string Handler::getPipePath(string id)
+{
+    char buff[256];
+    sprintf(buff, "Pipes/%s", id.c_str());
+    string pipeOut(buff);
+    return pipeOut;
 }
 
 bool Handler::StartDolphin()
 {
-    ctrl->SetControllerPath((dolphinuser + "Pipe/AI1").c_str());
-
-    printf("Checking Initialization\n");
-    if (!IsInitialized())
-    {
-        fprintf(stderr, "Cannot start, Initialization failed\n");
+    if (!cfg)
         return false;
+    if (!cfg->IsInitialized())
+        return false;
+
+    int player = 0;
+    int pipe_count = 0;
+    string id = "ssbm.io";
+
+    string aiPipe = dolphinShared + getPipePath(id);
+    string GCPadNew = dolphinUser + "GCPadNew.ini";
+    string controllerINI = cfg->getPlayerPipeConfig(player++);
+
+    ctrl->CreateFifo(aiPipe, pipe_count);
+    id = getFileName(aiPipe);
+    printf("Pipe Name: %s\n", id.c_str());
+    controllerINI += cfg->getAIPipeConfig(player++, pipe_count, id);
+
+    printf("Writing GCPadNew.ini\n");
+    // Write the pipe ini
+    FILE* fd = fopen(GCPadNew.c_str(), "w");
+    if (!fd)
+    {
+        perror("fopen:ini failed");
+        exit(EXIT_FAILURE);
     }
-
-    printf("Copying Dolphin.ini\n");
-    string dolphinCFG = cfg->getConfig();
-    string configLoc = _customINI + "Dolphin.ini";
-    copyFile(
-        configLoc.c_str(),
-        (configLoc + ".bkp").c_str());
-    FILE * ini = fopen(configLoc.c_str(), "w");
-    fwrite(dolphinCFG.c_str(), 
-        dolphinCFG.size() * sizeof(char), 
-        dolphinCFG.size(), ini);
-    fclose(ini);
-
-    printf("Copying Pad.ini\n");
-    string padCFG = cfg->getPipeConfig(1);
-    string padLoc = _customINI + "GCPadNew.ini";
-    copyFile(
-        padLoc.c_str(),
-        (padLoc + ".bkp").c_str());
-    ini = fopen(padLoc.c_str(), "w");
-    fwrite(padCFG.c_str(), padCFG.size() * sizeof(char), padCFG.size(), ini);
-    fclose(ini);
+    fwrite(controllerINI.c_str(), sizeof(char), controllerINI.size(), fd);
+    fclose(fd);
 
     pid = fork();
     // Child
     if (pid == 0)
     {
-        printf("Child: Launched!\n");
-        printf("Exiting now!\n");
+        printf("Child: Launched! (TODO exec dolphin)\n");
         exit(EXIT_SUCCESS);
     } // child will not exit this block
 
@@ -91,6 +109,18 @@ bool Handler::StartDolphin()
     }
 
     printf("Child successfully launched\n");
+
+    // Do this AFTER launching Dolphin, otherwise it will block
+    printf("Opening controller at: %s\n", aiPipe.c_str());
+    ctrl->SetControllerPath(aiPipe);
+
+    printf("Checking Initialization\n");
+    if (!IsInitialized())
+    {
+        fprintf(stderr, "Cannot start, Initialization failed\n");
+        return false;
+    }
+
     return true;
 }
 
@@ -132,36 +162,31 @@ bool Handler::IsInitialized()
     return cfg->IsInitialized() && ctrl->IsInitialized();
 }
 
-Handler::Handler()
+Handler::Handler(VsType vs)
 {
+    struct passwd* pw = getpwuid(getuid());
     pid = -1;
+    string userDir = pw->pw_dir;
 
-    // Check for existing paths
-    if (!exists_test(_dolphinLoc))
-    {
-        fprintf(stderr,
-            "Error: Path to Dolphin exec does not exist:\n%s\n",
-            _dolphinLoc.c_str());
-        initialized = false;
-        return;
-    }
-    else
-        _dolphinLoc = _dolphinLoc;
+    dolphinShared = userDir + "/.local/share/dolphin-emu/";
+    dolphinUser = userDir + "/.config/dolphin-emu/";
 
-    if (!exists_test(_ssbmisoLoc))
-    {
-        fprintf(stderr,
-            "Error: Path to ssbm iso does not exist:\n%s\n",
-            _ssbmisoLoc.c_str());
-        initialized = false;
-        return;
-    }
-    else
-        _ssbmisoLoc = _ssbmisoLoc;
+    size_t n = sizeof(_ssbmisoLocs) / sizeof(_ssbmisoLocs[0]);
+
+    do {
+        _isoidx++;
+        if (_isoidx > n)
+        {
+            fprintf(stderr, "ERROR: ISO not found\n");
+            initialized = false;
+            return;
+        }
+        printf("Testing for ISO:\n%s\n", _ssbmisoLocs[_isoidx].c_str());
+    } while (!exists_test(_ssbmisoLocs[_isoidx]));
 
 
     printf("Creating Config\n");
-    cfg = new Config(VsType::Human);
+    cfg = new Config(vs);
     printf("Creating Controller\n");
     ctrl = new Controller();
 
