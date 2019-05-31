@@ -68,14 +68,14 @@ class DQN:
 		self.learning_rate = 0.01
 		self.input_size = 8
 		self.tau = .05
-		self.actions = [[0,0,0,0,0,0,0]]*90
+		self.npa = 5*3*6
+		self.actions = [[0,0,0,0,0,0,0]]*self.npa
 		c = 0
 		for p in [-1,-.5,0,.5,1]:
 			for u in [-1,0,1]:
-				for ab in [0, 1]:
-					for lyz in [0,1,2]:
-						self.actions[c] = [p, u,ab,1-ab,1 if lyz == 0 else 0, 1 if lyz == 1 else 0, 1 if lyz == 2 else 0]
-						c = c + 1
+				for a in [0,1,2,3,4,5]:
+					self.actions[c] = [p, u,1 if a == 1 else 0, 1 if a == 2 else 0, 1 if a == 3 else 0, 1 if a ==4 else 0, 1 if a == 5 else 0]
+					c = c + 1
 		self.model = self.create_model()
 		# "hack" implemented by DeepMind to improve convergence
 		self.target_model = self.create_model()
@@ -109,7 +109,7 @@ class DQN:
 		# Reason for a small second to last dense layer is that 
 		# A LOT of the values are highly correlated (sadly), so we don't expect a lot of difference here. 
 		model.add(Dropout(0.5))
-		model.add(Dense(90, activation='linear'))
+		model.add(Dense(self.npa, activation='linear'))
 		# 5 stick positions (-.8, -.2, 0, .2, .8)
 		# A or B
 		# L or Y or Z
