@@ -2,6 +2,7 @@ Python trainer:
 	Required packages:
 		tensorflow and all required packages (installed using anaconda)
 		h5py
+		zc.lockfile
 		
 To use this software (learner.py):
 	It will first require a single number (0 or 1). If it is zero, any and all debugging output (prompts, notifications, etc) will not be printed to the stdout stream, baring kera's training prints. If it is non-zero, then it will print to stdout as normal.
