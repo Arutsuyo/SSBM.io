@@ -2,12 +2,13 @@
 //
 
 #include <stdio.h>
+#include <unistd.h>
 #include "Handler.h"
 
 int main()
 {
     printf("Creating Handler\n");
-    Handler hnd;
+    Handler hnd(VsType::Human);
 
     hnd.StartDolphin();
 
@@ -20,15 +21,18 @@ int main()
 
     hnd.WaitForDolphinClose();
 
-    printf("Press enter to spam A\n");
+    printf("Looping Input!\n");
     Controller* ctrl = hnd.getController();
-    char inp = 'a';
-    while ((inp = getchar()) != 'q')
+    
+    while (ctrl->IsInitialized())
     {
         ctrl->setButton(Button::A);
         ctrl->SendState();
+        sleep(1);
         ctrl->setButton(Button::None);
         ctrl->SendState();
+        sleep(5);
     }
 
+    printf("Closing\n");
 }
