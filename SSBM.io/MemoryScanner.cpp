@@ -29,12 +29,14 @@ struct player{
 */
 
 
-MemoryScanner::MemoryScanner(){
+MemoryScanner::MemoryScanner(std::string s){
 
 	p1.health = 1000; p2.health = 1000;
 	p1.dir = 10; p2.dir = 10;
 	p1.pos_y = -1024; p1.pos_x = -1024;
 	p2.pos_y = -1024; p2.pos_x = -1024;
+	p =s;
+
 
 	init_socket();
 }
@@ -57,11 +59,9 @@ void MemoryScanner::readytoprint(){
 void MemoryScanner::init_socket(){
 
 	struct passwd *pw = getpwuid(getuid());
-    //char *path = pw->pw_dir;
-    //strcat(path, "/.dolphin-emu/MemoryWatcher/MemoryWatcher");
 
-	std::string path = pw->pw_dir;
-	std::string sock_path = path+ Trainer::userDir + "/MemoryWatcher/MemoryWatcher";
+	std::string sock_path =  p + "/MemoryWatcher/MemoryWatcher";
+	std::cout << "FJKLFJDKLJFLKDJFKLDJFKLDJ" << sock_path <<std::endl;
 	//std::string path = pw->pw_dir;
 	//path += "/.dolphin-emu/MemoryWatcher/MemoryWatcher";
 	/*set up socket*/

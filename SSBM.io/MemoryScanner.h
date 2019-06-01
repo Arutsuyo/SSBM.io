@@ -1,5 +1,6 @@
 #ifndef _MEMORYSCANNER_H
 #define _MEMORYSCANNER_H
+#include <string>
 #include "Player.h"
 
 /*
@@ -17,7 +18,7 @@ class MemoryScanner{
 
 public:
 
-	MemoryScanner();
+	MemoryScanner(std::string s);
 
 
 	int UpdatedFrame();
@@ -27,7 +28,7 @@ private:
 	player p2;
 
 	void init_socket();
-
+	std::string p;
 	int socketfd = -1;
 
 	void readytoprint();

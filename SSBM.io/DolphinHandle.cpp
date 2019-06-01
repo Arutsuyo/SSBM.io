@@ -166,8 +166,8 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
             return;
         }
     }
-
-    MemoryScanner mem;
+    
+    MemoryScanner mem = MemoryScanner(ta._dolphinUser);
 
 
     // Do Input
@@ -225,7 +225,7 @@ bool DolphinHandle::StartDolphin(int lst)
     controllerINI = "";
 
     std::string memwatch = dolphinUser + "MemoryWatcher/";
-
+    
     string hotkey;
     switch (_vs)
     {
@@ -269,18 +269,18 @@ bool DolphinHandle::StartDolphin(int lst)
     system(buff);
     memwatch += "Locations.txt";
 
-    fd = fopen(memwatch.c_str(), "w");
-    if(!fd){
+    FILE* fd1 = fopen(memwatch.c_str(), "w");
+    if(!fd1){
     	char buff[256];
     	sprintf(buff, "DH: fopen:%s failed", memwatch.c_str());
     	perror(buff);
     	return false;
     }
 
-    fwrite(memlocation.c_str(), sizeof(char), memlocation.size(), fd);
+    fwrite(memlocation.c_str(), sizeof(char), memlocation.size(), fd1);
     
-    fclose(fd);
-    unlink(memwatch.c_str());
+    fclose(fd1);
+    
     // Write the hotkey for savestate
     dolphinConfig += "Hotkeys.ini";
     fd = fopen(dolphinConfig.c_str(), "w");
