@@ -41,14 +41,14 @@ MemoryScanner::MemoryScanner(){
 
 void MemoryScanner::readytoprint(){
 	
-	
+	/*
 	if (this->p1.dir == 10 || this->p2.dir == 10)
 		return;
 	if (this->p1.pos_x == -1024 || this->p1.pos_y == -1024)
 		return;
 	if (this->p2.pos_x == -1024 || this->p2.pos_y == -1024)
 		return;
-
+	*/
 	std::cout << p1.health << "," << p1.dir << "," << p1.pos_x << "," << p1.pos_y << std::endl;
 	std::cout << p2.health << "," << p2.dir << "," << p2.pos_x << "," << p2.pos_y << std::endl; 
 }
@@ -61,7 +61,7 @@ void MemoryScanner::init_socket(){
     //strcat(path, "/.dolphin-emu/MemoryWatcher/MemoryWatcher");
 
 	std::string path = pw->pw_dir;
-	std::string sock_path = path+ Trainer::userDir;
+	std::string sock_path = path+ Trainer::userDir + "/MemoryWatcher/MemoryWatcher";
 	//std::string path = pw->pw_dir;
 	//path += "/.dolphin-emu/MemoryWatcher/MemoryWatcher";
 	/*set up socket*/
@@ -72,12 +72,13 @@ void MemoryScanner::init_socket(){
 	struct sockaddr_un addr;
 	memset(&addr, 0 , sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	unlink(path.c_str());
+	unlink(sock_path.c_str());
 
-	strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path) - 1);
+	strncpy(addr.sun_path, sock_path.c_str(), sizeof(addr.sun_path) - 1);
 
 		if ( bind(socketfd, (struct sockaddr*)&addr, sizeof(addr)) < 0){
 			std::cout << "Error binding socket " << strerror(errno) << std::endl;
+			std::cout << "path is " << sock_path << std::endl;
 			std::cout << "socketfd is " << socketfd << std::endl;
 		} 
 }
