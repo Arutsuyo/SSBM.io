@@ -11,33 +11,34 @@ class Controller
     // The order must match enum Button
     static char _ButtonNames[];
 
-    bool initialized = false;
-
-    FILE* outPipe;
+    std::string pipePath;
+    bool pipeOpen = true;
+    int fifo_fd;
 
     // Piped input sticks go from 0 to 1. 0.5 is centered
     float _MainStickX;
     float _MainStickY;
-
     bool _Buttons[_NUM_BUTTONS];
 
+    // Pipe signal handlers
+    bool createSigAction();
+    bool sendtofifo(std::string fifocmd);
+
 public:
-
-    Controller();
-    ~Controller();
-
-    bool SetControllerPath(const char* pipePath);
+    bool CreateFifo(std::string inPipePath, int pipe_count);
+    std::string GetControllerPath();
+    bool OpenController();
 
     // This should only be explicitly called for debug use, 
     // otherwise it's use internally to send the state
     std::string GetState();
 
     // Primary call the AI will use to send the state to Dolphin.
-    void SendState();
+    bool SendState();
 
     // Sets only the designated button to true, 
     // all other buttons will be set to false
-    void setButton(Button btn);
+    void setButton(Button btn = Button::None);
     
     /* setStick
      * float valX/Y:
@@ -45,8 +46,11 @@ public:
      */
     void setSticks(float valX = 0.5f, float valY = 0.5f);
 
-    bool IsInitialized();
-private:
+    bool IsPipeOpen();
+
+    Controller();
+    ~Controller();
+
 };
 
 

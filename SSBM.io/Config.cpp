@@ -3,36 +3,58 @@
 #include <fstream>
 #include <iostream>
 
-#define _GFX_BACKEND "D3D"
+#define _GFX_BACKEND "OGL"
 #define _DUAL_CORE_DEFAULT 1
 #define _GFX_DEFAULT false
 #define _FULLSCREEN_DEFAULT false
 
 using namespace std;
 
-string AIController =
-"Buttons / A = `Button A`\n"
-"Buttons / B = `Button B`\n"
-"Buttons / X = `Button X`\n"
-"Buttons / Y = `Button Y`\n"
-"Buttons / Z = `Button Z`\n"
-"Buttons / Start = `Button START`\n"
-"D - Pad / Up = `Button D_UP`\n"
-"D - Pad / Down = `Button D_DOWN`\n"
-"D - Pad / Left = `Button D_LEFT`\n"
-"D - Pad / Right = `Button D_RIGHT`\n"
-"Triggers / L = `Button L`\n"
-"Triggers / R = `Button R`\n"
-"Main Stick / Up = `Axis MAIN Y - `\n"
-"Main Stick / Down = `Axis MAIN Y + `\n"
-"Main Stick / Left = `Axis MAIN X - `\n"
-"Main Stick / Right = `Axis MAIN X + `\n"
-"C - Stick / Up = `Axis C Y - `\n"
-"C - Stick / Down = `Axis C Y + `\n"
-"C - Stick / Left = `Axis C X - `\n"
-"C - Stick / Right = `Axis C X + `\n";
+string PlayerKeyboard =
+"Device = Xlib/0/Keyboard Mouse\n"
+"Buttons/A = V\n"
+"Buttons/B = C\n"
+"Buttons/X = X\n"
+"Buttons/Y = `Button Y`\n"
+"Buttons/Z = Z\n"
+"Buttons/Start = Return\n"
+"Main Stick/Up = Up\n"
+"Main Stick/Down = Down\n"
+"Main Stick/Left = Left\n"
+"Main Stick/Right = Right\n"
+"C-Stick/Up = `Axis C Y -`\n"
+"C-Stick/Down = `Axis C Y +`\n"
+"C-Stick/Left = `Axis C X -`\n"
+"C-Stick/Right = `Axis C X +`\n"
+"Triggers/L = space\n"
+"D-Pad/Up = `Button D_UP`\n"
+"D-Pad/Down = `Button D_DOWN`\n"
+"D-Pad/Left = `Button D_LEFT`\n"
+"D-Pad/Right = `Button D_RIGHT`\n";
 
-Config::Config(VsType vType = VsType::Self)
+string AIController =
+"Buttons/A = `Button A`\n"
+"Buttons/B = `Button B`\n"
+"Buttons/X = `Button X`\n"
+"Buttons/Y = `Button Y`\n"
+"Buttons/Z = `Button Z`\n"
+"Buttons/Start = `Button START`\n"
+"D-Pad/Up = `Button D_UP`\n"
+"D-Pad/Down = `Button D_DOWN`\n"
+"D-Pad/Left = `Button D_LEFT`\n"
+"D-Pad/Right = `Button D_RIGHT`\n"
+"Triggers/L = `Button L`\n"
+"Triggers/R = `Button R`\n"
+"Main Stick/Up = `Axis MAIN Y - `\n"
+"Main Stick/Down = `Axis MAIN Y + `\n"
+"Main Stick/Left = `Axis MAIN X - `\n"
+"Main Stick/Right = `Axis MAIN X + `\n"
+"C-Stick/Up = `Axis C Y - `\n"
+"C-Stick/Down = `Axis C Y + `\n"
+"C-Stick/Left = `Axis C X - `\n"
+"C-Stick/Right = `Axis C X + `\n";
+
+Config::Config(VsType vType)
 {
     // Set the vs type
     _vs = vType;
@@ -55,20 +77,27 @@ Config::Config(VsType vType = VsType::Self)
     initialized = true;
 }
 
-string Config::getPipeConfig(int pipe)
+string Config::getPlayerPipeConfig(int player)
 {
     char buff[256];
-    sprintf(buff, "[GCPad1]\nDevice = Pipe/1/AI%d\n", pipe);
+    printf("CFG: Creating Keyboard Player: %d\n", player);
+    sprintf(buff, "[GCPad%d]\n", player + 1);
     string pipeOut(buff);
-    pipeOut += AIController;
+    pipeOut += PlayerKeyboard;
     return pipeOut;
 }
 
-string Config::getPipeLoc(int pipe)
+string Config::getAIPipeConfig(int player, int pipe_count, string id)
 {
     char buff[256];
-    sprintf(buff, "Pipe/pipe%d\n", pipe);
+    sprintf(buff,
+        "[GCPad%d]\nDevice = Pipe/%d/%s%d\n",
+        player + 1,
+        pipe_count,
+        id.c_str(),
+        pipe_count);
     string pipeOut(buff);
+    pipeOut += AIController;
     return pipeOut;
 }
 
@@ -121,4 +150,5 @@ string Config::getConfig()
 
 Config::~Config()
 {
+    printf("CFG: Destroying Config\n");
 }

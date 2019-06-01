@@ -8,22 +8,20 @@
 class Config
 {
     bool initialized;
-
-public:
-    Config(VsType vType);
-    ~Config();
-
-    std::string getConfig();
-    std::string getPipeConfig(int pipe);
-    std::string getPipeLoc(int pipe);
-
-    bool IsInitialized();
-private:
     bool _dual_core;
     bool _gfx;
     bool _fullscreen;
 
     VsType _vs;
+
+public:
+    std::string getConfig();
+    std::string getPlayerPipeConfig(int player);
+    std::string getAIPipeConfig(int player, int pipe_count, std::string id);
+
+    bool IsInitialized();
+    Config(VsType vType = VsType::Self);
+    ~Config();
 };
 
 
