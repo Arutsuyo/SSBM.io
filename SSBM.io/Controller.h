@@ -20,8 +20,6 @@ class Controller
     float _MainStickY;
     bool _Buttons[_NUM_BUTTONS];
 
-    // Pipe signal handlers
-    bool createSigAction();
     bool sendtofifo(std::string fifocmd);
 
 public:
@@ -47,6 +45,7 @@ public:
     void setSticks(float valX = 0.5f, float valY = 0.5f);
 
     bool IsPipeOpen();
+    bool ActivateSaveState();
 
     Controller();
     ~Controller();

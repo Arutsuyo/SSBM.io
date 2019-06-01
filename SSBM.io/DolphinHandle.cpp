@@ -27,26 +27,10 @@ inline bool exists_test(const string& name) {
     }
 }
 
-string getFileName(const string& s) {
-
-    char sep = '/';
-
-#ifdef _WIN32
-    sep = '\\';
-#endif
-
-    size_t i = s.rfind(sep, s.length());
-    if (i != string::npos) {
-        return(s.substr(i + 1, s.length() - i));
-    }
-
-    return("");
-}
-
 void SendKill(int pid)
 {
     printf("Sending kill signal\n");
-    kill(pid, SIGKILL);
+    kill(pid, SIGINT);
 }
 
 bool WaitForDolphinToClose(int pid)
@@ -69,13 +53,13 @@ void DolphinHandle::CopyBaseFiles()
 string DolphinHandle::AddController(int player, int pipe_count, string id)
 {
     printf("DH: Creating AI Player: %d\n", player);
-    Controller *ctrl = new Controller;
+    Controller* ctrl = new Controller;
     !ctrl->CreateFifo(aiPipe, pipe_count);
     controllers.push_back(ctrl);
     return Trainer::cfg->getAIPipeConfig(player, pipe_count, id);
 }
 
-void DolphinHandle::dolphin_thread(ThreadArgs *targ)
+void DolphinHandle::dolphin_thread(ThreadArgs* targ)
 {
     printf("DH-T-: --Thread Started\n");
     ThreadArgs ta = *targ;
@@ -132,29 +116,22 @@ void DolphinHandle::dolphin_thread(ThreadArgs *targ)
         }
     }
 
-    printf("%d:Ready for input!\n", *ta._pid);
-
     // Do Input
     Trainer::cv.notify_all();
-    bool openPipe;
-    while (*ta._running)
+    sleep(10);
+    bool openPipe = (*ta._controllers).back()->ActivateSaveState();
+    printf("%d:Ready for input!\n", *ta._pid);
+
+    bool alt = true;
+    while (*ta._running && openPipe)
     {
         for (int i = 0; i < (*ta._controllers).size(); i++)
         {
-            (*ta._controllers)[i]->setButton(Button::A);
+            (*ta._controllers)[i]->setButton(alt ? Button::A : Button::None);
             openPipe = (*ta._controllers)[i]->SendState();
         }
-        if (!openPipe)
-            break;
+        alt = !alt;
         sleep(1);
-        for (int i = 0; i < (*ta._controllers).size(); i++)
-        {
-            (*ta._controllers)[i]->setButton();
-            openPipe = (*ta._controllers)[i]->SendState();
-        }
-        sleep(1);
-        if (!openPipe)
-            break;
     }
 
     // Closing, notify the trainer
@@ -189,24 +166,22 @@ bool DolphinHandle::StartDolphin(int lst)
     aiPipe += id;
 
     // Make the GCPadNew.ini
-    string GCP2 = dolphinUser + "Config/";
-    string GCP3 = dolphinUser + "GC/";
-    string GCP4 = Trainer::userDir;
-    GCP4 += "/.config/dolphin-emu/";
-    string GCP5 = Trainer::userDir;
-    GCP5 += "/.config/dolphin-emu/Config/";
+    string dolphinConfig = dolphinUser + "Config/";
     controllerINI = "";
 
+    string hotkey;
     switch (_vs)
     {
     case Human:
     case CPU:
         controllerINI += Trainer::cfg->getPlayerPipeConfig(player++);
+        hotkey = Trainer::cfg->getHotkeyINI(player, pipe_count, id);
         controllerINI += AddController(player++, pipe_count++, id);
         break;
 
     case Self:
         controllerINI = AddController(player++, pipe_count++, id);
+        hotkey = Trainer::cfg->getHotkeyINI(player, pipe_count, id);
         controllerINI += AddController(player++, pipe_count++, id);
         break;
 
@@ -217,9 +192,9 @@ bool DolphinHandle::StartDolphin(int lst)
     }
 
     // Write the pipe ini
-    GCPadNew = GCP2 + "GCPadNew.ini";
+    GCPadNew = dolphinConfig + "GCPadNew.ini";
     printf("DH: Writing %s\n", GCPadNew.c_str());
-    sprintf(buff, "mkdir %s", GCP2.c_str());
+    sprintf(buff, "mkdir %s", dolphinConfig.c_str());
     system(buff);
     FILE* fd = fopen(GCPadNew.c_str(), "w");
     if (!fd)
@@ -232,11 +207,13 @@ bool DolphinHandle::StartDolphin(int lst)
     fwrite(controllerINI.c_str(), sizeof(char), controllerINI.size(), fd);
     fclose(fd);
 
-    fd = fopen("test.txt", "w");
-    fwrite(controllerINI.c_str(), sizeof(char), controllerINI.size(), fd);
+    // Write the hotkey for savestate
+    dolphinConfig += "Hotkeys.ini";
+    fd = fopen(dolphinConfig.c_str(), "w");
+    fwrite(hotkey.c_str(), sizeof(char), hotkey.size(), fd);
     fclose(fd);
 
-    ThreadArgs *ta = new ThreadArgs;
+    ThreadArgs* ta = new ThreadArgs;
     ta->_running = &running;
     ta->_pid = &pid;
     ta->_dolphinUser = dolphinUser;
@@ -262,7 +239,7 @@ DolphinHandle::~DolphinHandle()
 {
     running = false;
     printf("DH: Closing Dolphin Handle, Closing Thread\n");
-    if(t->joinable())
+    if (t->joinable())
         t->join();
     if (targ)
         delete targ;

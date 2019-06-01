@@ -96,6 +96,41 @@ void Controller::setButton(Button btn)
 
 }
 
+string getFileName(const string& s) {
+
+    char sep = '/';
+
+#ifdef _WIN32
+    sep = '\\';
+#endif
+
+    size_t i = s.rfind(sep, s.length());
+    if (i != string::npos) {
+        return(s.substr(i + 1, s.length() - i));
+    }
+
+    return("");
+}
+
+bool Controller::ActivateSaveState()
+{
+
+    char buff[256];
+    string output;
+
+    sprintf( buff, "%s %c\n", "PRESS", 'R');
+    output = buff;
+    printf("%s: %s", getFileName(pipePath).c_str(), output.c_str());
+    if (!sendtofifo(output))
+        return false;
+    sleep(1);
+    sprintf(buff, "%s %c\n", "RELEASE", 'R');
+    output = buff;
+    printf("%s: %s", getFileName(pipePath).c_str(), output.c_str());
+
+    return sendtofifo(output);
+}
+
 void Controller::setSticks(float valX, float valY)
 {
     _MainStickX = valX;
@@ -112,7 +147,7 @@ bool Controller::CreateFifo(string inPipePath, int pipe_count)
     printf("CTRL: Creating pipe\n");
     // Make the pipe
     pipePath = inPipePath + to_string(pipe_count);
-    if(mkfifo(pipePath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == -1)
+    if (mkfifo(pipePath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == -1)
     {
         perror("CTRL: mkfifo failed");
         return false;
@@ -169,5 +204,5 @@ Controller::~Controller()
     if (remove(pipePath.c_str()) != 0)
         perror("CTRL: Error deleting pipe");
     printf("CTRL: deleted pipe\n");
-    
+
 }

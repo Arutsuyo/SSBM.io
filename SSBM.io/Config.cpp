@@ -54,6 +54,9 @@ string AIController =
 "C-Stick/Left = `Axis C X - `\n"
 "C-Stick/Right = `Axis C X + `\n";
 
+string hotkey =
+"Keys/Load State Slot 1 = `Button R`";
+
 Config::Config(VsType vType)
 {
     // Set the vs type
@@ -98,6 +101,19 @@ string Config::getAIPipeConfig(int player, int pipe_count, string id)
         pipe_count);
     string pipeOut(buff);
     pipeOut += AIController;
+    return pipeOut;
+}
+
+string Config::getHotkeyINI(int player, int pipe_count, string id)
+{
+    char buff[256];
+    sprintf(buff,
+        "[Hotkeys1]\nDevice = Pipe/%d/%s%d\n",
+        pipe_count,
+        id.c_str(),
+        pipe_count);
+    string pipeOut(buff);
+    pipeOut += hotkey;
     return pipeOut;
 }
 

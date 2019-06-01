@@ -16,7 +16,8 @@ int main()
     struct passwd* pw = getpwuid(getuid());
     Trainer::userDir = pw->pw_dir;
     Trainer::dolphinDefaultUser = Trainer::userDir + "/.local/share/dolphin-emu/";
-    Trainer::concurentThreadsSupported = std::thread::hardware_concurrency();
+    Trainer::concurentThreadsSupported = 
+        std::thread::hardware_concurrency() / 3;
     Trainer::term = false;
     printf("MAIN: Creating Trainer\n");
     Trainer trainer(VsType::Human);

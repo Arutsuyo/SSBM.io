@@ -84,6 +84,7 @@ void Trainer::runTraining()
     }
 
     int numCreate = _vs == VsType::Human ? 1 : concurentThreadsSupported;
+    //int numCreate = 1;
     printf("TRNR: Running %d Instance%s\n", numCreate, numCreate > 1 ? "s" : "" );
     for (int i = 0; i < numCreate; i++)
     {
