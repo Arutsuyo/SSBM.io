@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <sys/stat.h>
 #include <stdint.h>
-
+#include "Trainer.h"
 #include "MemoryScanner.h"
 #include "addresses.h"
 
@@ -57,21 +57,24 @@ void MemoryScanner::readytoprint(){
 void MemoryScanner::init_socket(){
 
 	struct passwd *pw = getpwuid(getuid());
-    char *path = pw->pw_dir;
-    strcat(path, "/.dolphin-emu/MemoryWatcher/MemoryWatcher");
+    //char *path = pw->pw_dir;
+    //strcat(path, "/.dolphin-emu/MemoryWatcher/MemoryWatcher");
 
+	std::string path = pw->pw_dir;
+	std::string sock_path = path+ Trainer::userDir;
 	//std::string path = pw->pw_dir;
 	//path += "/.dolphin-emu/MemoryWatcher/MemoryWatcher";
 	/*set up socket*/
+
 	socketfd = socket(AF_UNIX, SOCK_DGRAM, 0);
 	if ( socketfd < 0)
 		std::cout << "Socket file descriptor returned with " << socketfd << std::endl;
 	struct sockaddr_un addr;
 	memset(&addr, 0 , sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	unlink(path);
+	unlink(path.c_str());
 
-	strncpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
+	strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path) - 1);
 
 		if ( bind(socketfd, (struct sockaddr*)&addr, sizeof(addr)) < 0){
 			std::cout << "Error binding socket " << strerror(errno) << std::endl;
