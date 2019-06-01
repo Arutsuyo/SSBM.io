@@ -3,36 +3,32 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include "Handler.h"
+#include "Trainer.h"
+
+// Included for PW
+#include <pwd.h>
+
 
 int main()
 {
-    printf("Creating Handler\n");
-    Handler hnd(VsType::Human);
-
-    hnd.StartDolphin();
-
-    if (!hnd.IsInitialized())
-    {
-        //hnd.KillDolphin();
-        fprintf(stderr, "Handler not initialized\n");
+    printf("MAIN: Initializing statics\n");
+    // Init the static user dir
+    struct passwd* pw = getpwuid(getuid());
+    Trainer::userDir = pw->pw_dir;
+    Trainer::dolphinDefaultUser = Trainer::userDir + "/.local/share/dolphin-emu/";
+    Trainer::concurentThreadsSupported = std::thread::hardware_concurrency();
+    Trainer::term = false;
+    printf("MAIN: Creating Trainer\n");
+    Trainer trainer(VsType::Human);
+    if (!trainer.initialized)
         exit(EXIT_FAILURE);
-    }
 
-    hnd.WaitForDolphinClose();
+    printf("MAIN: Running Training Loop\n");
+    trainer.runTraining();
 
-    printf("Looping Input!\n");
-    Controller* ctrl = hnd.getController();
-    
-    while (ctrl->IsInitialized())
-    {
-        ctrl->setButton(Button::A);
-        ctrl->SendState();
-        sleep(1);
-        ctrl->setButton(Button::None);
-        ctrl->SendState();
-        sleep(5);
-    }
+    printf("MAIN: Closing Everything\n");
+    trainer.~Trainer();
 
-    printf("Closing\n");
+    printf("MAIN: Shutting Down\n\n");
+    exit(EXIT_SUCCESS);
 }
