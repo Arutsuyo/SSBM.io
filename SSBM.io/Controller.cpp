@@ -19,7 +19,6 @@ char Controller::_ButtonNames[] = {
 
 bool Controller::sendtofifo(string fifocmd)
 {
-    printf("Writing: %s", fifocmd.c_str());
     unsigned int buff_sz = strlen(fifocmd.c_str());
     if (write(fifo_fd, fifocmd.c_str(), buff_sz) < buff_sz)
     {
@@ -34,14 +33,14 @@ void sigpipe_handler(int val)
 {
     if (val != SIGPIPE)
     {
-        printf("Bad Signal Catch: %d\n", val);
+        printf("CTRL: Bad Signal Catch: %d\n", val);
         return;
     }
 
-    printf("A pipe reader was closed\n");
+    printf("CTRL: A pipe reader was closed\n");
 }
 
-bool Controller::createSigAction()
+bool createSigPipeAction()
 {
     // Create signal action
     struct sigaction sa;
@@ -81,16 +80,16 @@ string Controller::GetState()
 
 bool Controller::SendState()
 {
-    if (!initialized || !pipeOpen)
+    if (!pipeOpen)
     {
-        fprintf(stderr, "Cannot send input, please open pipe");
+        fprintf(stderr, "CTRL: Cannot send input, please open pipe");
         return false;
     }
 
     return sendtofifo(GetState());
 }
 
-void Controller::setButton(Button btn = Button::None)
+void Controller::setButton(Button btn)
 {
     for (int i = 0; i < _NUM_BUTTONS; i++)
         _Buttons[i] = i == btn ? true : false;
@@ -108,54 +107,49 @@ string Controller::GetControllerPath()
     return pipePath;
 }
 
-bool Controller::CreateFifo(string& inPipePath, int &pipe_count)
+bool Controller::CreateFifo(string inPipePath, int pipe_count)
 {
-    printf("Creating pipe\n");
+    printf("CTRL: Creating pipe\n");
     // Make the pipe
-    pipePath = inPipePath;
-    pipe_count = 0;
-    while (mkfifo(inPipePath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == -1)
+    pipePath = inPipePath + to_string(pipe_count);
+    if(mkfifo(pipePath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == -1)
     {
-        perror("mkfifo failed");
-        pipe_count++;
-        inPipePath = pipePath + to_string(pipe_count);
+        perror("CTRL: mkfifo failed");
+        return false;
     }
-    // Save the final pipe path
-    pipePath = inPipePath;
-    printf("Pipe Created: %s\n", pipePath.c_str());
+    printf("CTRL: Pipe Created: %s\n", pipePath.c_str());
+    return true;
 }
 
-bool Controller::SetControllerPath(string &inPipePath)
+bool Controller::OpenController()
 {
-    // Save the pipe path
-    pipePath = inPipePath;
-    printf("Creating pipe signal handler\n");
-    if (createSigAction())
-        perror("Could not create fifo handler");
+    printf("CTRL: Creating pipe signal handler\n");
+    if (!createSigPipeAction())
+        printf("CTRL: Could not create fifo sighandler\n");
 
     // Blocks if no reader
-    printf("Opening pipe\n");
+    printf("CTRL: Opening pipe\n");
     if ((fifo_fd = open(pipePath.c_str(), O_WRONLY)) < 0)
     {
         perror("Could not open fifo");
-        initialized = false;
+        pipeOpen = false;
         return false;
     }
     pipeOpen = true;
 
-    printf("Controller ready for input!\n");
+    printf("CTRL: Controller ready for input!\n");
 
-    initialized = true;
     return true;
 }
 
-bool Controller::IsInitialized()
+bool Controller::IsPipeOpen()
 {
-    return initialized && pipeOpen;
+    return pipeOpen;
 }
 
 Controller::Controller()
 {
+    printf("CTRL: Initializing Controller\n");
     _MainStickX = 0.5f;
     _MainStickY = 0.5f;
 
@@ -165,15 +159,15 @@ Controller::Controller()
 
 Controller::~Controller()
 {
-    printf("Destroying Controller\n");
+    printf("CTRL: Destroying Controller\n");
     if (pipeOpen)
     {
-        printf("Closing pipe\n");
+        printf("CTRL: Closing pipe\n");
         close(fifo_fd);
     }
-    printf("deleting pipe\n");
+    printf("CTRL: deleting pipe\n");
     if (remove(pipePath.c_str()) != 0)
-        perror("Error deleting pipe");
-    printf("deleted pipe\n");
+        perror("CTRL: Error deleting pipe");
+    printf("CTRL: deleted pipe\n");
     
 }

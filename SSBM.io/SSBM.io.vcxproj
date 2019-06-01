@@ -154,13 +154,15 @@
   <ItemGroup>
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="Controller.cpp" />
-    <ClCompile Include="Handler.cpp" />
+    <ClCompile Include="DolphinHandle.cpp" />
+    <ClCompile Include="Trainer.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h" />
     <ClInclude Include="Controller.h" />
-    <ClInclude Include="Handler.h" />
+    <ClInclude Include="DolphinHandle.h" />
+    <ClInclude Include="Trainer.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -12,7 +12,6 @@ class Controller
     static char _ButtonNames[];
 
     std::string pipePath;
-    bool initialized = false;
     bool pipeOpen = true;
     int fifo_fd;
 
@@ -26,9 +25,9 @@ class Controller
     bool sendtofifo(std::string fifocmd);
 
 public:
-    bool CreateFifo(std::string& inPipePath, int& pipe_count);
+    bool CreateFifo(std::string inPipePath, int pipe_count);
     std::string GetControllerPath();
-    bool SetControllerPath(std::string& inPipePath);
+    bool OpenController();
 
     // This should only be explicitly called for debug use, 
     // otherwise it's use internally to send the state
@@ -39,7 +38,7 @@ public:
 
     // Sets only the designated button to true, 
     // all other buttons will be set to false
-    void setButton(Button btn);
+    void setButton(Button btn = Button::None);
     
     /* setStick
      * float valX/Y:
@@ -47,7 +46,7 @@ public:
      */
     void setSticks(float valX = 0.5f, float valY = 0.5f);
 
-    bool IsInitialized();
+    bool IsPipeOpen();
 
     Controller();
     ~Controller();

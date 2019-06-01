@@ -20,7 +20,7 @@ public:
     std::string getAIPipeConfig(int player, int pipe_count, std::string id);
 
     bool IsInitialized();
-    Config(VsType vType);
+    Config(VsType vType = VsType::Self);
     ~Config();
 };
 

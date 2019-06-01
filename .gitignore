@@ -338,3 +338,5 @@ CMakeCache\.txt
 SSBM
 
 Makefile
+
+build/
