@@ -1,4 +1,7 @@
 #include "DolphinHandle.h"
+#include "MemoryScanner.h"
+#include "Player.h"
+#include "addresses.h"
 #include "Trainer.h"
 #include <stdlib.h>
 #include <sys/types.h>
@@ -116,6 +119,9 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
     }
 
+    MemoryScanner mem;
+
+
     // Do Input
     Trainer::cv.notify_all();
     sleep(10);
@@ -129,6 +135,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         {
             (*ta._controllers)[i]->setButton(alt ? Button::A : Button::None);
             openPipe = (*ta._controllers)[i]->SendState();
+            m.UpdateFrame();
         }
         alt = !alt;
         sleep(1);
