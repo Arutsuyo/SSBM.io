@@ -60,7 +60,7 @@ void MemoryScanner::init_socket(){
 
 	struct passwd *pw = getpwuid(getuid());
 
-	std::string sock_path =  p + "/MemoryWatcher/MemoryWatcher";
+	std::string sock_path =  p + "MemoryWatcher/MemoryWatcher";
 	std::cout << "FJKLFJDKLJFLKDJFKLDJFKLDJ" << sock_path <<std::endl;
 	//std::string path = pw->pw_dir;
 	//path += "/.dolphin-emu/MemoryWatcher/MemoryWatcher";
