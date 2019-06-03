@@ -15,14 +15,22 @@ installed this via `apt-get install dolphin-emu`.
 Doanload:
 https://www.anaconda.com/distribution/#download-section
 
-Packages:
+Update steps:
+```
+conda update conda
+conda update anaconda
+conda update python
+conda update --all
+```
+
+required Packages:
 tensorflow-gpu keras-gpu h5py zc.lockfile
 
 Enviroment setup:
 ```
 conda create --name tf-gpu
 conda activate tf-gpu
-conda install tensorflow-gpu keras-gpu
+conda install tensorflow-gpu keras-gpu h5py zc.lockfile
 ```
 
 You can test the Anaconda enviroment by using:
