@@ -69,4 +69,9 @@
   <ItemGroup>
     <Text Include="..\CMakeLists.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Python\trainer.py">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

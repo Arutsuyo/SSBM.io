@@ -11,8 +11,8 @@ https://token2shell.com/howto/x410/setting-up-wsl-for-linux-gui-apps/
 installed this via `apt-get install dolphin-emu`.
 
 
-### Anaconda ###
-Doanload:
+### Anaconda (VIA CMD) ###
+Download:
 https://www.anaconda.com/distribution/#download-section
 
 Update steps:
@@ -49,7 +49,7 @@ https://www.pugetsystems.com/labs/hpc/The-Best-Way-to-Install-TensorFlow-with-GP
 
 
 ### CUDA tollkit ###
-Doanload:
+Download:
 https://developer.nvidia.com/cuda-downloads
 
 Install Instructions:
@@ -57,7 +57,7 @@ Follow the on screen default
 
 
 ### CUDNN ###
-Doanload:
+Download:
 https://developer.nvidia.com/rdp/cudnn-download
 
 Install guide (Make sure to set up the paths correctly):
@@ -67,8 +67,11 @@ https://docs.nvidia.com/deeplearning/sdk/cudnn-install/index.html#install-window
 ## Build Instructions ##
 - Create a build folder in your prefered location
 ```
-cmake <source_root>
+# IN CMD, in the root dir
+conda activate tf-gpu
+bash
+mkdir build
+cmake ..
 make
-conda activate
 ./SSBM
 ```

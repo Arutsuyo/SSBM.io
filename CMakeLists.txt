@@ -40,5 +40,10 @@ IF(WIN32)
 ENDIF()
 add_executable(SSBM ${SOURCES} ${HEADERS})
 target_link_libraries(SSBM Threads::Threads)
-file(COPY "${CMAKE_SOURCE_DIR}/Model" DESTINATION "${CMAKE_BINARY_DIR}/")
+
+configure_file(
+	"${CMAKE_SOURCE_DIR}/Python/trainer.py"
+	"${CMAKE_BINARY_DIR}/trainer.py" 
+	COPYONLY)
 file(COPY "${CMAKE_SOURCE_DIR}/Files" DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY "${CMAKE_SOURCE_DIR}/AI" DESTINATION ${CMAKE_BINARY_DIR})

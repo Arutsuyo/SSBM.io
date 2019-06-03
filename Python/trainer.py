@@ -54,7 +54,7 @@ try:
 except:
 	debugPrint("Unable to import CuDNNLSTM, using fallback of LSTM with tanh activator.")
 	
-debugPrint("Hello! New (0) model or Load (1) model (directory: ./models/ssbm.h5) or Run (2) model (just predict mode): ")
+debugPrint("Hello! New (0) model or Load (1) model (directory: ./AI/ssbm.h5) or Run (2) model (just predict mode): ")
 
 
 class DQN:
@@ -155,8 +155,8 @@ class DQN:
 
 
 
-export_dir = os.path.join("models","ssbm.h5")
-best_file = os.path.join("models", "modelscore.txt")
+export_dir = os.path.join(os.getcwd(), "AI","ssbm.h5")
+best_file = os.path.join(os.getcwd(), "AI", "modelscore.txt")
 choice = sys.stdin.readline()[:-1]
 if choice != '0' and choice != '1' and choice != '2':
 	debugPrint("That was neither! Exiting.")
