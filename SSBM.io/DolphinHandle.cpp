@@ -94,7 +94,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
             ta._dolphinUser.c_str(),
             NULL);
 
-        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+        fprintf(stderr, "%s:%d-T\t%s: %s\n", FILENM, __LINE__,
             "execlp", strerror(errno));
         exit(EXIT_FAILURE);
     } // child will not exit this block
@@ -104,31 +104,29 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     // Check if Fork Failed
     if (*ta._pid == -1)
     {
-        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+        fprintf(stderr, "%s:%d-T\t%s: %s\n", FILENM, __LINE__,
             "execlp", strerror(errno));
         *ta._running = false;
         return;
     }
 
-    printf("%s:%d-T%d: Child successfully launched\n",
+    printf("%s:%d-T%d\tChild successfully launched\n",
         FILENM, __LINE__, *ta._pid);
 
     // Do this AFTER launching Dolphin, otherwise it will block
-    printf("%s:%d-T%d: Opening controller\n",
+    printf("%s:%d-T%d\tOpening controllers\n",
         FILENM, __LINE__, *ta._pid);
-    printf("%d:\n", *ta._pid);
     std::vector<TensorHandler*> tHandles;
     for (int i = 0; i < (*ta._controllers).size(); i++)
     {
-        printf("%s:%d-T%d: Opening Controller %d\n",
+        printf("%s:%d-T%d\tOpening Controller %d\n",
             FILENM, __LINE__, *ta._pid, i);
         if (!(*ta._controllers)[i]->OpenController())
         {
             *ta._running = false;
             return;
         }
-
-        printf("%s:%d-T%d: Linking Controller with Tensor\n",
+        printf("%s:%d-T%d\tLinking Controller with Tensor\n",
             FILENM, __LINE__, *ta._pid);
         TensorHandler* th = new TensorHandler;
         th->CreatePipes((*ta._controllers)[i]);
@@ -142,18 +140,34 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         //true;
         (*ta._controllers).back()->ActivateSaveState();
 
-    printf("%s:%d-T%d: Creating Memory Watcher!\n",
+    printf("%s:%d-T%d\tCreating Memory Watcher!\n",
         FILENM, __LINE__, *ta._pid);
-    MemoryScanner mem(ta._dolphinUser);
+    MemoryScanner mem = MemoryScanner(ta._dolphinUser);
+    if (mem.success == false) {
+        fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+            "Failed to initialize Memory Scanner");
+        return;
+    }
 
     int loopLimit = 20;
-    while (*ta._running && openPipe && loopLimit--)
+    sleep(10); // TODO: Adjust memory tracker to detect the main menu
+    bool openPipe = (*ta._controllers).back()->ActivateSaveState();
+
+    printf("%s:%d\tReady for input!\n",
+        FILENM, __LINE__, *ta._pid);
+    int memory_update;
+    bool openSocket = true;
+    while (*ta._running && openPipe && openSocket && loopLimit--)
     {
-        mem.UpdatedFrame();
-        for (int i = 0; i < tHandles.size(); i++)
+        if (!mem.UpdatedFrame())
         {
-            openPipe = tHandles[i]->MakeExchange(&mem);
+            fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+                "Memory update failed");
+            break;
         }
+
+        for (int i = 0; i < tHandles.size(); i++)
+            openPipe = tHandles[i]->MakeExchange(&mem);
     }
 
     // Closing, notify the trainer
@@ -228,7 +242,7 @@ bool DolphinHandle::StartDolphin(int lst)
         break;
     }
 
-    // Write the hotkey for savestate
+    // Write the hotkey for save state
     dolphinConfig += "Hotkeys.ini";
 
     if (!WriteToFile(GCPadNew, controllerINI))

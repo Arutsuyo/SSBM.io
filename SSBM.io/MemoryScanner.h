@@ -5,25 +5,24 @@
 
 class MemoryScanner {
 
-    Player p1;
-    Player p2;
+	Player p1;
+	Player p2;
 
-    void init_socket();
-    std::string userPath;
-    int socketfd = -1;
+	int socketfd = -1;
 
+	std::string userPath;
+
+	bool init_socket();
 public:
+	bool success = false;
 
-    MemoryScanner(std::string s);
+	// 0: Player1 1: Player2
+	Player GetPlayer(bool pl);
+	bool UpdatedFrame();
+	void print();
 
-    int UpdatedFrame();
-
-    // 0: Player1 1: Player2
-    Player GetPlayer(bool pl);
-
-    void print();
+	MemoryScanner(std::string s);
+	~MemoryScanner();
 };
-
-
 
 #endif
