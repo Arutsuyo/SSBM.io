@@ -25,7 +25,7 @@ bool Controller::sendtofifo(std::string fifocmd)
     if (write(fifo_fd, fifocmd.c_str(), buff_sz) < buff_sz)
     {
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "write", strerror(errno));
+            "--ERROR:write", strerror(errno));
         pipeOpen = false;
         return false;
     }
@@ -37,7 +37,7 @@ void sigpipe_handler(int val)
     if (val != SIGPIPE)
     {
         fprintf(stderr, "%s:%d: %s\n", FILENM, __LINE__,
-            "Wrong Signal Caught");
+            "--ERROR:Wrong Signal Caught");
         return;
     }
 
@@ -54,7 +54,7 @@ bool createSigPipeAction()
     if (sigaction(SIGPIPE, &sa, NULL) == -1)
     {
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "sigaction", strerror(errno));
+            "--ERROR:sigaction", strerror(errno));
         return false;
     }
     return true;
@@ -87,7 +87,8 @@ bool Controller::SendState()
 {
     if (!pipeOpen)
     {
-        fprintf(stderr, "CTRL: Cannot send input, please open pipe");
+        fprintf(stderr, "%s:%d: %s\n", FILENM, __LINE__,
+            "--ERROR:Cannot send input, please open pipe");
         return false;
     }
 
@@ -163,7 +164,7 @@ bool Controller::CreateFifo(std::string inPipePath, int pipe_count)
     if (mkfifo(pipePath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == -1)
     {
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "mkfifo", strerror(errno));
+            "--ERROR:mkfifo", strerror(errno));
         return false;
     }
     printf("%s:%d Pipe Created: %s\n", FILENM, __LINE__, pipePath.c_str());
@@ -181,7 +182,7 @@ bool Controller::OpenController()
     if ((fifo_fd = open(pipePath.c_str(), O_WRONLY)) < 0)
     {
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "open", strerror(errno));
+            "--ERROR:open", strerror(errno));
         pipeOpen = false;
         return false;
     }
@@ -214,7 +215,7 @@ Controller::~Controller()
     printf("%s:%d deleting pipe\n", FILENM, __LINE__);
     if (remove(pipePath.c_str()) != 0)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "remove", strerror(errno));
+            "--ERROR:remove", strerror(errno));
     
     printf("%s:%d deleted pipe\n", FILENM, __LINE__);
 }

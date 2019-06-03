@@ -56,12 +56,11 @@ bool createSigIntAction()
     if (sigaction(SIGINT, &sa, NULL) == -1)
     {
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "sigaction", strerror(errno));
+            "--ERROR:sigaction", strerror(errno));
         return false;
     }
 
     printf("%s:%d\tSignal Handler Created\n", FILENM, __LINE__);
-    printf("%s:%d\t--Stop the Trainer with CTRL+C\n", FILENM, __LINE__);
     return true;
 }
 
@@ -97,7 +96,7 @@ void Trainer::runTraining()
     }
 
     printf("%s:%d\tEntering Management Loop\n", FILENM, __LINE__);
-
+    printf("%s:%d\t--Stop the Trainer with CTRL+C\n", FILENM, __LINE__);
     while (!term)
     {
         std::unique_lock<std::mutex> lk(mut);
@@ -140,7 +139,7 @@ void Trainer::runTraining()
                 printf("%s:%d\tStarting(1) Dolphin Instance %d\n", FILENM, __LINE__, i);
                 if (!dh->StartDolphin(i))
                 {
-                    fprintf(stderr, "%s:%d\tERROR: Dolphin Failed to start(1)", FILENM, __LINE__);
+                    fprintf(stderr, "%s:%d\t--ERROR:Dolphin Failed to start(1)", FILENM, __LINE__);
                     term = true;
                     break;
                 }
@@ -168,7 +167,7 @@ Trainer::Trainer(VsType vs)
         if (_isoidx > n)
         {
             fprintf(stderr, "%s:%d: %s\n", FILENM, __LINE__,
-                "ERROR: ISO not found");
+                "--ERROR:ISO not found");
             initialized = false;
             return;
         }

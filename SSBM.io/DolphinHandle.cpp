@@ -36,7 +36,7 @@ bool WriteToFile(std::string filename, std::string contents)
     if (!fd)
     {
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "fopen", strerror(errno));
+            "--ERROR:fopen", strerror(errno));
         return false;
     }
     fwrite(contents.c_str(), sizeof(char), contents.size(), fd);
@@ -95,7 +95,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
             NULL);
 
         fprintf(stderr, "%s:%d-T\t%s: %s\n", FILENM, __LINE__,
-            "execlp", strerror(errno));
+            "--ERROR:execlp", strerror(errno));
         exit(EXIT_FAILURE);
     } // child will not exit this block
 
@@ -105,7 +105,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     if (*ta._pid == -1)
     {
         fprintf(stderr, "%s:%d-T\t%s: %s\n", FILENM, __LINE__,
-            "execlp", strerror(errno));
+            "--ERROR:execlp", strerror(errno));
         *ta._running = false;
         return;
     }
@@ -133,27 +133,27 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         tHandles.push_back(th);
     }
 
-    // Do Input
-    Trainer::cv.notify_all();
-    sleep(10); // Make sure that dolphin has loaded into the menu
-    bool openPipe =
-        //true;
-        (*ta._controllers).back()->ActivateSaveState();
-
     printf("%s:%d-T%d\tCreating Memory Watcher!\n",
         FILENM, __LINE__, *ta._pid);
     MemoryScanner mem = MemoryScanner(ta._dolphinUser);
     if (mem.success == false) {
         fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
-            "Failed to initialize Memory Scanner");
+            "--ERROR:Failed to initialize Memory Scanner");
         return;
     }
 
-    int loopLimit = 20;
+    // Do Input
+    Trainer::cv.notify_all();
+    printf("%s:%d-T%d\tPausing to load Menu\n",
+        FILENM, __LINE__, *ta._pid);
     sleep(10); // TODO: Adjust memory tracker to detect the main menu
-    bool openPipe = (*ta._controllers).back()->ActivateSaveState();
-
-    printf("%s:%d\tReady for input!\n",
+    printf("%s:%d-T%d\tLoading Savestate\n",
+        FILENM, __LINE__, *ta._pid);
+    int loopLimit = 20;
+    bool openPipe =
+        //true;
+        (*ta._controllers).back()->ActivateSaveState();
+    printf("%s:%d-T%d\tReady for input!\n",
         FILENM, __LINE__, *ta._pid);
     int memory_update;
     bool openSocket = true;
@@ -162,7 +162,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         if (!mem.UpdatedFrame())
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
-                "Memory update failed");
+                "--ERROR:Memory update failed");
             break;
         }
 
@@ -237,7 +237,8 @@ bool DolphinHandle::StartDolphin(int lst)
         break;
 
     default:
-        fprintf(stderr, "DH: Invalid VS Type: %d", _vs);
+        fprintf(stderr, "%s:%d\t%s %d\n", FILENM, __LINE__,
+            "--ERROR:Invalid VS Type:", _vs);
         return false;
         break;
     }

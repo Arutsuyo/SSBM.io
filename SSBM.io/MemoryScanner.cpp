@@ -36,7 +36,7 @@ MemoryScanner::~MemoryScanner() {
     /*shutdown the socket*/
     if (shutdown(this->socketfd, 2) < 0)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "shutdown", strerror(errno));
+            "--ERROR:shutdown", strerror(errno));
 }
 
 Player MemoryScanner::GetPlayer(bool pl)
@@ -73,7 +73,7 @@ bool MemoryScanner::init_socket() {
     /*set up socket*/
     if ((socketfd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "socket", strerror(errno));
+            "--ERROR:socket", strerror(errno));
 
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
@@ -85,7 +85,7 @@ bool MemoryScanner::init_socket() {
     if (bind(socketfd, (struct sockaddr*) & addr, sizeof(addr)) < 0)
     {
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "bind", strerror(errno));
+            "--ERROR:bind", strerror(errno));
         return false;
     }
     return true;
@@ -109,7 +109,7 @@ bool MemoryScanner::UpdatedFrame() {
     socklen_t sock_len;
     if (recvfrom(socketfd, buffer, sizeof(buffer), 0, &recvsock, &sock_len) == -1)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "recvfrom", strerror(errno));
+            "--ERROR:recvfrom", strerror(errno));
 
     printf("%s:%d\tParsing Buffer\n", FILENM, __LINE__);
     //puts(buffer);
