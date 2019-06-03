@@ -5,13 +5,6 @@
 
 class MemoryScanner {
 
-public:
-
-    MemoryScanner(std::string s);
-
-    int UpdatedFrame();
-
-private:
     Player p1;
     Player p2;
 
@@ -19,11 +12,16 @@ private:
     std::string userPath;
     int socketfd = -1;
 
-    void print();
+public:
+
+    MemoryScanner(std::string s);
+
+    int UpdatedFrame();
 
     // 0: Player1 1: Player2
     Player GetPlayer(bool pl);
 
+    void print();
 };
 
 

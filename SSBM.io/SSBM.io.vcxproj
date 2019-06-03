@@ -156,6 +156,7 @@
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="DolphinHandle.cpp" />
     <ClCompile Include="MemoryScanner.cpp" />
+    <ClCompile Include="TensorHandler.cpp" />
     <ClCompile Include="Trainer.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -165,8 +166,13 @@
     <ClInclude Include="Controller.h" />
     <ClInclude Include="DolphinHandle.h" />
     <ClInclude Include="MemoryScanner.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="TensorHandler.h" />
     <ClInclude Include="Trainer.h" />
     <ClInclude Include="Types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\CMakeLists.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

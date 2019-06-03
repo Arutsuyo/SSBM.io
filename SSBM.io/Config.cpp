@@ -7,10 +7,10 @@
 #define _DUAL_CORE_DEFAULT 1
 #define _GFX_DEFAULT false
 #define _FULLSCREEN_DEFAULT false
+#define FILENM "CFG"
 
-using namespace std;
-
-string PlayerKeyboard =
+#pragma region UtilStrings
+std::string PlayerKeyboard =
 "Device = Xlib/0/Keyboard Mouse\n"
 "Buttons/A = V\n"
 "Buttons/B = C\n"
@@ -32,7 +32,7 @@ string PlayerKeyboard =
 "D-Pad/Left = `Button D_LEFT`\n"
 "D-Pad/Right = `Button D_RIGHT`\n";
 
-string AIController =
+std::string AIController =
 "Buttons/A = `Button A`\n"
 "Buttons/B = `Button B`\n"
 "Buttons/X = `Button X`\n"
@@ -54,7 +54,7 @@ string AIController =
 "C-Stick/Left = `Axis C X - `\n"
 "C-Stick/Right = `Axis C X + `\n";
 
-string memlocation =
+std::string memlocation =
 "004530E0\n"
 "00453F70\n"
 "0045310E\n"
@@ -101,8 +101,9 @@ string memlocation =
 "01118270\n"
 "00479D60\n"
 "\n";
+#pragma endregion UtilStrings
 
-string hotkey =
+std::string hotkey =
 "Keys/Load State Slot 1 = `Button R`";
 
 Config::Config(VsType vType)
@@ -128,18 +129,19 @@ Config::Config(VsType vType)
     initialized = true;
 }
 
-string Config::getPlayerPipeConfig(int player)
+std::string Config::getPlayerPipeConfig(int player)
 {
     char buff[256];
-    printf("CFG: Creating Keyboard Player: %d\n", player);
+    printf("%s:%d\tCreating Keyboard Player: %d\n", FILENM, __LINE__, player + 1);
     sprintf(buff, "[GCPad%d]\n", player + 1);
-    string pipeOut(buff);
+    std::string pipeOut(buff);
     pipeOut += PlayerKeyboard;
     return pipeOut;
 }
 
-string Config::getAIPipeConfig(int player, int pipe_count, string id)
+std::string Config::getAIPipeConfig(int player, int pipe_count, std::string id)
 {
+    printf("%s:%d\tCreating AI Player: %d\n", FILENM, __LINE__, player + 1);
     char buff[256];
     sprintf(buff,
         "[GCPad%d]\nDevice = Pipe/%d/%s%d\n",
@@ -147,20 +149,21 @@ string Config::getAIPipeConfig(int player, int pipe_count, string id)
         pipe_count,
         id.c_str(),
         pipe_count);
-    string pipeOut(buff);
+    std::string pipeOut(buff);
     pipeOut += AIController;
     return pipeOut;
 }
 
-string Config::getHotkeyINI(int player, int pipe_count, string id)
+std::string Config::getHotkeyINI(int player, int pipe_count, std::string id)
 {
+    printf("%s:%d\tCreating Hotkey INI on AI %d\n", FILENM, __LINE__, player + 1);
     char buff[256];
     sprintf(buff,
         "[Hotkeys1]\nDevice = Pipe/%d/%s%d\n",
         pipe_count,
         id.c_str(),
         pipe_count);
-    string pipeOut(buff);
+    std::string pipeOut(buff);
     pipeOut += hotkey;
     return pipeOut;
 }
@@ -175,10 +178,11 @@ bool Config::IsInitialized()
     return initialized;
 }
 
-string Config::getConfig()
+std::string Config::getConfig()
 {
+    printf("%s:%d\tConstructing Dolphin.INI\n", FILENM, __LINE__);
     char buff[256];
-    string output = string();
+    std::string output = std::string();
     output += 
         "[Core]\n"
         "DSPHLE = True\n"
@@ -219,5 +223,5 @@ string Config::getConfig()
 
 Config::~Config()
 {
-    printf("CFG: Destroying Config\n");
+    printf("%s:%d\tDestroying CFG\n", FILENM, __LINE__);
 }

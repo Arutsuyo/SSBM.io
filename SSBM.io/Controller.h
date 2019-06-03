@@ -6,6 +6,13 @@
 #include <stdio.h>
 #include "Types.h"
 
+struct Controls
+{
+    // Piped input sticks go from 0 to 1. 0.5 is centered
+    float stick[2];
+    bool buttons[_NUM_BUTTONS];
+};
+
 class Controller
 {
     // The order must match enum Button
@@ -14,15 +21,14 @@ class Controller
     std::string pipePath;
     bool pipeOpen = true;
     int fifo_fd;
-
-    // Piped input sticks go from 0 to 1. 0.5 is centered
-    float _MainStickX;
-    float _MainStickY;
-    bool _Buttons[_NUM_BUTTONS];
+    Controls ct;
 
     bool sendtofifo(std::string fifocmd);
 
 public:
+    // false:Player 1 True:Player2
+    bool player;
+
     bool CreateFifo(std::string inPipePath, int pipe_count);
     std::string GetControllerPath();
     bool OpenController();
@@ -44,10 +50,12 @@ public:
      */
     void setSticks(float valX = 0.5f, float valY = 0.5f);
 
+    void setControls(Controls inCt);
+
     bool IsPipeOpen();
     bool ActivateSaveState();
 
-    Controller();
+    Controller(bool plyr);
     ~Controller();
 
 };

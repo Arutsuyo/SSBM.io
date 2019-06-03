@@ -1,15 +1,16 @@
 #include "Trainer.h"
 #include <fstream>
 #include <signal.h>
-
-using namespace std;
+#include <stdio.h>
+#include <cstring>
+#define FILENM "TRNR"
 
 bool Trainer::term;
 
 Config* Trainer::cfg;
 
 // ISO locations, will step through
-string Trainer::_ssbmisoLocs[] = {
+std::string Trainer::_ssbmisoLocs[] = {
     "/mnt/f/Program Files/Dolphin-x64/iso/ssbm.gcm",
     "/mnt/c/Program Files/Dolphin-x64/iso/ssbm.gcm",
     "/mnt/c/User/Nara/Desktop/Dolphin-x64/iso/ssbm.gcm",
@@ -26,7 +27,7 @@ std::condition_variable Trainer::cv;
 unsigned Trainer::concurentThreadsSupported;
 
 /* Helper Functions */
-inline bool exists_test(const string& name) {
+inline bool exists_test(const std::string& name) {
     if (FILE * file = fopen(name.c_str(), "r")) {
         fclose(file);
         return true;
@@ -41,7 +42,7 @@ void sigint_handle(int val)
     if (val != SIGINT)
         return;
 
-    printf("Received SIGINT, closing trainer\n");
+    printf("%s:%d\tReceived SIGINT, closing trainer\n", FILENM, __LINE__);
     Trainer::term = true;
 }
 
@@ -54,30 +55,32 @@ bool createSigIntAction()
     sigemptyset(&sa.sa_mask);
     if (sigaction(SIGINT, &sa, NULL) == -1)
     {
-        fprintf(stderr, "sigaction Failed\n");
-        return true;
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "sigaction", strerror(errno));
+        return false;
     }
-    return false;
+
+    printf("%s:%d\tSignal Handler Created\n", FILENM, __LINE__);
+    printf("%s:%d\t--Stop the Trainer with CTRL+C\n", FILENM, __LINE__);
+    return true;
 }
 
 void Trainer::runTraining()
 {
-    printf("TRNR: Initializing Training.\n"
-        "TRNR: Press ctrl+c at any time to shut down training\n");
+    printf("%s:%d\tInitializing Training.\n", FILENM, __LINE__);
 
-    if (!createSigIntAction())
-        printf("TRNR: Could not create SIGINT handler\n");
-    
+    createSigIntAction();
+
     switch (_vs)
     {
     case Self:
-        printf("TRNR: Playing vs Self\n");
+        printf("%s:%d\tPlaying vs Self\n", FILENM, __LINE__);
         break;
     case CPU:
-        printf("TRNR: Playing vs CPU\n");
+        printf("%s:%d\tPlaying vs CPU\n", FILENM, __LINE__);
         break;
     case Human:
-        printf("TRNR: Playing vs Human\n");
+        printf("%s:%d\tPlaying vs Human\n", FILENM, __LINE__);
         break;
     default:
         break;
@@ -85,33 +88,33 @@ void Trainer::runTraining()
 
     int numCreate = _vs == VsType::Human ? 1 : concurentThreadsSupported;
     //int numCreate = 1;
-    printf("TRNR: Running %d Instance%s\n", numCreate, numCreate > 1 ? "s" : "" );
+    printf("%s:%d\tRunning %d Instance%s\n", FILENM, __LINE__, numCreate, numCreate > 1 ? "s" : "" );
     for (int i = 0; i < numCreate; i++)
     {
-        printf("TRNR: Creating Handler %d\n", i);
+        printf("%s:%d\tCreating Handler %d\n", FILENM, __LINE__, i);
         DolphinHandle *dh = new DolphinHandle(_vs);
         _Dhandles.push_back(dh);
     }
 
-    printf("TRNR: Entering Management Loop\n");
+    printf("%s:%d\tEntering Management Loop\n", FILENM, __LINE__);
 
     while (!term)
     {
-        unique_lock<mutex> lk(mut);
+        std::unique_lock<std::mutex> lk(mut);
         for (int i = 0; i < numCreate; i++)
         {
             DolphinHandle* dh = _Dhandles[i];
             if (!dh->started)
             {
                 lk.unlock();
-                printf("TRNR: Starting(0) Dolphin Instance %d\n", i);
+                printf("%s:%d\tStarting(0) Dolphin Instance %d\n", FILENM, __LINE__, i);
                 if (!dh->StartDolphin(i))
                 {
-                    printf("TRNR: --ERROR: Dolphin Failed to start(0)\n");
+                    printf("%s:%d\t--ERROR: Dolphin Failed to start(0)\n", FILENM, __LINE__);
                     term = true;
                     break;
                 }
-                printf("TRNR: Dolphin Instance %d Started(0)\n", i);
+                printf("%s:%d\tDolphin Instance %d Started(0)\n", FILENM, __LINE__, i);
                 lk.lock();
             }
         }
@@ -119,14 +122,14 @@ void Trainer::runTraining()
         if (term)
             break;
 
-        printf("TRNR: Checking if running\n");
+        printf("%s:%d\tChecking if running\n", FILENM, __LINE__);
         for (int i = 0; i < numCreate; i++)
         {
             DolphinHandle* dh = _Dhandles[i];
             // Check if the match finished
             if (!dh->running && dh->started)
             {
-                printf("TRNR: Dolphin Instance %d stopped, restarting\n", i);
+                printf("%s:%d\tDolphin Instance %d stopped, restarting\n", FILENM, __LINE__, i);
                 dh->~DolphinHandle();
                 // Remove the handler, calling the destructor
                 _Dhandles.erase(_Dhandles.begin() + i);
@@ -134,14 +137,14 @@ void Trainer::runTraining()
                 // push a new one
                 DolphinHandle* dh = new DolphinHandle(_vs);
                 lk.unlock();
-                printf("TRNR: Starting(1) Dolphin Instance %d\n", i);
+                printf("%s:%d\tStarting(1) Dolphin Instance %d\n", FILENM, __LINE__, i);
                 if (!dh->StartDolphin(i))
                 {
-                    printf("TRNR: --ERROR: Dolphin Failed to start(1)");
+                    fprintf(stderr, "%s:%d\tERROR: Dolphin Failed to start(1)", FILENM, __LINE__);
                     term = true;
                     break;
                 }
-                printf("TRNR: Dolphin Instance %d Started(1)\n", i);
+                printf("%s:%d\tDolphin Instance %d Started(1)\n", FILENM, __LINE__, i);
                 _Dhandles.push_back(dh);
                 lk.lock();
             }
@@ -150,7 +153,7 @@ void Trainer::runTraining()
         if (term)
             break;
 
-        printf("TRNR: Waiting for notification\n");
+        printf("%s:%d\tWaiting for notification\n", FILENM, __LINE__);
         // Lock the mutex and wait for the condition variable
         cv.wait(lk);
     }
@@ -164,18 +167,19 @@ Trainer::Trainer(VsType vs)
         _isoidx++;
         if (_isoidx > n)
         {
-            fprintf(stderr, "TRNR: ERROR: ISO not found\n");
+            fprintf(stderr, "%s:%d: %s\n", FILENM, __LINE__,
+                "ERROR: ISO not found");
             initialized = false;
             return;
         }
-        printf("TRNR: Testing for ISO:\n\t%s\n", _ssbmisoLocs[_isoidx].c_str());
+        printf("%s:%d\tTesting for ISO:\n\t%s\n", FILENM, __LINE__, _ssbmisoLocs[_isoidx].c_str());
     } while (!exists_test(_ssbmisoLocs[_isoidx]));
 
 
     _vs = vs;
     if (!cfg)
     {
-        printf("TRNR: Creating Config\n");
+        printf("%s:%d\tCreating Config\n", FILENM, __LINE__);
         cfg = new Config(_vs);
     }
 
@@ -184,7 +188,7 @@ Trainer::Trainer(VsType vs)
 
 Trainer::~Trainer()
 {
-    printf("TRNR: Trainer dying\n");
+    printf("%s:%d\tTrainer dying\n", FILENM, __LINE__);
     if (cfg)
         cfg->~Config();
 

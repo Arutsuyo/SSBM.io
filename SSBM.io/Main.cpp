@@ -7,11 +7,11 @@
 
 // Included for PW
 #include <pwd.h>
-
+#define FILENM "Main"
 
 int main()
 {
-    printf("MAIN: Initializing statics\n");
+    printf("%s:%d Initializing statics\n", FILENM, __LINE__);
     // Init the static user dir
     struct passwd* pw = getpwuid(getuid());
     Trainer::userDir = pw->pw_dir;
@@ -20,17 +20,17 @@ int main()
         std::thread::hardware_concurrency() / 3;
     Trainer::term = false;
 
-    printf("MAIN: Creating Trainer\n");
+    printf("%s:%d Creating Trainer\n", FILENM, __LINE__);
     Trainer trainer(VsType::Human);
     if (!trainer.initialized)
         exit(EXIT_FAILURE);
 
-    printf("MAIN: Running Training Loop\n");
+    printf("%s:%d Running Training Loop\n", FILENM, __LINE__);
     trainer.runTraining();
 
-    printf("MAIN: Closing Everything\n");
+    printf("%s:%d Closing Everything\n", FILENM, __LINE__);
     trainer.~Trainer();
 
-    printf("MAIN: Shutting Down\n\n");
+    printf("%s:%d Shutting Down\n", FILENM, __LINE__);
     exit(EXIT_SUCCESS);
 }

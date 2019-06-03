@@ -24,8 +24,6 @@ class DolphinHandle
     // Important Locations
     std::string dolphinUser;
     std::string aiPipe;
-    std::string GCPadNew;
-    std::string controllerINI;
 
     void CopyBaseFiles();
     std::string AddController(int player, int pipe_count, std::string id);

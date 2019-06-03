@@ -1,6 +1,6 @@
 #pragma once
 #include "MemoryScanner.h"
-#include "Player.h"
+#include "Controller.h"
 
 class TensorHandler
 {
@@ -10,18 +10,21 @@ class TensorHandler
     int pipeToPy[2];
     int pipeFromPy[2];
 
+    Controller* ctrl;
+
     // Pipe interactions
-    void SendToPipe(Player& ai, Player& enemy);
+    void SendToPipe(Player ai, Player enemy);
     std::string ReadFromPipe();
+    bool handleController(std::string tensor);
 
 public:
     // Must be called before exchanges can be made
-    bool CreatePipes();
+    bool CreatePipes(Controller* ai);
 
     // Returns the output from the model in the following format: 
     // 
     // If there's an error, returns ""
-    std::string MakeExchange(Player ai, Player enemy);
+    bool MakeExchange(MemoryScanner *mem);
 
     TensorHandler();
     ~TensorHandler();

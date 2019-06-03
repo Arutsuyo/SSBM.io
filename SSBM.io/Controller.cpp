@@ -7,7 +7,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
-using namespace std;
+#include <string>
+#define FILENM "CTRL"
 
 char Controller::_ButtonNames[] = {
         'A',
@@ -17,12 +18,14 @@ char Controller::_ButtonNames[] = {
         'L'
 };
 
-bool Controller::sendtofifo(string fifocmd)
+bool Controller::sendtofifo(std::string fifocmd)
 {
+    printf("%s:%d Writing to FIFO\n", FILENM, __LINE__);
     unsigned int buff_sz = strlen(fifocmd.c_str());
     if (write(fifo_fd, fifocmd.c_str(), buff_sz) < buff_sz)
     {
-        perror("Error writing to fifo");
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "write", strerror(errno));
         pipeOpen = false;
         return false;
     }
@@ -33,11 +36,12 @@ void sigpipe_handler(int val)
 {
     if (val != SIGPIPE)
     {
-        printf("CTRL: Bad Signal Catch: %d\n", val);
+        fprintf(stderr, "%s:%d: %s\n", FILENM, __LINE__,
+            "Wrong Signal Caught");
         return;
     }
 
-    printf("CTRL: A pipe reader was closed\n");
+    printf("%s:%d A pipe was closed\n", FILENM, __LINE__);
 }
 
 bool createSigPipeAction()
@@ -49,19 +53,20 @@ bool createSigPipeAction()
     sigemptyset(&sa.sa_mask);
     if (sigaction(SIGPIPE, &sa, NULL) == -1)
     {
-        fprintf(stderr, "sigaction Failed\n");
-        return true;
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "sigaction", strerror(errno));
+        return false;
     }
-    return false;
+    return true;
 }
 
-string Controller::GetState()
+std::string Controller::GetState()
 {
     char buff[256];
-    string output = string();
+    std::string output = std::string();
 
     // Main Stick
-    sprintf(buff, "SET MAIN %.2f %.2f\n", _MainStickX, _MainStickY);
+    sprintf(buff, "SET MAIN %.2f %.2f\n", ct.stick[0], ct.stick[0]);
     output += buff;
 
     // buttons
@@ -70,7 +75,7 @@ string Controller::GetState()
         sprintf(
             buff,
             "%s %c \n",
-            _Buttons[i] ? "PRESS" : "RELEASE",
+            ct.buttons[i] ? "PRESS" : "RELEASE",
             _ButtonNames[i]);
         output += buff;
     }
@@ -92,11 +97,11 @@ bool Controller::SendState()
 void Controller::setButton(Button btn)
 {
     for (int i = 0; i < _NUM_BUTTONS; i++)
-        _Buttons[i] = i == btn ? true : false;
+        ct.buttons[i] = i == btn ? true : false;
 
 }
 
-string getFileName(const string& s) {
+std::string getFileName(const std::string& s) {
 
     char sep = '/';
 
@@ -105,7 +110,7 @@ string getFileName(const string& s) {
 #endif
 
     size_t i = s.rfind(sep, s.length());
-    if (i != string::npos) {
+    if (i != std::string::npos) {
         return(s.substr(i + 1, s.length() - i));
     }
 
@@ -114,66 +119,75 @@ string getFileName(const string& s) {
 
 bool Controller::ActivateSaveState()
 {
-
+    printf("%s:%d Activating Save State\n", FILENM, __LINE__);
     char buff[256];
-    string output;
+    std::string output;
 
-    sprintf( buff, "%s %c\n", "PRESS", 'R');
+    sprintf(buff, "%s %c\n", "PRESS", 'R');
     output = buff;
-    printf("%s: %s", getFileName(pipePath).c_str(), output.c_str());
+    printf("%s:%d %s %s\n", FILENM, __LINE__,
+        getFileName(pipePath).c_str(), output.c_str());
     if (!sendtofifo(output))
         return false;
+
     sleep(1);
     sprintf(buff, "%s %c\n", "RELEASE", 'R');
     output = buff;
-    printf("%s: %s", getFileName(pipePath).c_str(), output.c_str());
+    printf("%s:%d %s %s\n", FILENM, __LINE__,
+        getFileName(pipePath).c_str(), output.c_str());
 
     return sendtofifo(output);
 }
 
 void Controller::setSticks(float valX, float valY)
 {
-    _MainStickX = valX;
-    _MainStickY = valY;
+    ct.stick[0] = valX;
+    ct.stick[1] = valY;
 }
 
-string Controller::GetControllerPath()
+void Controller::setControls(Controls inCt)
+{
+    ct = inCt;
+}
+
+std::string Controller::GetControllerPath()
 {
     return pipePath;
 }
 
-bool Controller::CreateFifo(string inPipePath, int pipe_count)
+bool Controller::CreateFifo(std::string inPipePath, int pipe_count)
 {
-    printf("CTRL: Creating pipe\n");
+    printf("%s:%d Creating pipe\n", FILENM, __LINE__);
     // Make the pipe
-    pipePath = inPipePath + to_string(pipe_count);
+    pipePath = inPipePath + std::to_string(pipe_count);
     if (mkfifo(pipePath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) == -1)
     {
-        perror("CTRL: mkfifo failed");
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "mkfifo", strerror(errno));
         return false;
     }
-    printf("CTRL: Pipe Created: %s\n", pipePath.c_str());
+    printf("%s:%d Pipe Created: %s\n", FILENM, __LINE__, pipePath.c_str());
     return true;
 }
 
 bool Controller::OpenController()
 {
-    printf("CTRL: Creating pipe signal handler\n");
+    printf("%s:%d Creating pipe signal handler\n", FILENM, __LINE__);
     if (!createSigPipeAction())
         printf("CTRL: Could not create fifo sighandler\n");
 
     // Blocks if no reader
-    printf("CTRL: Opening pipe\n");
+    printf("%s:%d Opening pipe\n", FILENM, __LINE__);
     if ((fifo_fd = open(pipePath.c_str(), O_WRONLY)) < 0)
     {
-        perror("Could not open fifo");
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "open", strerror(errno));
         pipeOpen = false;
         return false;
     }
     pipeOpen = true;
 
-    printf("CTRL: Controller ready for input!\n");
-
+    printf("%s:%d Controller ready for input\n", FILENM, __LINE__);
     return true;
 }
 
@@ -182,27 +196,25 @@ bool Controller::IsPipeOpen()
     return pipeOpen;
 }
 
-Controller::Controller()
+Controller::Controller(bool plyr) :
+    player(plyr),
+    ct{ 0.5f, 0.5f, false, false, false, false, false }
 {
-    printf("CTRL: Initializing Controller\n");
-    _MainStickX = 0.5f;
-    _MainStickY = 0.5f;
-
-    for (int i = 0; i < _NUM_BUTTONS; i++)
-        _Buttons[i] = false;
+    printf("%s:%d Controller Created\n", FILENM, __LINE__);
 }
 
 Controller::~Controller()
 {
-    printf("CTRL: Destroying Controller\n");
+    printf("%s:%d Destroying Controller\n", FILENM, __LINE__);
     if (pipeOpen)
     {
-        printf("CTRL: Closing pipe\n");
+        printf("%s:%d Closing pipe\n", FILENM, __LINE__);
         close(fifo_fd);
     }
-    printf("CTRL: deleting pipe\n");
+    printf("%s:%d deleting pipe\n", FILENM, __LINE__);
     if (remove(pipePath.c_str()) != 0)
-        perror("CTRL: Error deleting pipe");
-    printf("CTRL: deleted pipe\n");
-
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "remove", strerror(errno));
+    
+    printf("%s:%d deleted pipe\n", FILENM, __LINE__);
 }

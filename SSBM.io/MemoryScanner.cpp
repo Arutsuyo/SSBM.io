@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <cstring>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -14,19 +15,19 @@
 #include <stdint.h>
 #include "MemoryScanner.h"
 #include "addresses.h"
-using namespace std;
+#define FILENM "MS"
 
-MemoryScanner::MemoryScanner(string inUserDir)
+MemoryScanner::MemoryScanner(std::string inUserDir)
 {
-
     p1.health = 1000; p2.health = 1000;
     p1.dir = 10; p2.dir = 10;
     p1.pos_y = -1024; p1.pos_x = -1024;
     p2.pos_y = -1024; p2.pos_x = -1024;
     
     userPath = inUserDir;
-
     init_socket();
+
+    printf("%s:%d\tMemory Scanner Created\n", FILENM, __LINE__);
 }
 
 Player MemoryScanner::GetPlayer(bool pl)
@@ -36,21 +37,24 @@ Player MemoryScanner::GetPlayer(bool pl)
 
 void MemoryScanner::print()
 {
-    cout << "MEM:P1: HP:" << p1.health << ", Dir:" << p1.dir << ", X:" << p1.pos_x << ", Y:" << p1.pos_y << endl;
-    cout << "MEM:P1: HP:" << p2.health << ", Dir:" << p2.dir << ", X:" << p2.pos_x << ", Y:" << p2.pos_y << endl;
+    printf("%s:%d\tMemory Scan\n"
+        "\tP1:%u P1:%d P1:%f P1:%f\n", FILENM, __LINE__,
+        p1.health, p1.dir, p1.pos_x, p1.pos_y);
+    printf("\tP2:%u P2:%d P2:%f P2:%f\n",
+        p2.health, p2.dir, p2.pos_x, p2.pos_y);
 }
 
 /*initializes unix socket in default path....*/
 void MemoryScanner::init_socket() {
-
-    string sock_path = userPath + "MemoryWatcher/MemoryWatcher";
-    cout << "MEM: Socket Path: " << sock_path << endl;
+    printf("%s:%d\tCreating Socket\n", FILENM, __LINE__);
+    std::string sock_path = userPath + "MemoryWatcher/MemoryWatcher";
+    printf("%s:%d\tSocket Path: %s\n", FILENM, __LINE__, sock_path.c_str());
 
     /*set up socket*/
+    if ((socketfd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "socket", strerror(errno));
 
-    socketfd = socket(AF_UNIX, SOCK_DGRAM, 0);
-    if (socketfd < 0)
-        cout << "Socket file descriptor returned with " << socketfd << endl;
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
@@ -58,32 +62,36 @@ void MemoryScanner::init_socket() {
 
     strncpy(addr.sun_path, sock_path.c_str(), sizeof(addr.sun_path) - 1);
 
-    if (bind(socketfd, (struct sockaddr*) & addr, sizeof(addr)) < 0) {
-        cout << "Error binding socket " << strerror(errno) << endl;
-        cout << "path is " << sock_path << endl;
-        cout << "socketfd is " << socketfd << endl;
-    }
+    if (bind(socketfd, (struct sockaddr*) & addr, sizeof(addr)) < 0)
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "bind", strerror(errno));
 }
 
 int MemoryScanner::UpdatedFrame() {
+    printf("%s:%d\tUpdating Memory\n", FILENM, __LINE__);
 
     if (socketfd < 0) {
-        cout << "Error socket file descriptor is bad" << endl;
+        std::cout << "Error socket file descriptor is bad" << std::endl;
         return -1;
     }
 
     char buffer[128];
     memset(buffer, '\0', 128);
 
-    uint val_int;
+    unsigned int val_int;
 
+    printf("%s:%d\tReading Socket\n", FILENM, __LINE__);
     struct sockaddr recvsock;
     socklen_t sock_len;
-    recvfrom(socketfd, buffer, sizeof(buffer), 0, &recvsock, &sock_len);
+    if (recvfrom(socketfd, buffer, sizeof(buffer), 0, &recvsock, &sock_len) == -1)
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "recvfrom", strerror(errno));
+
+    printf("%s:%d\tParsing Buffer\n", FILENM, __LINE__);
     //puts(buffer);
-    stringstream ss(buffer);
+    std::stringstream ss(buffer);
     /*strings to hold addresses*/
-    string base, val;
+    std::string base, val;
 
     getline(ss, base, '\n');
     getline(ss, val, '\n');
@@ -92,44 +100,44 @@ int MemoryScanner::UpdatedFrame() {
     double check this*/
     size_t pointer_ref = base.find(" ");
     /*check until the end*/
-    if (pointer_ref != string::npos) {
+    if (pointer_ref != std::string::npos) {
 
-        string offset = base.substr(pointer_ref + 1);
-        string ptr_base = base.substr(0, pointer_ref);
+        std::string offset = base.substr(pointer_ref + 1);
+        std::string ptr_base = base.substr(0, pointer_ref);
 
         /*convert to base16 number*/
-        uint ptr = stoul(offset.c_str(), nullptr, 16);
-        uint p_base = stoul(ptr_base.c_str(), nullptr, 16);
+        unsigned int ptr = std::stoul(offset.c_str(), nullptr, 16);
+        unsigned int p_base = std::stoul(ptr_base.c_str(), nullptr, 16);
     }
     else {
 
-        uint player_val = stoul(base.c_str(), nullptr, 16);
+        unsigned int player_val = std::stoul(base.c_str(), nullptr, 16);
         switch (player_val) {
 
             /*p1 health*/
         case Addresses::PLAYER_ATTRIB::P1_HEALTH: {
-            val_int = stoul(val.c_str(), nullptr, 16);
+            val_int = std::stoul(val.c_str(), nullptr, 16);
             //cout << "health? " << (val_int / 16) <<endl;
             //val_int = val_int >> 16;
             //cout << "HEALTH " << val_int << endl;
             p1.health = (val_int / 16);
             break;	}
         case Addresses::PLAYER_ATTRIB::P1_COORD_X: {
-            val_int = stoul(val.c_str(), nullptr, 16);
-            uint* vx = &val_int;
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* vx = &val_int;
             float x = *((float*)vx);
             p1.pos_x = x;
             //cout << "float x :" << x << endl;
             break; }
         case Addresses::PLAYER_ATTRIB::P1_COORD_Y: {
-            val_int = stoul(val.c_str(), nullptr, 16);
-            uint* vy = &val_int;
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* vy = &val_int;
             float y = *((float*)vy);
             p1.pos_y = y;
             //cout << "float y:" << y << endl;
             break; }
         case Addresses::PLAYER_ATTRIB::P1_DIR: {
-            val_int = stoul(val.c_str(), nullptr, 16);
+            val_int = std::stoul(val.c_str(), nullptr, 16);
             //left 191 right 63
             if (val_int == 191)
                 p1.dir = -1;
@@ -139,26 +147,26 @@ int MemoryScanner::UpdatedFrame() {
             break; }
                                                /*P2 */
         case Addresses::PLAYER_ATTRIB::P2_HEALTH:
-            val_int = stoul(val.c_str(), nullptr, 16);
+            val_int = std::stoul(val.c_str(), nullptr, 16);
             p2.health = (val_int / 16);
             //cout << "HEALTH 2 " << val_int << endl;
             break;
         case Addresses::PLAYER_ATTRIB::P2_COORD_X: {
-            val_int = stoul(val.c_str(), nullptr, 16);
-            uint* vx = &val_int;
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* vx = &val_int;
             float x = *((float*)vx);
             p2.pos_x = x;
             //cout << "float 2x: " << x << endl;
             break; }
         case Addresses::PLAYER_ATTRIB::P2_COORD_Y: {
-            val_int = stoul(val.c_str(), nullptr, 16);
-            uint* vy = &val_int;
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* vy = &val_int;
             float y = *((float*)vy);
             p2.pos_y = y;
             //cout << "float 2y: " << y << endl;
             break; }
         case Addresses::PLAYER_ATTRIB::P2_DIR: {
-            val_int = stoul(val.c_str(), nullptr, 16);
+            val_int = std::stoul(val.c_str(), nullptr, 16);
             //left 191 right 63
             if (val_int == 191)
                 p2.dir = -1;

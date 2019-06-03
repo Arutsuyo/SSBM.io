@@ -1,4 +1,5 @@
 #include "DolphinHandle.h"
+#include "TensorHandler.h"
 #include "Trainer.h"
 #include <stdlib.h>
 #include <sys/types.h>
@@ -6,7 +7,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
-using namespace std;
+#include <cstring>
+#define FILENM "DH"
 
 #ifdef WIN32
 #define SIGKILL 9
@@ -17,7 +19,7 @@ int wait(int* status) {};
 
 
 /* Helper Functions */
-inline bool exists_test(const string& name) {
+inline bool exists_test(const std::string& name) {
     if (FILE * file = fopen(name.c_str(), "r")) {
         fclose(file);
         return true;
@@ -27,9 +29,24 @@ inline bool exists_test(const string& name) {
     }
 }
 
+bool WriteToFile(std::string filename, std::string contents)
+{
+    printf("%s:%d\tWriting %s\n", FILENM, __LINE__, filename.c_str());
+    FILE* fd = fopen(filename.c_str(), "w");
+    if (!fd)
+    {
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "fopen", strerror(errno));
+        return false;
+    }
+    fwrite(contents.c_str(), sizeof(char), contents.size(), fd);
+    fclose(fd);
+    return true;
+}
+
 void SendKill(int pid)
 {
-    printf("Sending kill signal\n");
+    printf("%s:%d\tSending kill signal\n", FILENM, __LINE__);
     kill(pid, SIGINT);
 }
 
@@ -39,21 +56,22 @@ bool WaitForDolphinToClose(int pid)
     int tpid;
     SendKill(pid);
     tpid = waitpid(pid, &status, 0);
-    printf("Child(Status:%d) Exited\n", status);
+    printf("%s:%d\tChild(Status:%d) Exited\n", FILENM, __LINE__, status);
     return true;
 }
 
 void DolphinHandle::CopyBaseFiles()
 {
+    printf("%s:%d\tCopying Base Files\n", FILENM, __LINE__);
     char buff[1028];
     sprintf(buff, "cp -r ./Files/* %s", dolphinUser.c_str());
     system(buff);
 }
 
-string DolphinHandle::AddController(int player, int pipe_count, string id)
+std::string DolphinHandle::AddController(int player, int pipe_count, std::string id)
 {
-    printf("DH: Creating AI Player: %d\n", player);
-    Controller* ctrl = new Controller;
+    printf("%s:%d\tCreating AI Controller: %d\n", FILENM, __LINE__, player + 1);
+    Controller* ctrl = new Controller(player);
     !ctrl->CreateFifo(aiPipe, pipe_count);
     controllers.push_back(ctrl);
     return Trainer::cfg->getAIPipeConfig(player, pipe_count, id);
@@ -61,14 +79,14 @@ string DolphinHandle::AddController(int player, int pipe_count, string id)
 
 void DolphinHandle::dolphin_thread(ThreadArgs* targ)
 {
-    printf("DH-T-: --Thread Started\n");
+    printf("%s:%d-T\tThread Started\n", FILENM, __LINE__);
     ThreadArgs ta = *targ;
     *ta._pid = fork();
     // Child
     if (*ta._pid == 0)
     {
-        printf("DH-T-: Launching Dolphin\n");
-        execlp( "dolphin-emu",
+        printf("%s:%d-T\tLaunching Dolphin\n", FILENM, __LINE__);
+        execlp("dolphin-emu",
             "-b",
             "-e",
             Trainer::_ssbmisoLocs[Trainer::_isoidx].c_str(),
@@ -76,7 +94,8 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
             ta._dolphinUser.c_str(),
             NULL);
 
-        fprintf(stderr, "DH-T-: EXECVP FAILED!\n");
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "execlp", strerror(errno));
         exit(EXIT_FAILURE);
     } // child will not exit this block
 
@@ -85,49 +104,61 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     // Check if Fork Failed
     if (*ta._pid == -1)
     {
-        fprintf(stderr, "DH-T-: FORK FAILED\n");
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "execlp", strerror(errno));
         *ta._running = false;
         return;
     }
 
-    printf("%d:Child successfully launched\n", *ta._pid);
-
-    // Threads can and most likely will intercept ctrl^c
-    if (!createSigIntAction())
-        printf("%d:Could not create SIGINT handler\n", *ta._pid);
+    printf("%s:%d-T%d: Child successfully launched\n",
+        FILENM, __LINE__, *ta._pid);
 
     // Do this AFTER launching Dolphin, otherwise it will block
-    printf("%d:Opening controllers\n", *ta._pid);
+    printf("%s:%d-T%d: Opening controller\n",
+        FILENM, __LINE__, *ta._pid);
+    printf("%d:\n", *ta._pid);
+    std::vector<TensorHandler*> tHandles;
     for (int i = 0; i < (*ta._controllers).size(); i++)
     {
+        printf("%s:%d-T%d: Opening Controller %d\n",
+            FILENM, __LINE__, *ta._pid, i);
         if (!(*ta._controllers)[i]->OpenController())
         {
             *ta._running = false;
             return;
         }
+
+        printf("%s:%d-T%d: Linking Controller with Tensor\n",
+            FILENM, __LINE__, *ta._pid);
+        TensorHandler* th = new TensorHandler;
+        th->CreatePipes((*ta._controllers)[i]);
+        tHandles.push_back(th);
     }
-    
 
     // Do Input
     Trainer::cv.notify_all();
-    sleep(10);
-    bool openPipe = true;// (*ta._controllers).back()->ActivateSaveState();
-    printf("%d:Ready for input!\n", *ta._pid);
+    sleep(10); // Make sure that dolphin has loaded into the menu
+    bool openPipe =
+        //true;
+        (*ta._controllers).back()->ActivateSaveState();
 
-    bool alt = true;
-    while (*ta._running && openPipe)
+    printf("%s:%d-T%d: Creating Memory Watcher!\n",
+        FILENM, __LINE__, *ta._pid);
+    MemoryScanner mem(ta._dolphinUser);
+
+    int loopLimit = 20;
+    while (*ta._running && openPipe && loopLimit--)
     {
-        for (int i = 0; i < (*ta._controllers).size(); i++)
+        mem.UpdatedFrame();
+        for (int i = 0; i < tHandles.size(); i++)
         {
-            (*ta._controllers)[i]->setButton(alt ? Button::A : Button::None);
-            openPipe = (*ta._controllers)[i]->SendState();
+            openPipe = tHandles[i]->MakeExchange(&mem);
         }
-        alt = !alt;
-        sleep(1);
     }
 
     // Closing, notify the trainer
-    printf("%d:Closing Thread\n", *ta._pid);
+    printf("%s:%d-T%d: Closing Thread\n",
+        FILENM, __LINE__, *ta._pid);
     WaitForDolphinToClose(*ta._pid);
     *ta._running = false;
     Trainer::cv.notify_all();
@@ -138,9 +169,11 @@ bool DolphinHandle::StartDolphin(int lst)
     char buff[256];
     sprintf(buff, "/ssbm%d/", lst);
     dolphinUser = Trainer::userDir + buff;
+    std::string dolphinConfig = dolphinUser + "/Config/";
 
     // Copy the user folder
-    printf("DH: Prepping the user folder: %s\n", dolphinUser.c_str());
+    printf("%s:%d\tPrepping the user folder: %s\n", FILENM, __LINE__,
+        dolphinUser.c_str());
     sprintf(buff, "cp -r %s %s", Trainer::dolphinDefaultUser.c_str(), dolphinUser.c_str());
     system(buff);
 
@@ -149,7 +182,7 @@ bool DolphinHandle::StartDolphin(int lst)
     running = true;
     int player = 0;
     int pipe_count = 0;
-    string id = "ssbm.io";
+    std::string id = "ssbm.io";
 
     // Making sure the pipe folder exists
     aiPipe = dolphinUser + "Pipes/";
@@ -157,13 +190,23 @@ bool DolphinHandle::StartDolphin(int lst)
     system(buff);
     aiPipe += id;
 
-    // Make the GCPadNew.ini
-    string dolphinConfig = dolphinUser + "Config/";
-    controllerINI = "";
+    // Write the pipe ini
+    std::string GCPadNew = dolphinConfig + "GCPadNew.ini";
+    printf("%s:%d\tWriting %s\n", FILENM, __LINE__, GCPadNew.c_str());
+    sprintf(buff, "mkdir %s", dolphinConfig.c_str());
+    system(buff);
 
+    printf("%s:%d\tCreating MemoryWatcher Directory\n", FILENM, __LINE__);
     std::string memwatch = dolphinUser + "MemoryWatcher/";
-    
-    string hotkey;
+    sprintf(buff, "mkdir %s", memwatch.c_str());
+    system(buff);
+    memwatch += "Locations.txt";
+
+    // Make the GCPadNew.ini
+    std::string controllerINI = "";
+
+    printf("%s:%d\tConstructing Controller INI\n", FILENM, __LINE__);
+    std::string hotkey;
     switch (_vs)
     {
     case Human:
@@ -185,54 +228,27 @@ bool DolphinHandle::StartDolphin(int lst)
         break;
     }
 
-    // Write the pipe ini
-    GCPadNew = dolphinConfig + "GCPadNew.ini";
-    printf("DH: Writing %s\n", GCPadNew.c_str());
-    sprintf(buff, "mkdir %s", dolphinConfig.c_str());
-    system(buff);
-    FILE* fd = fopen(GCPadNew.c_str(), "w");
-    if (!fd)
-    {
-        char buff[256];
-        sprintf(buff, "DH: fopen:%s failed", GCPadNew.c_str());
-        perror(buff);
-        return false;
-    }
-    fwrite(controllerINI.c_str(), sizeof(char), controllerINI.size(), fd);
-    fclose(fd);
-
-    puts("creating memwatch directory");
-    sprintf(buff, "mkdir %s", memwatch.c_str());
-    system(buff);
-    memwatch += "Locations.txt";
-
-    FILE* fd1 = fopen(memwatch.c_str(), "w");
-    if(!fd1){
-    	char buff[256];
-    	sprintf(buff, "DH: fopen:%s failed", memwatch.c_str());
-    	perror(buff);
-    	return false;
-    }
-
-    fwrite(memlocation.c_str(), sizeof(char), memlocation.size(), fd1);
-    
-    fclose(fd1);
-    
     // Write the hotkey for savestate
     dolphinConfig += "Hotkeys.ini";
-    fd = fopen(dolphinConfig.c_str(), "w");
-    fwrite(hotkey.c_str(), sizeof(char), hotkey.size(), fd);
-    fclose(fd);
+
+    if (!WriteToFile(GCPadNew, controllerINI))
+        return false;
+
+    if (!WriteToFile(memwatch, Trainer::cfg->getLocations()))
+        return false;
+
+    if (!WriteToFile(dolphinConfig, hotkey))
+        return false;
 
     ThreadArgs* ta = new ThreadArgs;
     ta->_running = &running;
-    ta->_pid = &pid; 
-   ta->_dolphinUser = dolphinUser;
+    ta->_pid = &pid;
+    ta->_dolphinUser = dolphinUser;
     ta->_controllers = &controllers;
 
-    printf("DH: Starting Thread\n");
-    unique_lock<mutex> lk(Trainer::mut);
-    t = new thread(&DolphinHandle::dolphin_thread, ta);
+    printf("%s:%d\tStarting Thread\n", FILENM, __LINE__);
+    std::unique_lock<std::mutex> lk(Trainer::mut);
+    t = new std::thread(&DolphinHandle::dolphin_thread, ta);
     Trainer::cv.wait(lk);
     started = true;
     return true;
@@ -249,14 +265,15 @@ DolphinHandle::DolphinHandle(VsType vs) :
 DolphinHandle::~DolphinHandle()
 {
     running = false;
-    printf("DH: Closing Dolphin Handle, Closing Thread\n");
-    if (t->joinable())
+    printf("%s:%d\tClosing Dolphin Handle, Closing Thread\n", FILENM, __LINE__);
+    if (t && t->joinable())
         t->join();
+
     if (targ)
         delete targ;
     // Call each destructor
-    while (controllers.size() > 0)
-        controllers.pop_back();
+    printf("%s:%d\tDestroying %lu Controllers\n", FILENM, __LINE__, 
+        controllers.size());
 
     // Call each destructor
     while (controllers.size() > 0)
@@ -268,7 +285,7 @@ DolphinHandle::~DolphinHandle()
 
     // Delete the user folder
     char buff[256];
-    printf("DH: Deleting the created user folder\n");
+    printf("%s:%d\tDeleting the created user folder\n", FILENM, __LINE__);
     sprintf(buff, "rm -rf %s", dolphinUser.c_str());
     system(buff);
 }
