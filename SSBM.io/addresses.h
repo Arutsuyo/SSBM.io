@@ -10,6 +10,17 @@ namespace Addresses {
         PLAYER_TWO = 0x453FC0
     };
 
+    enum MENUS{
+        /*offset to get stage */
+        MENU_STATE = 0x479d30;
+
+        CHARACTER_SELECT = 33685760,
+        STAGE_SELECT = 33685761,
+        IN_GAME = 33685762,
+        POSTGAME = 33685764   
+
+    };
+
     enum PLAYER_ATTRIB {
 
         /*health*/

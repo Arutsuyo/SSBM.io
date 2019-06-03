@@ -195,11 +195,39 @@ bool MemoryScanner::UpdatedFrame() {
             if (val_int == 63)
                 p2.dir = 1;
             break; }
+
+        case Addresses::MENUS::MENU_STATE:
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+                /*find out which stage we are on to know if the game is currently playing*/
+            switch( val_int){
+                case Addresses::MENUS::IN_GAME:
+                    printf("READING MENU\n");
+                    this->current_stage = 1;
+                    break;
+                case Addresses::MENUS::POSTGAME:
+                    printf("READING MENU\n");
+                    this->current_stage = 2;
+                    break;
+                case Addresses::MENUS::CHARACTER_SELECT:
+                    printf("READING MENU\n");
+                    this->current_stage = 3;
+                    break;
+                case Addresses::MENUS::STAGE_SELECT:
+                    printf("READING MENU\n");
+                    this->current_stage = 4;
+                    break;
+                default:
+                    fprintf(stderr, "Menu offset read, but returned unknown value\n");
+                    break;
+                }
+            break;
+
         default:
             break;
         }
-
-        print();
+        /*only print information if we are in game*/
+        if ( this->in_game )
+            print();
     }
     return true;
 }
