@@ -170,6 +170,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         //wait until the game detects it is currently in game
     while( mem.CurrentStage()!= 1 )
     {       //update the frame to find the current state
+            printf("CURRENT STAGE WAITING ON BATTLE \n");
             if (!mem.UpdatedFrame())
             {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
@@ -184,7 +185,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     bool openSocket = true;
 
     while (*ta._running && openPipe && openSocket && loopLimit--)
-    {
+    {   
         if (!mem.UpdatedFrame())
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,

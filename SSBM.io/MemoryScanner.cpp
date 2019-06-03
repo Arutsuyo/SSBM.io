@@ -197,23 +197,23 @@ bool MemoryScanner::UpdatedFrame() {
             break; }
 
         case Addresses::MENUS::MENU_STATE:
-            val_int = std::stoul(val.c_str(), nullptr, 16);
-                /*find out which stage we are on to know if the game is currently playing*/
-            switch( val_int){
+                uint  x, y,z; //z holds value we need
+                sscanf(val.c_str(), "%x,%x,%x", &x,&y,&z);
+            switch(z){
                 case Addresses::MENUS::IN_GAME:
-                    printf("READING MENU\n");
+                    printf("IN Playing in Game\n");
                     this->current_stage = 1;
                     break;
                 case Addresses::MENUS::POSTGAME:
-                    printf("READING MENU\n");
+                    printf("Postgame menu\n");
                     this->current_stage = 2;
                     break;
                 case Addresses::MENUS::CHARACTER_SELECT:
-                    printf("READING MENU\n");
+                    printf("Character Select\n");
                     this->current_stage = 3;
                     break;
                 case Addresses::MENUS::STAGE_SELECT:
-                    printf("READING MENU\n");
+                    printf("Stage Select\n");
                     this->current_stage = 4;
                     break;
                 default:

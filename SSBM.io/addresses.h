@@ -12,12 +12,12 @@ namespace Addresses {
 
     enum MENUS{
         /*offset to get stage */
-        MENU_STATE = 0x479d30;
+        MENU_STATE = 0x479d30,
 
-        CHARACTER_SELECT = 33685760,
-        STAGE_SELECT = 33685761,
-        IN_GAME = 33685762,
-        POSTGAME = 33685764   
+        CHARACTER_SELECT = 3328,
+        STAGE_SELECT = 3329,
+        IN_GAME = 3330,
+        POSTGAME = 3332   
 
     };
 
