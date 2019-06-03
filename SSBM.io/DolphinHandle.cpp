@@ -279,10 +279,16 @@ DolphinHandle::DolphinHandle(VsType vs) :
 
 DolphinHandle::~DolphinHandle()
 {
+    printf("%s:%d\tClosing DolphinHandle\n", FILENM, __LINE__);
     running = false;
-    printf("%s:%d\tClosing Dolphin Handle, Closing Thread\n", FILENM, __LINE__);
+    printf("%s:%d\tChecking Thread\n", FILENM, __LINE__);
     if (t && t->joinable())
+    {
+        printf("%s:%d\tJoining Thread\n", FILENM, __LINE__);
         t->join();
+    }
+    else
+        printf("%s:%d\tThread is already destroyed\n", FILENM, __LINE__);
 
     if (targ)
         delete targ;

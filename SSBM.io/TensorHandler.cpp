@@ -83,7 +83,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
         }
 
         /* run Program1 with dup2ed stdout */
-        execlp("python Model/trainer.py", "python Model/trainer.py", NULL);
+        execlp("python", "Model/trainer.py", NULL);
 
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:EXECLP", strerror(errno));
@@ -109,18 +109,20 @@ bool TensorHandler::CreatePipes(Controller* ai)
     char buff[8];
     sprintf(buff, "0");
     int bytesWritten = sizeof(char) * strlen(buff);
-    if (write(pipeToPy[0], buff, bytesWritten) != bytesWritten)
+    if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
     {
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:write", strerror(errno));
+        return false;
     }
 
     sprintf(buff, "1");
     bytesWritten = sizeof(char) * strlen(buff);
-    if (write(pipeToPy[0], buff, bytesWritten) != bytesWritten)
+    if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
     {
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:write", strerror(errno));
+        return false;
     }
 
     ctrl = ai;
@@ -217,7 +219,7 @@ TensorHandler::~TensorHandler()
     char buff[256];
     sprintf(buff, "-1 -1");
     int bytesWritten = sizeof(char) * strlen(buff);
-    if (write(pipeToPy[0], buff, bytesWritten) != bytesWritten)
+    if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:write", strerror(errno));
 

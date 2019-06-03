@@ -187,10 +187,11 @@ Trainer::Trainer(VsType vs)
 
 Trainer::~Trainer()
 {
-    printf("%s:%d\tTrainer dying\n", FILENM, __LINE__);
+    printf("%s:%d\tDestroying Trainer\n", FILENM, __LINE__);
     if (cfg)
         cfg->~Config();
 
+    printf("%s:%d\tClosing Handles\n", FILENM, __LINE__);
     // Call each destructor
     while (_Dhandles.size() > 0)
     {

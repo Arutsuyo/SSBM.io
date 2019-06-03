@@ -33,10 +33,12 @@ MemoryScanner::MemoryScanner(std::string inUserDir)
 
 MemoryScanner::~MemoryScanner() {
 
+    printf("%s:%d\tDestroying MemoryScanner\n", FILENM, __LINE__);
     /*shutdown the socket*/
     if (shutdown(this->socketfd, 2) < 0)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:shutdown", strerror(errno));
+    printf("%s:%d\tSocket Closed\n", FILENM, __LINE__);
 }
 
 Player MemoryScanner::GetPlayer(bool pl)
@@ -111,7 +113,7 @@ bool MemoryScanner::UpdatedFrame() {
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:recvfrom", strerror(errno));
 
-    printf("%s:%d\tParsing Buffer\n", FILENM, __LINE__);
+    printf("%s:%d\tParsing Buffer: %s\n", FILENM, __LINE__, buffer);
     //puts(buffer);
     std::stringstream ss(buffer);
     /*strings to hold addresses*/
