@@ -1,37 +1,28 @@
 #ifndef _MEMORYSCANNER_H
 #define _MEMORYSCANNER_H
 #include <string>
-#include "Player.h"
+#include "player.h"
 
-/*
-struct player{
-
-	unsigned int health;
-	int dir; //left -1 right 1
-	float pos x;	
-	float pos y;
-
-};
-*/
-
-class MemoryScanner{
+class MemoryScanner {
 
 public:
 
-	MemoryScanner(std::string s);
+    MemoryScanner(std::string s);
 
-
-	int UpdatedFrame();
+    int UpdatedFrame();
 
 private:
-	player p1;
-	player p2;
+    Player p1;
+    Player p2;
 
-	void init_socket();
-	std::string p;
-	int socketfd = -1;
+    void init_socket();
+    std::string userPath;
+    int socketfd = -1;
 
-	void readytoprint();
+    void print();
+
+    // 0: Player1 1: Player2
+    Player GetPlayer(bool pl);
 
 };
 

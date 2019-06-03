@@ -19,6 +19,7 @@ int main()
     Trainer::concurentThreadsSupported = 
         std::thread::hardware_concurrency() / 3;
     Trainer::term = false;
+
     printf("MAIN: Creating Trainer\n");
     Trainer trainer(VsType::Human);
     if (!trainer.initialized)

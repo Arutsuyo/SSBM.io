@@ -1,7 +1,4 @@
 #include "DolphinHandle.h"
-#include "MemoryScanner.h"
-#include "Player.h"
-#include "addresses.h"
 #include "Trainer.h"
 #include <stdlib.h>
 #include <sys/types.h>
@@ -17,54 +14,6 @@ int fork() {};
 void kill(int pid, int signal) {};
 int wait(int* status) {};
 #endif
-
-std::string memlocation = 
-"004530E0\n"
-"00453F70\n"
-"0045310E\n"
-"00453F9E\n"
-"004530C0\n"
-"00453F50\n"
-"00453090\n"
-"00453F20\n"
-"00453094\n"
-"00453F24\n"
-"00453130 70\n"
-"00453130 20CC\n"
-"00453130 8F4\n"
-"00453130 19EC\n"
-"00453130 19BC\n"
-"00453130 23a0\n"
-"00453130 2174\n"
-"00453130 19C8\n"
-"00453130 140\n"
-"00453130 E0\n"
-"00453130 E4\n"
-"00453130 EC\n"
-"00453130 F0\n"
-"00453130 14C\n"
-"00453FC0 70\n"
-"00453FC0 20CC\n"
-"00453FC0 8F4\n"
-"00453FC0 19EC\n"
-"00453FC0 19BC\n"
-"00453FC0 23a0\n"
-"00453FC0 2174\n"
-"00453FC0 19C8\n"
-"00453FC0 140\n"
-"00453FC0 E0\n"
-"00453FC0 E4\n"
-"00453FC0 EC\n"
-"00453FC0 F0\n"
-"00453FC0 14C\n"
-"003F0E0A\n"
-"003F0E2E\n"
-"00479d30\n"
-"004D6CAD\n"
-"0111826C\n"
-"01118270\n"
-"00479D60\n"
-"\n";
 
 
 /* Helper Functions */
@@ -119,22 +68,13 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     if (*ta._pid == 0)
     {
         printf("DH-T-: Launching Dolphin\n");
-        const char* uLoc = ta._dolphinUser.c_str();
-        // Create the Dolphin call
-        int lngth = 7;
-        char** argv = (char**)malloc(sizeof(char*) * lngth);
-        for (int i = 0; i < lngth - 1; i++)
-            argv[i] = (char*)malloc(sizeof(char) * 128);
-        argv[lngth - 1] = NULL;
-
-        sprintf(argv[0], "dolphin-emu");
-        sprintf(argv[1], "-b");
-        sprintf(argv[2], "-e");
-        sprintf(argv[3], "%s", Trainer::_ssbmisoLocs[Trainer::_isoidx].c_str());
-        sprintf(argv[4], "-u");
-        sprintf(argv[5], "%s", ta._dolphinUser.c_str());
-
-        execvp(argv[0], argv);
+        execlp( "dolphin-emu",
+            "-b",
+            "-e",
+            Trainer::_ssbmisoLocs[Trainer::_isoidx].c_str(),
+            "-u",
+            ta._dolphinUser.c_str(),
+            NULL);
 
         fprintf(stderr, "DH-T-: EXECVP FAILED!\n");
         exit(EXIT_FAILURE);
@@ -167,13 +107,11 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
     }
     
-    MemoryScanner mem = MemoryScanner(ta._dolphinUser);
-
 
     // Do Input
     Trainer::cv.notify_all();
     sleep(10);
-    bool openPipe = (*ta._controllers).back()->ActivateSaveState();
+    bool openPipe = true;// (*ta._controllers).back()->ActivateSaveState();
     printf("%d:Ready for input!\n", *ta._pid);
 
     bool alt = true;
@@ -183,7 +121,6 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         {
             (*ta._controllers)[i]->setButton(alt ? Button::A : Button::None);
             openPipe = (*ta._controllers)[i]->SendState();
-            mem.UpdatedFrame();
         }
         alt = !alt;
         sleep(1);

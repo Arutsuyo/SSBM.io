@@ -1,7 +1,7 @@
 #ifndef _PLAYER_H
 #define _PLAYER_H
 
-struct player{
+struct Player{
 
 	unsigned int health;
 	int dir; //left -1 right 1
