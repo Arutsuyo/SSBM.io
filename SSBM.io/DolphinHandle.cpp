@@ -168,22 +168,30 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     }
     
     MemoryScanner mem = MemoryScanner(ta._dolphinUser);
-
+    if ( mem.GetStatus() == false ){
+        printf("Failed to initalize Memory Scanner\n");
+        return;
+    }
 
     // Do Input
     Trainer::cv.notify_all();
     sleep(10);
     bool openPipe = (*ta._controllers).back()->ActivateSaveState();
     printf("%d:Ready for input!\n", *ta._pid);
-
+    int memory_update;
+    bool openSocket = true;
     bool alt = true;
-    while (*ta._running && openPipe)
+    while (*ta._running && openPipe && openSocket)
     {
         for (int i = 0; i < (*ta._controllers).size(); i++)
         {
             (*ta._controllers)[i]->setButton(alt ? Button::A : Button::None);
             openPipe = (*ta._controllers)[i]->SendState();
-            mem.UpdatedFrame();
+            memory_update = mem.UpdatedFrame();
+            if ( memory_update < 0){
+                printf("Error socket file descriptor is bad\n");
+                openSocket = false;
+            }
         }
         alt = !alt;
         sleep(1);
