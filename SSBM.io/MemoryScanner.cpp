@@ -24,7 +24,7 @@ MemoryScanner::MemoryScanner(std::string inUserDir)
     p1.dir = 10; p2.dir = 10;
     p1.pos_y = -1024; p1.pos_x = -1024;
     p2.pos_y = -1024; p2.pos_x = -1024;
-
+    p1.current_menu= -1; p2.current_menu = -1;
     userPath = inUserDir;
     success = init_socket();
 
@@ -149,7 +149,7 @@ bool MemoryScanner::UpdatedFrame() {
         case Addresses::PLAYER_ATTRIB::P1_HEALTH: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             p1.health = val_int >> 4;
-            break;	}
+            break;  }
         case Addresses::PLAYER_ATTRIB::P1_COORD_X: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* vx = &val_int;
@@ -201,19 +201,24 @@ bool MemoryScanner::UpdatedFrame() {
                 sscanf(val.c_str(), "%x,%x,%x", &x,&y,&z);
             switch(z){
                 case Addresses::MENUS::IN_GAME:
-                    printf("IN Playing in Game\n");
+                    p1.current_menu = 1;
+                    p2.current_menu = 1;
                     this->current_stage = 1;
                     break;
                 case Addresses::MENUS::POSTGAME:
-                    printf("Postgame menu\n");
+                    p1.current_menu = 2;
+                    p2.current_menu = 2;
                     this->current_stage = 2;
                     break;
                 case Addresses::MENUS::CHARACTER_SELECT:
-                    printf("Character Select\n");
+                    puts("CHARACTER_SELECT");
+                    p1.current_menu = 3;
+                    p2.current_menu = 3;
                     this->current_stage = 3;
                     break;
                 case Addresses::MENUS::STAGE_SELECT:
-                    printf("Stage Select\n");
+                    p1.current_menu = 4;
+                    p2.current_menu = 4;
                     this->current_stage = 4;
                     break;
                 default:
@@ -226,30 +231,33 @@ bool MemoryScanner::UpdatedFrame() {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* cx = &val_int;
             float cursx = *((float*)cx);
+            p2.cursor_x = cursx;
             break;}
 
         case Addresses::PLAYER_ATTRIB::P2_CURSOR_Y:{
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* cy = &val_int;
             float cursy = *((float*)cy);           
+            p2.cursor_y = cursy;
             break;}
 
         case Addresses::PLAYER_ATTRIB::P1_CURSOR_X:{
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* cx = &val_int;
             float cursx = *((float*)cx);
+            p1.cursor_x = cursx;
             break;}
 
         case Addresses::PLAYER_ATTRIB::P1_CURSOR_Y:{
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* cy = &val_int;
             float cursy = *((float*)cy); 
+            p1.cursor_y = cursy;
             break;}
 
         default:
             break;
         }
-
 
         /*only print information if we are in game*/
         if ( this->in_game )
