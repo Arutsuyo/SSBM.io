@@ -24,21 +24,6 @@ def debugPrint(o):
 	print(o)
 	
 	
-odr, odw = os.pipe()
-def redirectInput(inp, w):
-	while not w.closed:
-		k = inp.readline()
-		if not w.closed:
-			w.write(k)
-			w.flush()
-
-tmp = sys.stdin
-sys.stdin = fdopen(odr)
-w = fdopen(odw, 'w')
-
-thread = threading.Thread(target=redirectInput, args=(tmp, w))
-thread.setDaemon(True)
-thread.start()
 
 
 choice = sys.stdin.readline()[:-1]
@@ -175,22 +160,6 @@ else:
 debugPrint("Finished building/loading! Please input data in the form of P1-HP P1-FD P1-X P1-Y P2-HP P2-FD P2-X P2-Y (as specified ")
 # Train...until we hit an end of file...
 trainCase = 0
-def timeoutThread(w):
-	global trainCase
-	ctc = trainCase
-	while not w.closed:
-		for i in range(100):
-			if trainCase != ctc:
-				break
-			time.sleep(.1)
-		if trainCase == ctc:
-			w.write("-1 -1\n")
-			w.flush()
-			break
-		ctc = trainCase
-
-timeout = threading.Thread(target=timeoutThread, args=(w,))
-timeout.setDaemon(True)
 
 
 pa = [0,0,0,0,0,0,0,0]
@@ -247,6 +216,5 @@ if choice != '2':
 	debugPrint("Finished saving...exiting...")
 print(-1,-1)
 	# train
-w.close()
-sys.stdin.close()
+
 	
