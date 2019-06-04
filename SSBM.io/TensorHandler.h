@@ -11,8 +11,11 @@ class TensorHandler
     // Pipes: 0 is read, 1 is write
     int pipeToPy[2];
     int pipeFromPy[2];
+    int pipeErrorFromPy[2];
 
     Controller* ctrl;
+
+    void dumpErrorPipe();
 
     // Pipe interactions
     void SendToPipe(Player ai, Player enemy);

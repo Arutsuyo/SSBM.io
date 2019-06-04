@@ -23,9 +23,6 @@ as a template
 def debugPrint(o):
 	print(o)
 	
-	
-
-
 choice = sys.stdin.readline()[:-1]
 if choice == '0':
 	# SHUT UP!
