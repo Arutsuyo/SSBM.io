@@ -197,27 +197,28 @@ bool MemoryScanner::UpdatedFrame() {
             break; }
 
         case Addresses::MENUS::MENU_STATE:
-                uint  x, y,z; //z holds value we need
+            unsigned int x, y, z; //z holds value we need
                 sscanf(val.c_str(), "%x,%x,%x", &x,&y,&z);
             switch(z){
                 case Addresses::MENUS::IN_GAME:
-                    printf("IN Playing in Game\n");
+                    printf("%s:%d\tState: In Game\n", FILENM, __LINE__);
                     this->current_stage = 1;
                     break;
                 case Addresses::MENUS::POSTGAME:
-                    printf("Postgame menu\n");
+                    printf("%s:%d\tState: Post-game menu\n", FILENM, __LINE__);
                     this->current_stage = 2;
                     break;
                 case Addresses::MENUS::CHARACTER_SELECT:
-                    printf("Character Select\n");
+                    printf("%s:%d\tState: Character Select\n", FILENM, __LINE__);
                     this->current_stage = 3;
                     break;
                 case Addresses::MENUS::STAGE_SELECT:
-                    printf("Stage Select\n");
+                    printf("%s:%d\tState: Stage Select\n", FILENM, __LINE__);
                     this->current_stage = 4;
                     break;
                 default:
-                    fprintf(stderr, "Menu offset read, but returned unknown value\n");
+                    fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+                        "--ERROR:Menu offset read, but returned unknown value");
                     break;
                 }
             break;

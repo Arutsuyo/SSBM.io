@@ -147,45 +147,43 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     printf("%s:%d-T%d\tPausing to load Menu\n",
         FILENM, __LINE__, *ta._pid);
 
-        //wait until the character stage is detected
-    while( mem.CurrentStage()!= 3 )
-    {       //update the frame to find the current state
-        printf("WAITING on MENU DETECTION\n");
-            if (!mem.UpdatedFrame())
-            {
+    //wait until the character stage is detected
+    while (mem.CurrentStage() != 3)
+    {
+        //update the frame to find the current state
+        if (!mem.UpdatedFrame())
+        {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
             break;
-           }
+        }
     }
 
     printf("%s:%d-T%d\tLoading Savestate\n",
         FILENM, __LINE__, *ta._pid);
     int loopLimit = 20;
     bool openPipe =
-        //true;
+        //true; // This can be used once we have cursor pos
+        (*ta._controllers).back()->ActivateSaveState();
 
-    (*ta._controllers).back()->ActivateSaveState();
-
-        //wait until the game detects it is currently in game
-    while( mem.CurrentStage()!= 1 )
-    {       //update the frame to find the current state
-            printf("CURRENT STAGE WAITING ON BATTLE \n");
-            if (!mem.UpdatedFrame())
-            {
+    //wait until the game detects it is currently in game
+    while (mem.CurrentStage() != 1)
+    {
+        //update the frame to find the current state
+        if (!mem.UpdatedFrame())
+        {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
             break;
-           }
+        }
     }
 
     printf("%s:%d-T%d\tReady for input!\n",
         FILENM, __LINE__, *ta._pid);
     int memory_update;
     bool openSocket = true;
-
     while (*ta._running && openPipe && openSocket && loopLimit--)
-    {   
+    {
         if (!mem.UpdatedFrame())
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
@@ -320,7 +318,7 @@ DolphinHandle::~DolphinHandle()
     if (targ)
         delete targ;
     // Call each destructor
-    printf("%s:%d\tDestroying %lu Controllers\n", FILENM, __LINE__, 
+    printf("%s:%d\tDestroying %lu Controllers\n", FILENM, __LINE__,
         controllers.size());
 
     // Call each destructor

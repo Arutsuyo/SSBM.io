@@ -83,7 +83,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
         }
 
         /* run Program1 with dup2ed stdout */
-        execlp("python", "Model/trainer.py", NULL);
+        execlp("python", "trainer.py", NULL);
 
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:EXECLP", strerror(errno));

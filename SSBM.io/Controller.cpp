@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string>
+#include <time.h>
 #define FILENM "CTRL"
 
 char Controller::_ButtonNames[] = {
@@ -17,6 +18,24 @@ char Controller::_ButtonNames[] = {
         'Z',
         'L'
 };
+
+int nsleep(long miliseconds)
+{
+    struct timespec req, rem;
+
+    if (miliseconds > 999)
+    {
+        req.tv_sec = (int)(miliseconds / 1000);                            /* Must be Non-Negative */
+        req.tv_nsec = (miliseconds - ((long)req.tv_sec * 1000)) * 1000000; /* Must be in range of 0 to 999999999 */
+    }
+    else
+    {
+        req.tv_sec = 0;                         /* Must be Non-Negative */
+        req.tv_nsec = miliseconds * 1000000;    /* Must be in range of 0 to 999999999 */
+    }
+
+    return nanosleep(&req, &rem);
+}
 
 bool Controller::sendtofifo(std::string fifocmd)
 {
@@ -130,8 +149,10 @@ bool Controller::ActivateSaveState()
         getFileName(pipePath).c_str(), output.c_str());
     if (!sendtofifo(output))
         return false;
+    
+    // Sleep for half a second
+    nsleep(500);
 
-    sleep(1);
     sprintf(buff, "%s %c\n", "RELEASE", 'R');
     output = buff;
     printf("%s:%d %s %s\n", FILENM, __LINE__,

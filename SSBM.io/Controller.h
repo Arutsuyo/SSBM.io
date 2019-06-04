@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include "Types.h"
 
+int nsleep(long miliseconds);
+
 struct Controls
 {
     // Piped input sticks go from 0 to 1. 0.5 is centered
