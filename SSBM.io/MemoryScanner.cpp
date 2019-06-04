@@ -50,6 +50,7 @@ Player MemoryScanner::GetPlayer(bool pl)
 
 bool MemoryScanner::print()
 {
+
     /*quick check for all values to be updated before being sent to model*/
     if (p1.dir == 10 || p2.dir == 10)
     {
@@ -140,8 +141,13 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
     /*strings to hold addresses*/
     std::string base, val;
 
+
+    while(!ss.eof())
+{
     getline(ss, base, '\n');
     getline(ss, val, '\n');
+
+
 
     /* to fix any issues with cross platform memory reading, remove commas*/
     val.erase(std::remove(val.begin(), val.end(), ','), val.end());
@@ -207,21 +213,16 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             break; }
         case Addresses::PLAYER_ATTRIB::P2_COORD_Y: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
-            
-            unsigned int* d2 = &val_int;
-            float dir2 = *((float*)d2);
-            p2.dir = dir2;
-            
+            unsigned int* vy = &val_int;
+            float y = *((float*)vy);
+            p2.pos_y = y;
+
             break; }
         case Addresses::PLAYER_ATTRIB::P2_DIR: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
-            //left 191 right 63
-            val_int = val_int >> 24;
-            if (val_int)
-                p2.dir = -1;
-            if (!val_int)
-                p2.dir = 1;
-            printf("%d\n",val_int);
+            unsigned int* d2 = &val_int;
+            float dir2 = *((float*)d2);
+            p2.dir = dir2;
             break; }
 
         case Addresses::MENUS::MENU_STATE:
@@ -300,6 +301,9 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
         if (this->in_game)
             print();
     }
+
+}
+
     return true;
 }
 
