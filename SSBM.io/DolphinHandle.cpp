@@ -153,7 +153,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     Navigation nav = Navigation(*(*ta._controllers).back(), &mem);
 
     //wait until the character stage is detected
-    while (mem.CurrentStage() != 44)
+    while (mem.CurrentStage() != 3)
     {
         nav.FindPos();
         //update the frame to find the current state
