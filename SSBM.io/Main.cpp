@@ -1,12 +1,12 @@
 // Main.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include <stdio.h>
-#include <unistd.h>
 #include "Trainer.h"
 
 // Included for PW
 #include <pwd.h>
+#include <stdio.h>
+#include <unistd.h>
 #define FILENM "Main"
 
 int main()
@@ -23,7 +23,7 @@ int main()
     struct passwd* pw = getpwuid(getuid());
     Trainer::userDir = pw->pw_dir;
     Trainer::dolphinDefaultUser = Trainer::userDir + "/.local/share/dolphin-emu/";
-    Trainer::concurentThreadsSupported = 
+    Trainer::concurentThreadsSupported =
         std::thread::hardware_concurrency() / 3;
     Trainer::term = false;
 

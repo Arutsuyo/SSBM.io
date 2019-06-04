@@ -39,7 +39,6 @@ bool exists_test(const std::string& name) {
 
 bool TensorHandler::CreatePipes(Controller* ai)
 {
-
     printf("%s:%d\tCreating Write Pipe\n", FILENM, __LINE__);
     if (pipe(pipeToPy) == -1)
     {
@@ -112,8 +111,8 @@ bool TensorHandler::CreatePipes(Controller* ai)
             exit(EXIT_FAILURE);
         }
 
-        /* Launch Python */
-        execlp("python", "trainer.py", NULL);
+        /* Launch Python (EXE IS REQUIRED FOR WSL)*/
+        execlp("python.exe", "trainer.py", NULL);
 
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:EXECLP", strerror(errno));

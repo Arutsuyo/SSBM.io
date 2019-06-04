@@ -223,7 +223,7 @@ bool DolphinHandle::StartDolphin(int lst)
     char buff[256];
     sprintf(buff, "/ssbm%d/", lst);
     dolphinUser = Trainer::userDir + buff;
-    std::string dolphinConfig = dolphinUser + "/Config/";
+    std::string dolphinConfig = dolphinUser + "Config/";
 
     // Copy the user folder
     printf("%s:%d\tPrepping the user folder: %s\n", FILENM, __LINE__,
