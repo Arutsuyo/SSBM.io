@@ -20,17 +20,6 @@ int wait(int* status) {};
 #endif
 
 
-/* Helper Functions */
-inline bool exists_test(const std::string& name) {
-    if (FILE * file = fopen(name.c_str(), "r")) {
-        fclose(file);
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
 bool WriteToFile(std::string filename, std::string contents)
 {
     printf("%s:%d\tWriting %s\n", FILENM, __LINE__, filename.c_str());
@@ -161,17 +150,12 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
-            break;
+            return;
         }
     }
 
     printf("%s:%d-T%d\tLoading Save-state\n",
         FILENM, __LINE__, *ta._pid);
-    int loopLimit = 20;
-    bool openPipe =
-        true; // This can be used once we have cursor pos
-        //(*ta._controllers).back()->ActivateSaveState();
-
     //wait until the game detects it is currently in game
     while (mem.CurrentStage() != 1)
     {
@@ -180,9 +164,34 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
-            break;
+            return;
         }
     }
+
+    // Check mem until we get valid player numbers
+    printf("%s:%d-T%d\tChecking for valid player data\n",
+        FILENM, __LINE__, *ta._pid);
+
+    bool openPipe =
+        true; // This can be used once we have cursor pos
+        //(*ta._controllers).back()->ActivateSaveState();
+
+    int loopLimit = 4, numDots = 50;
+    do
+    {
+        if (!mem.UpdatedFrame(true, true))
+        {
+            fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+                "--ERROR:Memory update failed");
+            return;
+        }
+        // Busy print loop
+        if (loopLimit-- == 0)
+        {
+            loopLimit = 4;
+            printf(".");
+        }
+    } while (!mem.print());
 
     printf("%s:%d-T%d\tReady for input!\n",
         FILENM, __LINE__, *ta._pid);

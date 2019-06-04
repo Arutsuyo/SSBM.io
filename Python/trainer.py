@@ -207,6 +207,8 @@ while True:
 	action = agent.act(pa) 
 	# It is 6 values, brute force
 	print((action[0]+1)/2,(action[1]+1)/2,action[2],action[3],action[4],action[5],action[6])
+	sys.stdout.flush()
+	sys.stderr.flush()
 	# Output action....
 	
 	vv = [float(x) for x in input_k.split(" ")] # Cur state!

@@ -24,10 +24,10 @@ public:
 
 	// 0: Player1 1: Player2
 	Player GetPlayer(bool pl);
-	bool UpdatedFrame(bool prin);
-	void print();
+	bool UpdatedFrame(bool prin, bool fuckit = false);
+	bool print();
 
-	int CurrentStage(){return this->current_stage;}
+	int CurrentStage() { return this->current_stage; }
 	MemoryScanner(std::string s);
 	~MemoryScanner();
 

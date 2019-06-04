@@ -25,7 +25,17 @@ pid_t waitpid(pid_t pid, int* status, int options) {};
 #endif
 
 #define FILENM "TH"
-using namespace std;
+
+/* Helper Functions */
+bool exists_test(const std::string& name) {
+    if (FILE * file = fopen(name.c_str(), "r")) {
+        fclose(file);
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 
 bool TensorHandler::CreatePipes(Controller* ai)
 {
@@ -56,20 +66,20 @@ bool TensorHandler::CreatePipes(Controller* ai)
     else if (pid == 0) {
         // Child Process
         printf("%s:%d\tChild: Launching Tensor\n", FILENM, __LINE__);
-        if (close(pipeFromPy[0]) == -1)
+        if (close(pipeFromPy[0]) == -1) // Read end 
         {
             fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
                 "--ERROR:close", strerror(errno));
             exit(EXIT_FAILURE);
         }
-        if (close(pipeToPy[1]) == -1)
+        if (close(pipeToPy[1]) == -1) // Write end
         {
             fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
                 "--ERROR:close", strerror(errno));
             exit(EXIT_FAILURE);
         }
 
-        /* redirect stdin and stdout */
+        /* copy <oldfd> using <newfd> */
         if (dup2(pipeFromPy[1], STDOUT_FILENO) == -1)
         {
             fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
@@ -83,7 +93,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
             exit(EXIT_FAILURE);
         }
 
-        /* run Program1 with dup2ed stdout */
+        /* Launch Python */
         execlp("python", "trainer.py", NULL);
 
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
@@ -119,7 +129,10 @@ bool TensorHandler::CreatePipes(Controller* ai)
         return false;
     }
 
-    sprintf(buff, "1");
+    if(exists_test("AI/ssbm.h5"))
+        sprintf(buff, "1"); // Load existing file
+    else
+        sprintf(buff, "0"); // Make a new model
     bytesWritten = sizeof(char) * strlen(buff);
     if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
     {
@@ -157,7 +170,7 @@ std::string TensorHandler::ReadFromPipe()
     char buff[1024];
     bool hadRead = false;
     unsigned int ret = 0, loop = 0;
-    string output;
+    std::string output;
     do {
         ret = read(pipeFromPy[0], buff, 1023);
         if (ret == -1)
@@ -177,7 +190,7 @@ std::string TensorHandler::ReadFromPipe()
     return output;
 }
 
-bool TensorHandler::handleController(string tensor)
+bool TensorHandler::handleController(std::string tensor)
 {
     printf("%s:%d\tParsing Tensor Output\n", FILENM, __LINE__);
     float sx, sy;
@@ -200,7 +213,7 @@ bool TensorHandler::MakeExchange(MemoryScanner* mem)
     printf("%s:%d\tMaking Exchange\n", FILENM, __LINE__);
     SendToPipe(mem->GetPlayer(ctrl->player), mem->GetPlayer(!ctrl->player));
 
-    string ret = ReadFromPipe();
+    std::string ret = ReadFromPipe();
     if (ret.size() == 0)
         return false;
 
@@ -230,7 +243,7 @@ TensorHandler::~TensorHandler()
     printf("%s:%d\tGetting CLosing line from Tensor\n", FILENM, __LINE__);
     bool hadRead = false;
     unsigned int ret = 0, loop = 0;
-    string output;
+    std::string output;
     do {
         ret = read(pipeFromPy[0], buff, 255);
         if (ret == -1)
@@ -244,7 +257,7 @@ TensorHandler::~TensorHandler()
     } while (ret != 0 || !hadRead);
 
     // Make sure we can find the closing identifier
-    if (output.find("-1 -1") == string::npos)
+    if (output.find("-1 -1") == std::string::npos)
         fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
             "--ERROR:Tensor Did not close properly");
 

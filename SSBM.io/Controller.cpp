@@ -37,20 +37,6 @@ int nsleep(long miliseconds)
     return nanosleep(&req, &rem);
 }
 
-bool Controller::sendtofifo(std::string fifocmd)
-{
-    printf("%s:%d Writing to FIFO\n", FILENM, __LINE__);
-    unsigned int buff_sz = strlen(fifocmd.c_str());
-    if (write(fifo_fd, fifocmd.c_str(), buff_sz) < buff_sz)
-    {
-        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "--ERROR:write", strerror(errno));
-        pipeOpen = false;
-        return false;
-    }
-    return true;
-}
-
 void sigpipe_handler(int val)
 {
     if (val != SIGPIPE)
@@ -74,6 +60,20 @@ bool createSigPipeAction()
     {
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:sigaction", strerror(errno));
+        return false;
+    }
+    return true;
+}
+
+bool Controller::sendtofifo(std::string fifocmd)
+{
+    printf("%s:%d Writing to FIFO\n", FILENM, __LINE__);
+    unsigned int buff_sz = strlen(fifocmd.c_str());
+    if (write(fifo_fd, fifocmd.c_str(), buff_sz) < buff_sz)
+    {
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "--ERROR:write", strerror(errno));
+        pipeOpen = false;
         return false;
     }
     return true;
