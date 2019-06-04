@@ -188,11 +188,11 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             break; }
         case Addresses::PLAYER_ATTRIB::P1_DIR: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
-            val_int = val_int >> 24;
-            if (val_int)
-                p1.dir = -1;
-            if (!val_int)
-                p1.dir = 1;
+            
+            unsigned int* d1 = &val_int;
+            float dir1 = *((float*)d1);
+            p1.dir = dir1;
+
             break; }
                                                /*P2 */
         case Addresses::PLAYER_ATTRIB::P2_HEALTH:
@@ -207,9 +207,11 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             break; }
         case Addresses::PLAYER_ATTRIB::P2_COORD_Y: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
-            unsigned int* vy = &val_int;
-            float y = *((float*)vy);
-            p2.pos_y = y;
+            
+            unsigned int* d2 = &val_int;
+            float dir2 = *((float*)d2);
+            p2.dir = dir2;
+            
             break; }
         case Addresses::PLAYER_ATTRIB::P2_DIR: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
