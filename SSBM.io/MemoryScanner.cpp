@@ -141,6 +141,9 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
     /*strings to hold addresses*/
     std::string base, val;
 
+
+    while(!ss.eof())
+{
     getline(ss, base, '\n');
     getline(ss, val, '\n');
 
@@ -298,6 +301,9 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
         if (this->in_game)
             print();
     }
+
+}
+
     return true;
 }
 
