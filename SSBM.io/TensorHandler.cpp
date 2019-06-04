@@ -39,14 +39,6 @@ bool exists_test(const std::string& name) {
 
 bool TensorHandler::CreatePipes(Controller* ai)
 {
-    printf("%s:%d\tCreating Read Pipe\n", FILENM, __LINE__);
-
-    if (pipe(pipeFromPy) == -1)
-    {
-        fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
-            "--ERROR:Pipe", strerror(errno));
-        return false;
-    }
 
     printf("%s:%d\tCreating Write Pipe\n", FILENM, __LINE__);
     if (pipe(pipeToPy) == -1)
@@ -56,6 +48,21 @@ bool TensorHandler::CreatePipes(Controller* ai)
         return false;
     }
 
+    printf("%s:%d\tCreating Read Pipe\n", FILENM, __LINE__);
+    if (pipe(pipeFromPy) == -1)
+    {
+        fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
+            "--ERROR:Pipe", strerror(errno));
+        return false;
+    }
+
+    printf("%s:%d\tCreating Error Pipe\n", FILENM, __LINE__);
+    if (pipe(pipeErrorFromPy) == -1)
+    {
+        fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
+            "--ERROR:Pipe", strerror(errno));
+        return false;
+    }
     if ((pid = fork()) == -1)
     {
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
@@ -72,6 +79,12 @@ bool TensorHandler::CreatePipes(Controller* ai)
                 "--ERROR:close", strerror(errno));
             exit(EXIT_FAILURE);
         }
+        if (close(pipeErrorFromPy[0]) == -1) // Read end 
+        {
+            fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
+                "--ERROR:close", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
         if (close(pipeToPy[1]) == -1) // Write end
         {
             fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
@@ -81,6 +94,12 @@ bool TensorHandler::CreatePipes(Controller* ai)
 
         /* copy <oldfd> using <newfd> */
         if (dup2(pipeFromPy[1], STDOUT_FILENO) == -1)
+        {
+            fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
+                "--ERROR:dup2", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        if (dup2(pipeErrorFromPy[1], STDERR_FILENO) == -1)
         {
             fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
                 "--ERROR:dup2", strerror(errno));
@@ -142,6 +161,32 @@ bool TensorHandler::CreatePipes(Controller* ai)
     }
 
     ctrl = ai;
+    dumpErrorPipe();
+}
+
+void TensorHandler::dumpErrorPipe()
+{
+    printf("%s:%d\tDumping Error from Pipe\n", FILENM, __LINE__);
+    // Get output
+    char buff[1024];
+    bool hadRead = false;
+    unsigned int ret = 0, loop = 0;
+    std::string output = "";
+    do {
+        if (ret = read(pipeErrorFromPy[0], buff, 1023) == -1)
+        {
+            fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
+                "--ERROR:read", strerror(errno));
+            return;
+        }
+        else
+            hadRead = true;
+        buff[1023] = '\0'; // Makes sure it's terminated
+        printf("%s:%d\tError:%d %s\n", FILENM, __LINE__, loop++, buff);
+        output += buff;
+    } while (ret != 0 || !hadRead);
+
+    printf("%s:%d\tTensor output:\n\t%s\n", FILENM, __LINE__, output.c_str());
 }
 
 void TensorHandler::SendToPipe(Player ai, Player enemy)
@@ -161,6 +206,9 @@ void TensorHandler::SendToPipe(Player ai, Player enemy)
         "\t%u %d %f %f %u %d %f %f\n", FILENM, __LINE__,
         ai.health, ai.dir, ai.pos_x, ai.pos_y,
         enemy.health, enemy.dir, enemy.pos_x, enemy.pos_y);
+
+
+    dumpErrorPipe();
 }
 
 std::string TensorHandler::ReadFromPipe()
@@ -186,6 +234,9 @@ std::string TensorHandler::ReadFromPipe()
     } while (ret != 0 || !hadRead);
 
     printf("%s:%d\tTensor output:\n\t%s\n", FILENM, __LINE__, output.c_str());
+
+
+    dumpErrorPipe();
     return output;
 }
 
@@ -261,10 +312,13 @@ TensorHandler::~TensorHandler()
         fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
             "--ERROR:Tensor Did not close properly");
 
+    dumpErrorPipe();
+
     // close the pipes
     printf("%s:%d\tShutting Down Handler\n", FILENM, __LINE__);
     close(pipeFromPy[0]);
     close(pipeToPy[1]);
+    close(pipeErrorFromPy[0]);
 
     // Wait for Tensor to close
     int status;
