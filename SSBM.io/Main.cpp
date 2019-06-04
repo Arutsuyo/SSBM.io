@@ -12,11 +12,11 @@
 int main()
 {
     // Parse Test
-    std::string val = "3f800000";
+    /*std::string val = "3f800000";
     val
     unsigned int val_int = std::stoul(val.c_str(), nullptr, 16);
     printf("Test val:%d\n", val_int);
-    exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);*/
 
     printf("%s:%d Initializing statics\n", FILENM, __LINE__);
     // Init the static user dir

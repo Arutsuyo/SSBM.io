@@ -48,22 +48,34 @@ Player MemoryScanner::GetPlayer(bool pl)
     return !pl ? p1 : p2;
 }
 
-void MemoryScanner::print()
+bool MemoryScanner::print()
 {
     /*quick check for all values to be updated before being sent to model*/
-
-    if (this->p1.dir == 10 || this->p2.dir == 10)
-        return;
-    if (this->p1.pos_x == -1024 || this->p1.pos_y == -1024)
-        return;
-    if (this->p2.pos_x == -1024 || this->p2.pos_y == -1024)
-        return;
+    if (p1.dir == 10 || p2.dir == 10)
+    {
+        printf("%s:%d\t--Invalid Data: %d:%d\n", FILENM, __LINE__,
+            p1.dir, p2.dir);
+        return false;
+    }
+    if (p1.pos_x == -1024 || p1.pos_y == -1024)
+    {
+        printf("%s:%d\t--Invalid Data: %f:%f\n", FILENM, __LINE__,
+            p1.pos_x, p1.pos_y);
+        return false;
+    }
+    if (p2.pos_x == -1024 || p2.pos_y == -1024)
+    {
+        printf("%s:%d\t--Invalid Data: %f:%f\n", FILENM, __LINE__,
+            p2.pos_x, p2.pos_y);
+        return false;
+    }
 
     printf("%s:%d\tMemory Scan\n"
         "\tP1:%u P1:%d P1:%f P1:%f\n", FILENM, __LINE__,
         p1.health, p1.dir, p1.pos_x, p1.pos_y);
     printf("\tP2:%u P2:%d P2:%f P2:%f\n",
         p2.health, p2.dir, p2.pos_x, p2.pos_y);
+    return true;
 }
 
 /*initializes unix socket in default path.... later maybe add custom path support/env var*/
@@ -118,7 +130,11 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             "--ERROR:recvfrom", strerror(errno));
 
     if (prin)
+    {
         printf("%s:%d\tParsing Buffer: %s\n", FILENM, __LINE__, buffer);
+        
+    }
+
     //puts(buffer);
     std::stringstream ss(buffer);
     /*strings to hold addresses*/
@@ -177,7 +193,6 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
                 p1.dir = -1;
             if (!val_int)
                 p1.dir = 1;
-            printf("%d\n",val_int);
             break; }
                                                /*P2 */
         case Addresses::PLAYER_ATTRIB::P2_HEALTH:

@@ -179,7 +179,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     int loopLimit = 4, numDots = 50;
     do
     {
-        if (!mem.UpdatedFrame(true, true))
+        if (!mem.UpdatedFrame(true))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
