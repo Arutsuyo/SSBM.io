@@ -5,6 +5,8 @@
 #include <cstring>
 #define FILENM "TRNR"
 
+std::vector<int> Trainer::killpids;
+
 bool Trainer::term;
 
 Config* Trainer::cfg;
@@ -64,11 +66,50 @@ bool createSigIntAction()
     return true;
 }
 
+void sigusr_handle(int val)
+{
+    if (val != SIGUSR1)
+        return;
+
+    printf("%s:%d\tReceived SIGUSR1, Killing subprocesses\n", FILENM, __LINE__);
+    Trainer::KillAllpids();
+}
+
+bool createSigUSR1Action()
+{
+    // Create signal action
+    struct sigaction sa;
+    sa.sa_flags = 0;
+    sa.sa_handler = sigusr_handle;
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(SIGUSR1, &sa, NULL) == -1)
+    {
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "--ERROR:sigaction", strerror(errno));
+        return false;
+    }
+
+    printf("%s:%d\tSIGUSR1 Handler Created\n", FILENM, __LINE__);
+    return true;
+}
+
+void Trainer::AddToKillList(int pid)
+{
+    killpids.push_back(pid);
+}
+
+void Trainer::KillAllpids()
+{
+    for (int i = 0; i < killpids.size(); i++)
+        kill(killpids[i], SIGINT);
+}
+
 void Trainer::runTraining()
 {
     printf("%s:%d\tInitializing Training.\n", FILENM, __LINE__);
 
     createSigIntAction();
+    createSigUSR1Action();
 
     switch (_vs)
     {

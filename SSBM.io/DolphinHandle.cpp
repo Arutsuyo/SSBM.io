@@ -112,6 +112,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     printf("%s:%d-T%d\tChild successfully launched\n",
         FILENM, __LINE__, *ta._pid);
+    Trainer::AddToKillList(*ta._pid);
 
     // Do this AFTER launching Dolphin, otherwise it will block
     printf("%s:%d-T%d\tOpening controllers\n",
@@ -151,7 +152,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     while (mem.CurrentStage() != 3)
     {
         //update the frame to find the current state
-        if (!mem.UpdatedFrame())
+        if (!mem.UpdatedFrame(true))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
@@ -159,7 +160,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
     }
 
-    printf("%s:%d-T%d\tLoading Savestate\n",
+    printf("%s:%d-T%d\tLoading Save-state\n",
         FILENM, __LINE__, *ta._pid);
     int loopLimit = 20;
     bool openPipe =
@@ -170,7 +171,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     while (mem.CurrentStage() != 1)
     {
         //update the frame to find the current state
-        if (!mem.UpdatedFrame())
+        if (!mem.UpdatedFrame(true))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
@@ -184,7 +185,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     bool openSocket = true;
     while (*ta._running && openPipe && openSocket && loopLimit--)
     {
-        if (!mem.UpdatedFrame())
+        if (!mem.UpdatedFrame(false))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");

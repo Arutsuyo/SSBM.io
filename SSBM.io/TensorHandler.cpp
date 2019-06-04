@@ -1,4 +1,5 @@
 #include "TensorHandler.h"
+#include "Trainer.h"
 #include <sys/types.h> /* pid_t */
 #include <cstring>
 #include <sys/wait.h>
@@ -89,6 +90,8 @@ bool TensorHandler::CreatePipes(Controller* ai)
             "--ERROR:EXECLP", strerror(errno));
         exit(EXIT_FAILURE);
     }
+
+    Trainer::AddToKillList(pid);
 
     if (close(pipeFromPy[1]) == -1)
     {

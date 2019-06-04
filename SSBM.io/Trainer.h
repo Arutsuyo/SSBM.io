@@ -18,6 +18,7 @@ class Trainer
     VsType _vs = VsType::Self;
 
     std::vector<DolphinHandle*> _Dhandles;
+    static std::vector<int> killpids;
 
 public:
     static bool term;
@@ -34,8 +35,12 @@ public:
 
     // Threading Info
     static unsigned concurentThreadsSupported;
+    
     static std::mutex mut;
     static std::condition_variable cv;
+
+    static void AddToKillList(int pid);
+    static void KillAllpids();
 
     void runTraining();
     Trainer(VsType vs = VsType::Self);

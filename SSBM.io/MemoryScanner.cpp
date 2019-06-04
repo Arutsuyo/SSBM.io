@@ -93,8 +93,9 @@ bool MemoryScanner::init_socket() {
     return true;
 }
 
-bool MemoryScanner::UpdatedFrame() {
-    printf("%s:%d\tUpdating Memory\n", FILENM, __LINE__);
+bool MemoryScanner::UpdatedFrame(bool prin) {
+    if (prin)
+        printf("%s:%d\tUpdating Memory\n", FILENM, __LINE__);
 
     if (socketfd < 0) {
         std::cout << "Error socket file descriptor is bad" << std::endl;
@@ -106,14 +107,16 @@ bool MemoryScanner::UpdatedFrame() {
 
     unsigned int val_int;
 
-    printf("%s:%d\tReading Socket\n", FILENM, __LINE__);
+    if (prin)
+        printf("%s:%d\tReading Socket\n", FILENM, __LINE__);
     struct sockaddr recvsock;
     socklen_t sock_len;
     if (recvfrom(socketfd, buffer, sizeof(buffer), 0, &recvsock, &sock_len) == -1)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:recvfrom", strerror(errno));
 
-    printf("%s:%d\tParsing Buffer: %s\n", FILENM, __LINE__, buffer);
+    if (prin)
+        printf("%s:%d\tParsing Buffer: %s\n", FILENM, __LINE__, buffer);
     //puts(buffer);
     std::stringstream ss(buffer);
     /*strings to hold addresses*/
@@ -198,54 +201,58 @@ bool MemoryScanner::UpdatedFrame() {
 
         case Addresses::MENUS::MENU_STATE:
             unsigned int x, y, z; //z holds value we need
-                sscanf(val.c_str(), "%x,%x,%x", &x,&y,&z);
-            switch(z){
-                case Addresses::MENUS::IN_GAME:
+            sscanf(val.c_str(), "%x,%x,%x", &x, &y, &z);
+            switch (z) {
+            case Addresses::MENUS::IN_GAME:
+                if (prin)
                     printf("%s:%d\tState: In Game\n", FILENM, __LINE__);
-                    this->current_stage = 1;
-                    break;
-                case Addresses::MENUS::POSTGAME:
+                this->current_stage = 1;
+                break;
+            case Addresses::MENUS::POSTGAME:
+                if (prin)
                     printf("%s:%d\tState: Post-game menu\n", FILENM, __LINE__);
-                    this->current_stage = 2;
-                    break;
-                case Addresses::MENUS::CHARACTER_SELECT:
+                this->current_stage = 2;
+                break;
+            case Addresses::MENUS::CHARACTER_SELECT:
+                if (prin)
                     printf("%s:%d\tState: Character Select\n", FILENM, __LINE__);
-                    this->current_stage = 3;
-                    break;
-                case Addresses::MENUS::STAGE_SELECT:
+                this->current_stage = 3;
+                break;
+            case Addresses::MENUS::STAGE_SELECT:
+                if (prin)
                     printf("%s:%d\tState: Stage Select\n", FILENM, __LINE__);
-                    this->current_stage = 4;
-                    break;
-                default:
-                    fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
-                        "--ERROR:Menu offset read, but returned unknown value");
-                    break;
-                }
+                this->current_stage = 4;
+                break;
+            default:
+                fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+                    "--ERROR:Menu offset read, but returned unknown value");
+                break;
+            }
             break;
 
-        case Addresses::PLAYER_ATTRIB::P2_CURSOR_X:{
+        case Addresses::PLAYER_ATTRIB::P2_CURSOR_X: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* cx = &val_int;
             float cursx = *((float*)cx);
-            break;}
+            break; }
 
-        case Addresses::PLAYER_ATTRIB::P2_CURSOR_Y:{
+        case Addresses::PLAYER_ATTRIB::P2_CURSOR_Y: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* cy = &val_int;
-            float cursy = *((float*)cy);           
-            break;}
+            float cursy = *((float*)cy);
+            break; }
 
-        case Addresses::PLAYER_ATTRIB::P1_CURSOR_X:{
+        case Addresses::PLAYER_ATTRIB::P1_CURSOR_X: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* cx = &val_int;
             float cursx = *((float*)cx);
-            break;}
+            break; }
 
-        case Addresses::PLAYER_ATTRIB::P1_CURSOR_Y:{
+        case Addresses::PLAYER_ATTRIB::P1_CURSOR_Y: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* cy = &val_int;
-            float cursy = *((float*)cy); 
-            break;}
+            float cursy = *((float*)cy);
+            break; }
 
         default:
             break;
@@ -253,7 +260,7 @@ bool MemoryScanner::UpdatedFrame() {
 
 
         /*only print information if we are in game*/
-        if ( this->in_game )
+        if (this->in_game)
             print();
     }
     return true;
