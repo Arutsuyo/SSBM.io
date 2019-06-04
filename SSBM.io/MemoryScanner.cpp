@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include "MemoryScanner.h"
 #include "addresses.h"
+#include <algorithm>
 #define FILENM "MS"
 
 MemoryScanner::MemoryScanner(std::string inUserDir)
@@ -36,7 +37,7 @@ MemoryScanner::~MemoryScanner() {
 
     printf("%s:%d\tDestroying MemoryScanner\n", FILENM, __LINE__);
     /*shutdown the socket*/
-    if (shutdown(socketfd, 2) < 0)
+    if (shutdown(this->socketfd, 2) < 0)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:shutdown", strerror(errno));
     printf("%s:%d\tSocket Closed\n", FILENM, __LINE__);
@@ -47,35 +48,22 @@ Player MemoryScanner::GetPlayer(bool pl)
     return !pl ? p1 : p2;
 }
 
-bool MemoryScanner::print()
+void MemoryScanner::print()
 {
     /*quick check for all values to be updated before being sent to model*/
 
-    if (p1.dir == 10 || p2.dir == 10)
-    {
-        printf("%s:%d\t--Invalid Data: %d:%d\n", FILENM, __LINE__, 
-            p1.dir, p2.dir);
-        return false;
-    }
-    if (p1.pos_x == -1024 || p1.pos_y == -1024)
-    {
-        printf("%s:%d\t--Invalid Data: %f:%f\n", FILENM, __LINE__, 
-            p1.pos_x, p1.pos_y);
-        return false;
-    }
-    if (p2.pos_x == -1024 || p2.pos_y == -1024)
-    {
-        printf("%s:%d\t--Invalid Data: %f:%f\n", FILENM, __LINE__, 
-            p2.pos_x, p2.pos_y);
-        return false;
-    }
+    if (this->p1.dir == 10 || this->p2.dir == 10)
+        return;
+    if (this->p1.pos_x == -1024 || this->p1.pos_y == -1024)
+        return;
+    if (this->p2.pos_x == -1024 || this->p2.pos_y == -1024)
+        return;
 
     printf("%s:%d\tMemory Scan\n"
         "\tP1:%u P1:%d P1:%f P1:%f\n", FILENM, __LINE__,
         p1.health, p1.dir, p1.pos_x, p1.pos_y);
     printf("\tP2:%u P2:%d P2:%f P2:%f\n",
         p2.health, p2.dir, p2.pos_x, p2.pos_y);
-    return true;
 }
 
 /*initializes unix socket in default path.... later maybe add custom path support/env var*/
@@ -139,7 +127,8 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
     getline(ss, base, '\n');
     getline(ss, val, '\n');
 
-    static bool prints[4]{ false, false, false, false };
+    /* to fix any issues with cross platform memory reading, remove commas*/
+    val.erase(std::remove(val.begin(), val.end(), ','), val.end());
 
     /*attempt to find any pointers, should be ' ' but may be a comma
     double check this*/
@@ -168,7 +157,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
         case Addresses::PLAYER_ATTRIB::P1_HEALTH: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             p1.health = val_int >> 16;
-            break;	}
+            break;  }
         case Addresses::PLAYER_ATTRIB::P1_COORD_X: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* vx = &val_int;
@@ -183,9 +172,12 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             break; }
         case Addresses::PLAYER_ATTRIB::P1_DIR: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
-            unsigned int* vy = &val_int;
-            float y = *((float*)vy);
-            p1.dir = y;
+            val_int = val_int >> 24;
+            if (val_int)
+                p1.dir = -1;
+            if (!val_int)
+                p1.dir = 1;
+            printf("%d\n",val_int);
             break; }
                                                /*P2 */
         case Addresses::PLAYER_ATTRIB::P2_HEALTH:
@@ -206,9 +198,13 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             break; }
         case Addresses::PLAYER_ATTRIB::P2_DIR: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
-            unsigned int* vy = &val_int;
-            float y = *((float*)vy);
-            p2.dir = y;
+            //left 191 right 63
+            val_int = val_int >> 24;
+            if (val_int)
+                p2.dir = -1;
+            if (!val_int)
+                p2.dir = 1;
+            printf("%d\n",val_int);
             break; }
 
         case Addresses::MENUS::MENU_STATE:
@@ -220,28 +216,28 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
                     printf("%s:%d\tState: In Game\n", FILENM, __LINE__);
                 p1.current_menu = 1;
                 p2.current_menu = 1;
-                current_stage = 1;
+                this->current_stage = 1;
                 break;
             case Addresses::MENUS::POSTGAME:
                 if (prin)
                     printf("%s:%d\tState: Post-game menu\n", FILENM, __LINE__);
                 p1.current_menu = 2;
                 p2.current_menu = 2;
-                current_stage = 2;
+                this->current_stage = 2;
                 break;
             case Addresses::MENUS::CHARACTER_SELECT:
                 if (prin)
                     printf("%s:%d\tState: Character Select\n", FILENM, __LINE__);
                 p1.current_menu = 3;
                 p2.current_menu = 3;
-                current_stage = 3;
+                this->current_stage = 3;
                 break;
             case Addresses::MENUS::STAGE_SELECT:
                 if (prin)
                     printf("%s:%d\tState: Stage Select\n", FILENM, __LINE__);
                 p1.current_menu = 4;
                 p2.current_menu = 4;
-                current_stage = 4;
+                this->current_stage = 4;
                 break;
             default:
                 fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
@@ -284,10 +280,9 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
 
         /*only print information if we are in game*/
-        if (in_game)
+        if (this->in_game)
             print();
     }
-
     return true;
 }
 
