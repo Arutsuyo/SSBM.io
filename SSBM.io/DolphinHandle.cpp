@@ -150,12 +150,12 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     printf("%s:%d-T%d\tPausing to load Menu\n",
         FILENM, __LINE__, *ta._pid);
 
-    Navigation nav = Navigation(*(*ta._controllers).back(), &mem);
+    //Navigation nav = Navigation(*(*ta._controllers).back(), &mem);
 
     //wait until the character stage is detected
     while (mem.CurrentStage() != 3)
     {
-        nav.FindPos();
+        //nav.FindPos();
         //update the frame to find the current state
         if (!mem.UpdatedFrame(true))
         {

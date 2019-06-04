@@ -201,8 +201,8 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             break; }
 
         case Addresses::MENUS::MENU_STATE:
-            unsigned int x, y, z; //z holds value we need
-            sscanf(val.c_str(), "%x,%x,%x", &x, &y, &z);
+            unsigned int z; //z holds value we need
+            sscanf(val.substr(val.size()-3).c_str(), "%x", &z);
             switch (z) {
             case Addresses::MENUS::IN_GAME:
                 if (prin)
