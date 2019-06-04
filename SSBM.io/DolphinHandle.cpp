@@ -1,5 +1,7 @@
 #include "DolphinHandle.h"
 #include "TensorHandler.h"
+#include "Player.h" 
+#include "Navigation.h" 
 #include "Trainer.h"
 #include <stdlib.h>
 #include <sys/types.h>
@@ -148,9 +150,12 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     printf("%s:%d-T%d\tPausing to load Menu\n",
         FILENM, __LINE__, *ta._pid);
 
+    Navigation nav = Navigation(*(*ta._controllers).back(), &mem);
+
     //wait until the character stage is detected
-    while (mem.CurrentStage() != 3)
+    while (mem.CurrentStage() != 44)
     {
+        nav.FindPos();
         //update the frame to find the current state
         if (!mem.UpdatedFrame(true))
         {
@@ -164,8 +169,8 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         FILENM, __LINE__, *ta._pid);
     int loopLimit = 20;
     bool openPipe =
-        //true; // This can be used once we have cursor pos
-        (*ta._controllers).back()->ActivateSaveState();
+        true; // This can be used once we have cursor pos
+        //(*ta._controllers).back()->ActivateSaveState();
 
     //wait until the game detects it is currently in game
     while (mem.CurrentStage() != 1)
