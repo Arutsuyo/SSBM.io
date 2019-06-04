@@ -1,7 +1,8 @@
 #ifndef _MEMORYSCANNER_H
 #define _MEMORYSCANNER_H
 #include <string>
-#include "player.h"
+#include "Player.h"
+#include "Controller.h"
 
 class MemoryScanner {
 
@@ -13,6 +14,11 @@ class MemoryScanner {
 	std::string userPath;
 
 	bool init_socket();
+
+	bool in_game;
+
+	int current_stage = -1;
+
 public:
 	bool success = false;
 
@@ -21,8 +27,11 @@ public:
 	bool UpdatedFrame();
 	void print();
 
+	int CurrentStage(){return this->current_stage;}
 	MemoryScanner(std::string s);
 	~MemoryScanner();
+
+
 };
 
 #endif

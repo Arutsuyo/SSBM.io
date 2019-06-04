@@ -195,11 +195,66 @@ bool MemoryScanner::UpdatedFrame() {
             if (val_int == 63)
                 p2.dir = 1;
             break; }
+
+        case Addresses::MENUS::MENU_STATE:
+                uint  x, y,z; //z holds value we need
+                sscanf(val.c_str(), "%x,%x,%x", &x,&y,&z);
+            switch(z){
+                case Addresses::MENUS::IN_GAME:
+                    printf("IN Playing in Game\n");
+                    this->current_stage = 1;
+                    break;
+                case Addresses::MENUS::POSTGAME:
+                    printf("Postgame menu\n");
+                    this->current_stage = 2;
+                    break;
+                case Addresses::MENUS::CHARACTER_SELECT:
+                    printf("Character Select\n");
+                    this->current_stage = 3;
+                    break;
+                case Addresses::MENUS::STAGE_SELECT:
+                    printf("Stage Select\n");
+                    this->current_stage = 4;
+                    break;
+                default:
+                    fprintf(stderr, "Menu offset read, but returned unknown value\n");
+                    break;
+                }
+            break;
+
+        case Addresses::PLAYER_ATTRIB::P2_CURSOR_X:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* cx = &val_int;
+            float cursx = *((float*)cx);
+            break;}
+
+        case Addresses::PLAYER_ATTRIB::P2_CURSOR_Y:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* cy = &val_int;
+            float cursy = *((float*)cy);           
+            break;}
+
+        case Addresses::PLAYER_ATTRIB::P1_CURSOR_X:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* cx = &val_int;
+            float cursx = *((float*)cx);
+            break;}
+
+        case Addresses::PLAYER_ATTRIB::P1_CURSOR_Y:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* cy = &val_int;
+            float cursy = *((float*)cy); 
+            break;}
+
         default:
             break;
         }
 
-        print();
+
+        /*only print information if we are in game*/
+        if ( this->in_game )
+            print();
     }
     return true;
 }
+
