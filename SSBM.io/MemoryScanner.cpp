@@ -222,12 +222,39 @@ bool MemoryScanner::UpdatedFrame() {
                 }
             break;
 
+        case Addresses::PLAYER_ATTRIB::P2_CURSOR_X:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* cx = &val_int;
+            float cursx = *((float*)cx);
+            break;}
+
+        case Addresses::PLAYER_ATTRIB::P2_CURSOR_Y:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* cy = &val_int;
+            float cursy = *((float*)cy);           
+            break;}
+
+        case Addresses::PLAYER_ATTRIB::P1_CURSOR_X:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* cx = &val_int;
+            float cursx = *((float*)cx);
+            break;}
+
+        case Addresses::PLAYER_ATTRIB::P1_CURSOR_Y:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* cy = &val_int;
+            float cursy = *((float*)cy); 
+            break;}
+
         default:
             break;
         }
+
+
         /*only print information if we are in game*/
         if ( this->in_game )
             print();
     }
     return true;
 }
+

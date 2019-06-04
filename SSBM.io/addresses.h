@@ -41,8 +41,44 @@ namespace Addresses {
 
         /*Y Direction*/
         P1_COORD_Y = 0x453094,
-        P2_COORD_Y = 0x453F24
+        P2_COORD_Y = 0x453F24,
 
+        /*Cursor */
+        P1_CURSOR_X = 0x01118DEC,
+        P1_CURSOR_Y = 0x01118DF0,
+        P2_CURSOR_X = 0x0111826C,
+        P2_CURSOR_Y = 0x01118270
+
+
+
+    };
+
+    enum CHARACTERS {
+        DR_MARIO = 0,
+        MARIO = 1,
+        LUIGI = 2,
+        BOWSER = 3,
+        PEACH = 4,
+        YOSHI = 5,
+        DK = 6,
+        C_FALCON = 7,
+        GANONDORF = 8,
+        FALCO = 9,
+        FOX = 10,
+        NESS = 11,
+        ICE_CLIMBERS = 12,
+        KIRBY = 13,
+        SAMUS = 14,
+        ZELDA = 15,
+        LINK = 16,
+        YOUNG_LINK = 17,
+        PICHU = 18,
+        PIKACHU = 19,
+        JIGGLYPUFF = 20,
+        MEWTWO = 21,
+        MR_GAME_AND_WATCH = 22,
+        MARTH = 23,
+        ROY = 24
     };
 
 };

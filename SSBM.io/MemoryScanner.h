@@ -2,6 +2,7 @@
 #define _MEMORYSCANNER_H
 #include <string>
 #include "Player.h"
+#include "Controller.h"
 
 class MemoryScanner {
 
@@ -29,6 +30,8 @@ public:
 	int CurrentStage(){return this->current_stage;}
 	MemoryScanner(std::string s);
 	~MemoryScanner();
+
+
 };
 
 #endif
