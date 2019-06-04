@@ -107,7 +107,7 @@ bool MemoryScanner::init_socket() {
     return true;
 }
 
-bool MemoryScanner::UpdatedFrame(bool prin, bool fuckit) {
+bool MemoryScanner::UpdatedFrame(bool prin) {
     if (prin)
         printf("%s:%d\tUpdating Memory\n", FILENM, __LINE__);
 
@@ -166,42 +166,22 @@ bool MemoryScanner::UpdatedFrame(bool prin, bool fuckit) {
         switch (player_val) {
             /*p1 health*/
         case Addresses::PLAYER_ATTRIB::P1_HEALTH: {
-            if (fuckit)
-            {
-                printf("---MEMORY:P1_HEALTH::%s\n", val.c_str());
-                prints[0] = true;
-            }
             val_int = std::stoul(val.c_str(), nullptr, 16);
             p1.health = val_int >> 16;
             break;	}
         case Addresses::PLAYER_ATTRIB::P1_COORD_X: {
-            if (fuckit)
-            {
-                printf("---MEMORY:P1_COORD_X::%s\n", val.c_str());
-                prints[1] = true;
-            }
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* vx = &val_int;
             float x = *((float*)vx);
             p1.pos_x = x;
             break; }
         case Addresses::PLAYER_ATTRIB::P1_COORD_Y: {
-            if (fuckit)
-            {
-                printf("---MEMORY:P1_COORD_Y::%s\n", val.c_str());
-                prints[2] = true;
-            }
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* vy = &val_int;
             float y = *((float*)vy);
             p1.pos_y = y;
             break; }
-        case Addresses::PLAYER_ATTRIB::P1_DIR: { // Should be a float
-            if (fuckit)
-            {
-                printf("---MEMORY:P1_DIR::%s\n", val.c_str());
-                prints[3] = true;
-            }
+        case Addresses::PLAYER_ATTRIB::P1_DIR: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* vy = &val_int;
             float y = *((float*)vy);
@@ -307,8 +287,7 @@ bool MemoryScanner::UpdatedFrame(bool prin, bool fuckit) {
         if (in_game)
             print();
     }
-    if (prints[0] && prints[1] && prints[2] && prints[3])
-        exit(EXIT_SUCCESS);
+
     return true;
 }
 
