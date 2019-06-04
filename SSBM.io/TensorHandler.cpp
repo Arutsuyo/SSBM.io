@@ -170,10 +170,9 @@ std::string TensorHandler::ReadFromPipe()
     char buff[1024];
     bool hadRead = false;
     unsigned int ret = 0, loop = 0;
-    std::string output;
+    std::string output = "";
     do {
-        ret = read(pipeFromPy[0], buff, 1023);
-        if (ret == -1)
+        if(ret = read(pipeFromPy[0], buff, 1023) == -1)
         {
             fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
                 "--ERROR:read", strerror(errno));
@@ -243,12 +242,13 @@ TensorHandler::~TensorHandler()
     printf("%s:%d\tGetting CLosing line from Tensor\n", FILENM, __LINE__);
     bool hadRead = false;
     unsigned int ret = 0, loop = 0;
-    std::string output;
+    std::string output = "";
     do {
-        ret = read(pipeFromPy[0], buff, 255);
-        if (ret == -1)
+        if (ret = read(pipeFromPy[0], buff, 255) == -1)
+        {
             fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
                 "--ERROR:read", strerror(errno));
+        }
         else
             hadRead = true;
         buff[255] = '\0'; // Makes sure it's terminated
