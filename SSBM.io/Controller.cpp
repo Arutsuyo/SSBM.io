@@ -159,15 +159,21 @@ bool Controller::setControls(Controls inCt)
         std::chrono::high_resolution_clock::now()
         - lastSent;
     if (elapsed.count() < pipeDelay)
+    {
+        printf("%s:%d\tDelay hasn't elapsed\n",
+            FILENM, __LINE__);
         return false;
+    }
 
+    printf("%s:%d\tController: Sending Controls\n",
+        FILENM, __LINE__);
     // Main Stick
     float disx = ct.stick[0] - inCt.stick[0],
         disy = ct.stick[1] - inCt.stick[1];
     // Get Abs
     float absDisx = disx < 0 ? -disx : disx,
         absDisy = disy < 0 ? -disy : disy;
-    if (absDisx > 0.09 || absDisy > 0.09)
+    if (absDisx > 0.01 || absDisy > 0.01)
     {
         ret = sprintf(buff, "SET MAIN %.2f %.2f\n", inCt.stick[0], inCt.stick[0]);
         ct.stick[0] = inCt.stick[0];
