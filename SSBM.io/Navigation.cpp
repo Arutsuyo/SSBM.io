@@ -12,49 +12,56 @@ Navigation::Navigation(Controller& c, MemoryScanner* mem) {
 bool Navigation::FindPos() {
 
     //might need memory pointer to update the player
-
+    Player p2;
+    Player p1;
     bool exit = false;
 
     while (!exit)
     {
+        puts("IN FIRST CHECK");
+       p1 = memory->GetPlayer(true);
+        p2 = memory->GetPlayer(false);
 
-        this->p1 = p1;
-        this->p2 = p2;
-        puts("IN NAVIGATION");
-        printf("%.2f is X POS\n", p2->cursor_x);
-        printf("Menu is %d\n", p2->current_menu);
+
         /*character select screen*/
-        while (p2->current_menu == 3)
-        {
+        while (p2.current_menu == 3)
+        {           
+            puts("SELECTING CHARAXTER");
+            p1 = memory->GetPlayer(true);
+            p2 = memory->GetPlayer(false);
+            
             int count = 0;
 
-            if (p2->cursor_x < 16.5)
+            if (p1.cursor_x < 16.5)
             {
                 puts("LESS");
                 count++;
                 tilt_right();
             }
-            if (p2->cursor_x > 19.4)
+            if (p1.cursor_x > 19.4)
             {
                 puts("MORE");
                 count++;
                 tilt_left();
             }
-            if (p2->cursor_y > 18)
+            if (p1.cursor_y > 18)
             {
                 count++;
                 tilt_up();
             }
-            if (p2->cursor_y < 16.5)
+            if (p1.cursor_y < 16.5)
             {
                 count++;
                 tilt_down();
             }
 
-            if (count == 0)
+            if (count == 0){
                 puts("FOUND");
+                return;
+            }
             //select_character();
             count = 0;
+            memory->UpdatedFrame(false);
         }
         /*
         while( p1->current_menu == 4)
@@ -69,27 +76,30 @@ bool Navigation::FindPos() {
                 //move up
         }*/
         //clear input
+        memory->UpdatedFrame(false);
         exit = true;
     }
     return true;
 }
 
 void Navigation::tilt_right() {
-    cont.setSticks(.6, .5);
-    (void)cont.SendState();
+    std::string b = "echo 'SET MAIN .6 .5' >> /home/zach/.dolphin-emu/Pipes/pipe1";
+    system(b.c_str());
+    //cont.setSticks(.6, .5);
+    //(void)cont.SendState();
 }
 
 void Navigation::tilt_left() {
-    cont.setSticks(.4, .5);
-    (void)cont.SendState();
+    std::string b = "echo 'SET MAIN .4 .5' >> /home/zach/.dolphin-emu/Pipes/pipe1";
+    system(b.c_str());
 }
 
 void Navigation::tilt_up() {
-    cont.setSticks(.5, .6);
-    (void)cont.SendState();
+    std::string b = "echo 'SET MAIN .5 .6' >> /home/zach/.dolphin-emu/Pipes/pipe1";
+    system(b.c_str());
 }
 
 void Navigation::tilt_down() {
-    cont.setSticks(.5, .4);
-    (void)cont.SendState();
+    std::string b = "echo 'SET MAIN .6 .4' >> /home/zach/.dolphin-emu/Pipes/pipe1";
+    system(b.c_str());
 }
