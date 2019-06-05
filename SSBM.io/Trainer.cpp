@@ -101,7 +101,7 @@ void Trainer::AddToKillList(int pid)
 void Trainer::KillAllpids()
 {
     for (int i = 0; i < killpids.size(); i++)
-        kill(killpids[i], SIGINT);
+        kill(killpids[i], 9);
 }
 
 void Trainer::runTraining()
