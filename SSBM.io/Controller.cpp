@@ -9,8 +9,10 @@
 #include <fcntl.h>
 #include <string>
 #include <time.h>
+
 #define FILENM "CTRL"
 #define BUFF_SIZE 1024
+
 
 
 char Controller::_ButtonNames[] = {
@@ -153,10 +155,23 @@ bool Controller::setControls(Controls inCt)
     memset(buff, 0, BUFF_SIZE);
     int offset = 0, ret = 0;
 
-    // Main Stick
-    ret = sprintf(buff, "SET MAIN %.2f %.2f", inCt.stick[0], inCt.stick[0]);
-    offset += ret + 1;
+    std::chrono::duration<double> elapsed =
+        std::chrono::high_resolution_clock::now()
+        - lastSent;
+    if (elapsed.count() < pipeDelay)
+        return false;
 
+    // Main Stick
+    float disx = ct.stick[0] - inCt.stick[0],
+        disy = ct.stick[1] - inCt.stick[1];
+    // Get Abs
+    float absDisx = disx < 0 ? -disx : disx,
+        absDisy = disy < 0 ? -disy : disy;
+    if (absDisx > 0.09 || absDisy > 0.09)
+    {
+        ret = sprintf(buff, "SET MAIN %.2f %.2f", inCt.stick[0], inCt.stick[0]);
+        offset += ret + 1;
+    }
     // buttons
     for (unsigned int i = 0; i < _NUM_BUTTONS; i++)
     {
@@ -164,14 +179,18 @@ bool Controller::setControls(Controls inCt)
         if (ct.buttons[i] == inCt.buttons[i])
             continue;
 
-        ret = sprintf(buff + offset, "%s %c", 
+        ret = sprintf(buff + offset, "%s %c",
             ct.buttons[i] ? "PRESS" : "RELEASE",
             _ButtonNames[i]);
         offset += ret + 1;
     }
 
     ct = inCt;
-    return sendtofifo(buff, offset);
+    if (!sendtofifo(buff, offset))
+        pipeOpen = false;
+
+    return pipeOpen;
+
 }
 
 bool Controller::PressStart()
@@ -180,14 +199,14 @@ bool Controller::PressStart()
     char buff[BUFF_SIZE];
     int ret = 0;
     ret = sprintf(buff, "%s %s", "PRESS", "Start");
-    
+
     printf("%s:%d %s %s\n", FILENM, __LINE__,
         getFileName(pipePath).c_str(), buff);
     if (!sendtofifo(buff, ret))
         return false;
 
-    // Sleep for half a second
-    nsleep(500);
+    // delay. pipeDelay needs to be converted to ms from seconds
+    nsleep(pipeDelay * 1000);
 
     ret = sprintf(buff, "%s %s", "RELEASE", "Start");
     printf("%s:%d %s %s\n", FILENM, __LINE__,
@@ -196,10 +215,16 @@ bool Controller::PressStart()
     return sendtofifo(buff, ret);
 }
 
-Controller::Controller(bool plyr) :
+Controller::Controller(bool plyr, int frameDelay) :
     player(plyr),
     ct{ 0.5f, 0.5f, false, false, false, false, false }
 {
+    // calculate frametime (ms)
+    double frametime = FPS / 1000.0;
+    // convert to seconds
+    frametime /= 1000;
+    pipeDelay = frametime * frameDelay;
+
     printf("%s:%d Controller Created\n", FILENM, __LINE__);
 }
 
@@ -215,6 +240,6 @@ Controller::~Controller()
     if (remove(pipePath.c_str()) != 0)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:remove", strerror(errno));
-    
+
     printf("%s:%d deleted pipe\n", FILENM, __LINE__);
 }
