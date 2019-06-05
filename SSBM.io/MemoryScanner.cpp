@@ -227,7 +227,9 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
         case Addresses::MENUS::MENU_STATE:
             unsigned int z; //z holds value we need
+
             sscanf(val.substr(val.size()-3).c_str(), "%x", &z);
+
             switch (z) {
             case Addresses::MENUS::IN_GAME:
                 if (prin)
@@ -266,6 +268,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
         case Addresses::PLAYER_ATTRIB::P1_CURSOR_X: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
+
             unsigned int* cx = &val_int;
             float cursx = *((float*)cx);
             p1.cursor_x = cursx;
@@ -280,6 +283,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
         case Addresses::PLAYER_ATTRIB::P2_CURSOR_X: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
+            printf("P1 CURSOR\n");
             unsigned int* cx = &val_int;
             float cursx = *((float*)cx);
             p2.cursor_x = cursx;
