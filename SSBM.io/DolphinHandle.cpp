@@ -61,7 +61,7 @@ void DolphinHandle::CopyBaseFiles()
 std::string DolphinHandle::AddController(int player, int pipe_count, std::string id)
 {
     printf("%s:%d\tCreating AI Controller: %d\n", FILENM, __LINE__, player + 1);
-    Controller* ctrl = new Controller(player);
+    Controller* ctrl = new Controller(player); // TODO add delay arg
     !ctrl->CreateFifo(aiPipe, pipe_count);
     controllers.push_back(ctrl);
     return Trainer::cfg->getAIPipeConfig(player, pipe_count, id);
@@ -168,7 +168,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         for (int i = 0; i < tHandles.size(); i++)
             selected &= tHandles[i]->SelectCharacter(&mem);
         if (selected)
-            (*ta._controllers).back()->PressStart();
+            (*ta._controllers).back()->ButtonPressRelease("START");
     }
 
     printf("%s:%d-T%d\tSelecting Stage\n",
@@ -184,7 +184,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
         if (tHandles[0]->SelectStage(&mem))
         {
-            (*ta._controllers).front()->PressStart();
+            (*ta._controllers).front()->ButtonPressRelease("START");
         }
     }
 

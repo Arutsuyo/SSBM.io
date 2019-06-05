@@ -273,7 +273,7 @@ bool TensorHandler::SelectCharacter(MemoryScanner* mem)
 {
     Player p = mem->GetPlayer(ctrl->player);
     float sx, sy;
-    int ba = 0, bb = 0, by = 0, bz = 0, bl = 0;
+    bool ba = false, bb = false, by = false, bz = false, bl = false;
 
     // Get distance
     float disx = cptFalcon[0] - p.cursor_x;
@@ -296,10 +296,11 @@ bool TensorHandler::SelectCharacter(MemoryScanner* mem)
         sy = disy > 0 ? 0.75f : 0.25;
 
     if (sx == 0.5f && sy == 0.5f)
-        ba = 1;
+        ba = true;
 
     printf("%s:%d\tSending Controls to Controller\n", FILENM, __LINE__);
-    ctrl->setControls({ sx, sy, ba, bb, by, bz, bl });
+    if (!ctrl->setControls({ sx, sy, ba, bb, by, bz, bl }) && !ctrl->IsPipeOpen())
+        return false;
 
     return ba;
 }

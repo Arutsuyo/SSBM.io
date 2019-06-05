@@ -169,7 +169,9 @@ bool Controller::setControls(Controls inCt)
         absDisy = disy < 0 ? -disy : disy;
     if (absDisx > 0.09 || absDisy > 0.09)
     {
-        ret = sprintf(buff, "SET MAIN %.2f %.2f", inCt.stick[0], inCt.stick[0]);
+        ret = sprintf(buff, "SET MAIN %.2f %.2f\n", inCt.stick[0], inCt.stick[0]);
+        ct.stick[0] = inCt.stick[0];
+        ct.stick[1] = inCt.stick[1];
         offset += ret + 1;
     }
     // buttons
@@ -179,26 +181,25 @@ bool Controller::setControls(Controls inCt)
         if (ct.buttons[i] == inCt.buttons[i])
             continue;
 
-        ret = sprintf(buff + offset, "%s %c",
+        ret = sprintf(buff + offset, "%s %c\n",
             ct.buttons[i] ? "PRESS" : "RELEASE",
             _ButtonNames[i]);
+        ct.buttons[i] = inCt.buttons[i];
         offset += ret + 1;
     }
 
-    ct = inCt;
     if (!sendtofifo(buff, offset))
         pipeOpen = false;
 
     return pipeOpen;
-
 }
 
-bool Controller::PressStart()
+bool Controller::ButtonPressRelease(std::string btn)
 {
     printf("%s:%d Pressing Start\n", FILENM, __LINE__);
     char buff[BUFF_SIZE];
     int ret = 0;
-    ret = sprintf(buff, "%s %s", "PRESS", "Start");
+    ret = sprintf(buff, "%s %s\n", "PRESS", btn.c_str());
 
     printf("%s:%d %s %s\n", FILENM, __LINE__,
         getFileName(pipePath).c_str(), buff);
@@ -208,7 +209,7 @@ bool Controller::PressStart()
     // delay. pipeDelay needs to be converted to ms from seconds
     nsleep(pipeDelay * 1000);
 
-    ret = sprintf(buff, "%s %s", "RELEASE", "Start");
+    ret = sprintf(buff, "%s %s\n", "RELEASE", btn.c_str());
     printf("%s:%d %s %s\n", FILENM, __LINE__,
         getFileName(pipePath).c_str(), buff);
 

@@ -58,9 +58,9 @@ public:
 
     // This function will pause long enough for dolphin to consume the pipe. 
     // Do not assume this function can be spammed
-    bool PressStart();
+    bool ButtonPressRelease(std::string btn);
 
-    Controller(bool plyr, int frameDelay);
+    Controller(bool plyr, int frameDelay = 1);
     ~Controller();
 
 };
