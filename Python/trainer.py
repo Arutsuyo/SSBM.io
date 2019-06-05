@@ -20,11 +20,34 @@ Using https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqns-
 as a template
 """
 
-def debugPrint(o):
-	print(o)
-	
-choice = sys.stdin.readline()[:-1]
-if choice == '0':
+# Make sure the pipes are open!!!
+stdoin = open(0, "r")
+stdout = open(1, "w")
+stderr = open(2, "w")
+
+# When writing to the pipe, we're using 
+# '\0' + ("pred: " + <str>msg) + '\0'
+# as the identifier for the pipe parser. by using "pred: " at the beginning we 
+# can guarantee that we know what to look for
+
+def debugPrint(msg):
+	stdout.write('\0' + ("pred: " + msg) + '\0')
+	stdout.flush()
+
+def PipePrint(*vars):
+	vLen = len(vars)
+	if vLen > 0:
+		msg = str(vars[0])
+		for i in range(1, vLen):
+			msg += " %s" % str(vars[i])
+		stdout.write('\0' + ("pred: " + msg) + '\0')
+		stdout.flush()
+
+def getInput(n):
+	return os.read(0, n).decode("utf-8")
+
+choice = getInput(1)
+if "0" in choice:
 	# SHUT UP!
 	debugPrint = lambda o: None # :D
 
@@ -32,11 +55,11 @@ fallbackLSTM = LSTM
 try:
 	from tensorflow.keras.layers import CuDNNLSTM
 	fallbackLSTM = lambda *args, **kw: CuDNNLSTM(*args, **{k:kw[k] for k in kw if k != "activation"})
-	debugPrint("Using CuDNNLSTM for faster evaluation of LSTMs.")
+	debugPrint("Using CuDNNLSTM for faster evaluation of LSTMs.\n")
 except:
-	debugPrint("Unable to import CuDNNLSTM, using fallback of LSTM with tanh activator.")
+	debugPrint("Unable to import CuDNNLSTM, using fallback of LSTM with tanh activator.\n")
 	
-debugPrint("Hello! New (0) model or Load (1) model (directory: ./AI/ssbm.h5) or Run (2) model (just predict mode): ")
+debugPrint("Initialization: (0) New Model (1) Load Model (2) Load in Prediction-Only\n")
 
 
 class DQN:
@@ -54,10 +77,9 @@ class DQN:
 		c = 0
 		for p in [-1,-.5,0,.5,1]:
 			for u in [-1,0,1]:
-				for ab in [0, 1]:
-					for lyz in [0,1,2]:
-						self.actions[c] = [p, u,ab,1-ab,1 if lyz == 0 else 0, 1 if lyz == 1 else 0, 1 if lyz == 2 else 0]
-						c = c + 1
+				for ab in [0, 1, 2, 3, 4, 5]:
+					self.actions[c] = [p, u,1 if ab ==1 else 0,1 if ab ==2 else 0,1 if ab ==3 else 0,1 if ab ==4 else 0,1 if ab ==5 else 0]
+					c = c + 1
 		self.model = self.create_model()
 		# "hack" implemented by DeepMind to improve convergence
 		self.target_model = self.create_model()
@@ -139,55 +161,48 @@ class DQN:
 
 export_dir = os.path.join(os.getcwd(), "AI","ssbm.h5")
 best_file = os.path.join(os.getcwd(), "AI", "modelscore.txt")
-choice = sys.stdin.readline()[:-1]
-if choice != '0' and choice != '1' and choice != '2':
-	debugPrint("That was neither! Exiting.")
+choice = getInput(1)
+if "0" not in choice and "1" not in choice and "2" not in choice:
+	debugPrint("That was neither! Exiting.\n")
 	sys.exit(1)
 
 # BUILD MODEL SECTION!
 agent = None
-if choice == '1' or choice == '2':
-	debugPrint("Loading model from file...")
+if "1" in choice or "2" in choice:
+	debugPrint("Loading model from file...\n")
 	agent = DQN()
 	agent.load_model(export_dir)
 else:
-	debugPrint("Building model:")
+	debugPrint("Building model:\n")
 	agent = DQN() # Prebuilds...
 #agent.test("cool")
-debugPrint("Finished building/loading! Please input data in the form of P1-HP P1-FD P1-X P1-Y P2-HP P2-FD P2-X P2-Y (as specified ")
-# Train...until we hit an end of file...
-trainCase = 0
-
+debugPrint("Finished building/loading!\nPlease input data in the form of:\nP1-HP P1-FD P1-X P1-Y P2-HP P2-FD P2-X P2-Y\n")
 
 pa = [0,0,0,0,0,0,0,0]
 while True:
 	try:
-		input_k = sys.stdin.readline()[:-1]
-		if input_k == "-1 -1":
+		input_k = getInput(256)
+		if "-1 -1" in input_k:
 			break
 	except:
 		break
-	if trainCase == 0:
-		timeout.start()
-	trainCase = trainCase + 1
 	action = agent.act(pa) 
 	# It is 6 values, brute force
-	print((action[0]+1)/2,(action[1]+1)/2,action[2],action[3],action[4],action[5],action[6])
-	sys.stdout.flush()
-	sys.stderr.flush()
+	PipePrint((action[0]+1)/2,(action[1]+1)/2,action[2],action[3],action[4],action[5],action[6])
+	stderr.flush()
 	# Output action....
 	
 	vv = [float(x) for x in input_k.split(" ")] # Cur state!
-	if choice != '2':
+	if "2" not in choice:
 		reward = agent.get_Score(pa, vv)
 		agent.remember(pa, action, reward, vv, False)
 		agent.replay()
 		agent.target_train()
 	pa = [x for x in vv]
 	
-if choice != '2':
+if "2" not in choice:
 	# Save!
-	debugPrint("End of file reached. Saving model.")
+	debugPrint("End of file reached. Saving model.\n")
 	while True:
 		lock = None
 		try: 
@@ -199,7 +214,7 @@ if choice != '2':
 				s = f.read()
 				f.close()
 				if float(s) > agent.game_score:
-					debugPrint("A worse score was recorded! Not going to save this model.")
+					debugPrint("A worse score was recorded! Not going to save this model.\n")
 					lock.close()
 					break
 			f = open(best_file, 'w+')
@@ -210,8 +225,5 @@ if choice != '2':
 			break
 		except lf.LockError:
 			sleep(0.05)			
-	debugPrint("Finished saving...exiting...")
-print(-1,-1)
-	# train
-
-	
+	debugPrint("Finished saving...exiting...\n")
+PipePrint(-1,-1)
