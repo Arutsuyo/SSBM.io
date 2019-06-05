@@ -156,7 +156,6 @@
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="DolphinHandle.cpp" />
     <ClCompile Include="MemoryScanner.cpp" />
-    <ClCompile Include="Navigation.cpp" />
     <ClCompile Include="TensorHandler.cpp" />
     <ClCompile Include="Trainer.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -167,7 +166,6 @@
     <ClInclude Include="Controller.h" />
     <ClInclude Include="DolphinHandle.h" />
     <ClInclude Include="MemoryScanner.h" />
-    <ClInclude Include="Navigation.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="TensorHandler.h" />
     <ClInclude Include="Trainer.h" />

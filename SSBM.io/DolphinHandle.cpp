@@ -1,7 +1,6 @@
 #include "DolphinHandle.h"
 #include "TensorHandler.h"
 #include "Player.h" 
-#include "Navigation.h" 
 #include "Trainer.h"
 #include <stdlib.h>
 #include <sys/types.h>
@@ -154,8 +153,41 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
     }
 
-    printf("%s:%d-T%d\tLoading Save-state\n",
+    printf("%s:%d-T%d\tSelecting Characters\n",
         FILENM, __LINE__, *ta._pid);
+    while (mem.CurrentStage() == 3)
+    {
+        //update the frame to find the current cursor pos
+        if (!mem.UpdatedFrame(true))
+        {
+            fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+                "--ERROR:Memory update failed");
+            return;
+        }
+        bool selected = true;
+        for (int i = 0; i < tHandles.size(); i++)
+            selected &= tHandles[i]->SelectCharacter(&mem);
+        if (selected)
+            (*ta._controllers).back()->PressStart();
+    }
+
+    printf("%s:%d-T%d\tSelecting Stage\n",
+        FILENM, __LINE__, *ta._pid);
+    while (mem.CurrentStage() == 4)
+    {
+        //update the frame to find the current cursor pos
+        if (!mem.UpdatedFrame(true))
+        {
+            fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+                "--ERROR:Memory update failed");
+            return;
+        }
+        if (tHandles[0]->SelectStage(&mem))
+        {
+            (*ta._controllers).front()->PressStart();
+        }
+    }
+
     //wait until the game detects it is currently in game
     while (mem.CurrentStage() != 1)
     {
@@ -171,33 +203,14 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     // Check mem until we get valid player numbers
     printf("%s:%d-T%d\tChecking for valid player data\n",
         FILENM, __LINE__, *ta._pid);
-
-    bool openPipe =
-        true; // This can be used once we have cursor pos
-        //(*ta._controllers).back()->ActivateSaveState();
-
-    int loopLimit = 4, numDots = 50;
-    do
-    {
-        if (!mem.UpdatedFrame(true))
-        {
-            fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
-                "--ERROR:Memory update failed");
-            return;
-        }
-        // Busy print loop
-        if (loopLimit-- == 0)
-        {
-            loopLimit = 4;
-            printf(".");
-        }
-    } while (!mem.print());
+    while (!mem.print())
+        mem.UpdatedFrame(true);
 
     printf("%s:%d-T%d\tReady for input!\n",
         FILENM, __LINE__, *ta._pid);
     int memory_update;
-    bool openSocket = true;
-    while (*ta._running && openPipe && openSocket && loopLimit--)
+    bool openSocket = true, openPipe = true;
+    while (*ta._running && openPipe && openSocket)
     {
         if (!mem.UpdatedFrame(false))
         {

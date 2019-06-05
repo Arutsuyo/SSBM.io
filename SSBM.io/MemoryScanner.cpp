@@ -26,7 +26,6 @@ MemoryScanner::MemoryScanner(std::string inUserDir)
     p1.pos_y = -1024; p1.pos_x = -1024;
     p2.pos_y = -1024; p2.pos_x = -1024;
 
-    p1.current_menu = -1; p2.current_menu = -1;
     userPath = inUserDir;
     success = init_socket();
 
@@ -234,29 +233,21 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             case Addresses::MENUS::IN_GAME:
                 if (prin)
                     printf("%s:%d\tState: In Game\n", FILENM, __LINE__);
-                p1.current_menu = 1;
-                p2.current_menu = 1;
                 this->current_stage = 1;
                 break;
             case Addresses::MENUS::POSTGAME:
                 if (prin)
                     printf("%s:%d\tState: Post-game menu\n", FILENM, __LINE__);
-                p1.current_menu = 2;
-                p2.current_menu = 2;
                 this->current_stage = 2;
                 break;
             case Addresses::MENUS::CHARACTER_SELECT:
                 if (prin)
                     printf("%s:%d\tState: Character Select\n", FILENM, __LINE__);
-                p1.current_menu = 3;
-                p2.current_menu = 3;
                 this->current_stage = 3;
                 break;
             case Addresses::MENUS::STAGE_SELECT:
                 if (prin)
                     printf("%s:%d\tState: Stage Select\n", FILENM, __LINE__);
-                p1.current_menu = 4;
-                p2.current_menu = 4;
                 this->current_stage = 4;
                 break;
             default:

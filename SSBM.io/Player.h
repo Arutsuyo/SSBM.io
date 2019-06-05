@@ -9,8 +9,6 @@ struct Player{
 	float pos_y;
 	float cursor_x;
 	float cursor_y;
-	int current_menu;
-
 };
 
 #endif

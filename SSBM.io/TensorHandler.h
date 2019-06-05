@@ -6,6 +6,10 @@ bool exists_test(const std::string& name);
 
 class TensorHandler
 {
+    static float finalDest[2];
+    static float cptFalcon[2];
+
+
     int pid;
 
     // Pipes: 0 is read, 1 is write
@@ -29,7 +33,11 @@ public:
     // Returns the output from the model in the following format: 
     // 
     // If there's an error, returns ""
-    bool MakeExchange(MemoryScanner *mem);
+    bool MakeExchange(MemoryScanner*mem);
+
+    // Move the cursor to select the character/stage and start the game
+    bool SelectCharacter(MemoryScanner* mem);
+    bool SelectStage(MemoryScanner* mem);
 
     TensorHandler();
     ~TensorHandler();

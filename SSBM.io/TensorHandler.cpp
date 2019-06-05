@@ -28,7 +28,7 @@ pid_t waitpid(pid_t pid, int* status, int options) {};
 #define FILENM "TH"
 
 /* Helper Functions */
-bool exists_test(const std::string& name) {
+bool exists_test(const std::string & name) {
     if (FILE * file = fopen(name.c_str(), "r")) {
         fclose(file);
         return true;
@@ -37,6 +37,9 @@ bool exists_test(const std::string& name) {
         return false;
     }
 }
+
+float TensorHandler::finalDest[2] = { -16.4, 18.87 };
+float TensorHandler::cptFalcon[2] = { 17.4f, 17.0f };
 
 bool TensorHandler::CreatePipes(Controller* ai)
 {
@@ -149,7 +152,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
         return false;
     }
 
-    if(exists_test("AI/ssbm.h5"))
+    if (exists_test("AI/ssbm.h5"))
         sprintf(buff, "1"); // Load existing file
     else
         sprintf(buff, "0"); // Make a new model
@@ -201,9 +204,7 @@ void TensorHandler::SendToPipe(Player ai, Player enemy)
             "--ERROR:write", strerror(errno));
     }
 
-    printf("%s:%d\tSent:\n"
-        "\t%u %d %f %f %u %d %f %f\n", FILENM, __LINE__, buff);
-
+    printf("%s:%d\tSent: %s\n", FILENM, __LINE__, buff);
 }
 
 // Scrub through the pipe until we reach the identifier, return that
@@ -253,8 +254,7 @@ bool TensorHandler::handleController(std::string tensor)
     }
 
     printf("%s:%d\tSending Controls to Controller\n", FILENM, __LINE__);
-    ctrl->setControls({ sx, sy, ba, bb, by, bz, bl });
-    return ctrl->SendState();
+    return ctrl->setControls({ sx, sy, ba, bb, by, bz, bl });
 }
 
 bool TensorHandler::MakeExchange(MemoryScanner* mem)
@@ -267,6 +267,76 @@ bool TensorHandler::MakeExchange(MemoryScanner* mem)
         return false;
 
     return handleController(ret);
+}
+
+bool TensorHandler::SelectCharacter(MemoryScanner* mem)
+{
+    Player p = mem->GetPlayer(ctrl->player);
+    float sx, sy;
+    int ba = 0, bb = 0, by = 0, bz = 0, bl = 0;
+
+    // Get distance
+    float disx = cptFalcon[0] - p.cursor_x;
+    float disy = cptFalcon[1] - p.cursor_y;
+
+    // Get Abs
+    float absDis = disx < 0 ? -disx : disx;
+    // Within Error?
+    if (absDis < 0.1)
+        sx = 0.5f;
+    else
+        sx = disx > 0 ? 0.75f : 0.25;
+
+    // Get Abs
+    absDis = disy < 0 ? -disy : disy;
+    // Within Error?
+    if (absDis < 0.1)
+        sy = 0.5f;
+    else
+        sy = disy > 0 ? 0.75f : 0.25;
+
+    if (sx == 0.5f && sy == 0.5f)
+        ba = 1;
+
+    printf("%s:%d\tSending Controls to Controller\n", FILENM, __LINE__);
+    ctrl->setControls({ sx, sy, ba, bb, by, bz, bl });
+
+    return ba;
+}
+
+bool TensorHandler::SelectStage(MemoryScanner* mem)
+{
+    Player p = mem->GetPlayer(ctrl->player);
+    float sx, sy;
+    int ba = 0, bb = 0, by = 0, bz = 0, bl = 0;
+
+    // Get distance
+    float disx = finalDest[0] - p.cursor_x;
+    float disy = finalDest[1] - p.cursor_y;
+
+    // Get Abs
+    float absDis = disx < 0 ? -disx : disx;
+    // Within Error?
+    if (absDis < 0.1)
+        sx = 0.5f;
+    else
+        sx = disx > 0 ? 0.75f : 0.25;
+
+    // Get Abs
+    absDis = disy < 0 ? -disy : disy;
+    // Within Error?
+    if (absDis < 0.1)
+        sy = 0.5f;
+    else
+        sy = disy > 0 ? 0.75f : 0.25;
+
+    if (sx == 0.5f && sy == 0.5f)
+        ba = 1;
+
+    printf("%s:%d\tSending Controls to Controller\n", FILENM, __LINE__);
+    ctrl->setControls({ sx, sy, ba, bb, by, bz, bl });
+
+    return ba;
 }
 
 TensorHandler::TensorHandler() :
