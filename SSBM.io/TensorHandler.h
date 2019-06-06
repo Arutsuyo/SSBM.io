@@ -35,9 +35,7 @@ public:
     // If there's an error, returns ""
     bool MakeExchange(MemoryScanner*mem);
 
-    // Move the cursor to select the character/stage and start the game
-    bool SelectCharacter(MemoryScanner* mem);
-    bool SelectStage(MemoryScanner* mem);
+    bool SelectLocation(MemoryScanner* mem, bool charStg);
 
     TensorHandler();
     ~TensorHandler();

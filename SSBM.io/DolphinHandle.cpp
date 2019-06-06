@@ -37,7 +37,7 @@ bool WriteToFile(std::string filename, std::string contents)
 void SendKill(int pid)
 {
     printf("%s:%d\tSending kill signal\n", FILENM, __LINE__);
-    kill(pid, SIGINT);
+    kill(pid, SIGKILL);
 }
 
 bool WaitForDolphinToClose(int pid)
@@ -61,7 +61,7 @@ void DolphinHandle::CopyBaseFiles()
 std::string DolphinHandle::AddController(int player, int pipe_count, std::string id)
 {
     printf("%s:%d\tCreating AI Controller: %d\n", FILENM, __LINE__, player + 1);
-    Controller* ctrl = new Controller(player);
+    Controller* ctrl = new Controller(player); // TODO add delay arg
     !ctrl->CreateFifo(aiPipe, pipe_count);
     controllers.push_back(ctrl);
     return Trainer::cfg->getAIPipeConfig(player, pipe_count, id);
@@ -115,6 +115,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         if (!(*ta._controllers)[i]->OpenController())
         {
             *ta._running = false;
+            Trainer::cv.notify_all();
             return;
         }
         printf("%s:%d-T%d\tLinking Controller with Tensor\n",
@@ -130,6 +131,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     if (mem.success == false) {
         fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
             "--ERROR:Failed to initialize Memory Scanner");
+        Trainer::cv.notify_all();
         return;
     }
 
@@ -138,64 +140,63 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     printf("%s:%d-T%d\tPausing to load Menu\n",
         FILENM, __LINE__, *ta._pid);
 
-    //Navigation nav = Navigation(*(*ta._controllers).back(), &mem);
-
     //wait until the character stage is detected
-    while (mem.CurrentStage() != 3)
+    while (mem.CurrentStage() != 3 && *ta._running)
     {
-        //nav.FindPos();
         //update the frame to find the current state
-        if (!mem.UpdatedFrame(true))
+        if (!mem.UpdatedFrame(false))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
+            Trainer::cv.notify_all();
             return;
         }
     }
 
     printf("%s:%d-T%d\tSelecting Characters\n",
         FILENM, __LINE__, *ta._pid);
-    while (mem.CurrentStage() == 3)
+    while (mem.CurrentStage() == 3 && *ta._running)
     {
         //update the frame to find the current cursor pos
-        if (!mem.UpdatedFrame(true))
+        if (!mem.UpdatedFrame(false))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
+            Trainer::cv.notify_all();
             return;
         }
         bool selected = true;
         for (int i = 0; i < tHandles.size(); i++)
-            selected &= tHandles[i]->SelectCharacter(&mem);
+            selected &= tHandles[i]->SelectLocation(&mem, false);
         if (selected)
-            (*ta._controllers).back()->PressStart();
+            (*ta._controllers).back()->ButtonPressRelease("START");
     }
 
     printf("%s:%d-T%d\tSelecting Stage\n",
         FILENM, __LINE__, *ta._pid);
-    while (mem.CurrentStage() == 4)
+    while (mem.CurrentStage() == 4 && *ta._running)
     {
         //update the frame to find the current cursor pos
-        if (!mem.UpdatedFrame(true))
+        if (!mem.UpdatedFrame(false))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
+            Trainer::cv.notify_all();
             return;
         }
-        if (tHandles[0]->SelectStage(&mem))
-        {
-            (*ta._controllers).front()->PressStart();
-        }
+        if (tHandles[0]->SelectLocation(&mem, true))
+            (*ta._controllers).front()->ButtonPressRelease("START");
     }
 
     //wait until the game detects it is currently in game
-    while (mem.CurrentStage() != 1)
+    while (mem.CurrentStage() != 1 && *ta._running)
     {
         //update the frame to find the current state
-        if (!mem.UpdatedFrame(true))
+        if (!mem.UpdatedFrame(false))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
+            Trainer::cv.notify_all();
             return;
         }
     }
@@ -204,7 +205,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
     printf("%s:%d-T%d\tChecking for valid player data\n",
         FILENM, __LINE__, *ta._pid);
     while (!mem.print())
-        mem.UpdatedFrame(true);
+        mem.UpdatedFrame(false);
 
     printf("%s:%d-T%d\tReady for input!\n",
         FILENM, __LINE__, *ta._pid);
@@ -315,6 +316,7 @@ bool DolphinHandle::StartDolphin(int lst)
     ta->_controllers = &controllers;
 
     printf("%s:%d\tStarting Thread\n", FILENM, __LINE__);
+    Trainer::cv.notify_all();
     std::unique_lock<std::mutex> lk(Trainer::mut);
     t = new std::thread(&DolphinHandle::dolphin_thread, ta);
     Trainer::cv.wait(lk);
