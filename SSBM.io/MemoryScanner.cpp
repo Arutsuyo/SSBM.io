@@ -87,7 +87,7 @@ bool MemoryScanner::init_socket() {
 
 
     /*set up socket*/
-    if ((socketfd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
+    if ((socketfd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0)) == -1)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:socket", strerror(errno));
 
@@ -108,8 +108,8 @@ bool MemoryScanner::init_socket() {
 }
 
 bool MemoryScanner::UpdatedFrame(bool prin) {
-    if (prin)
-        printf("%s:%d\tUpdating Memory\n", FILENM, __LINE__);
+    /*if (prin)
+        printf("%s:%d\tUpdating Memory\n", FILENM, __LINE__);*/
 
     if (socketfd < 0) {
         std::cout << "Error socket file descriptor is bad" << std::endl;
@@ -122,8 +122,8 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
     unsigned int val_int;
 
-    if (prin)
-        printf("%s:%d\tReading Socket\n", FILENM, __LINE__);
+    /*if (prin)
+        printf("%s:%d\tReading Socket\n", FILENM, __LINE__);*/
     struct sockaddr recvsock;
     socklen_t sock_len;
     if ((ret = recvfrom(socketfd, 
@@ -135,7 +135,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             // Nothing there
             if (prin)
             {
-                printf("%s:%d\tNothing Read: ret%d errno:%d(%d:%d)\n", FILENM, __LINE__, ret, errno, EAGAIN, EWOULDBLOCK);
+                /*printf("%s:%d\tNothing Read: ret%d errno:%d(%d:%d)\n", FILENM, __LINE__, ret, errno, EAGAIN, EWOULDBLOCK);*/
 
             }
             return true;
@@ -159,8 +159,6 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
     std::string base, val;
 
 
-    while(!ss.eof())
-{
     getline(ss, base, '\n');
     getline(ss, val, '\n');
 
@@ -315,7 +313,6 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             print();
     }
 
-}
 
     return true;
 }
