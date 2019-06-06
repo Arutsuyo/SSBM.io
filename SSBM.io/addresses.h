@@ -14,10 +14,10 @@ namespace Addresses {
         /*offset to get stage */
         MENU_STATE = 0x479d30,
 
-        CHARACTER_SELECT = 256,//3328,
-        STAGE_SELECT = 257,
-        IN_GAME = 258,
-        POSTGAME = 260   
+        CHARACTER_SELECT = 3328,
+        STAGE_SELECT = 3329,
+        IN_GAME = 3330,
+        POSTGAME = 3332   
 
     };
 
