@@ -87,7 +87,7 @@ bool MemoryScanner::init_socket() {
 
 
     /*set up socket*/
-    if ((socketfd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
+    if ((socketfd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0)) == -1)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:socket", strerror(errno));
 
@@ -116,6 +116,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
         return false;
     }
 
+    int ret = -1;
     char buffer[128];
     memset(buffer, '\0', 128);
 
@@ -125,9 +126,21 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
         printf("%s:%d\tReading Socket\n", FILENM, __LINE__);
     struct sockaddr recvsock;
     socklen_t sock_len;
-    if (recvfrom(socketfd, buffer, sizeof(buffer), 0, &recvsock, &sock_len) == -1)
+    if ((ret = recvfrom(socketfd, 
+        buffer, sizeof(buffer), 0, &recvsock, &sock_len)) == -1)
+    {
+        // Check if the socket is just empty
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+            // Nothing there
+            return true;
+        }
+
+        // Nope, we error'd
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:recvfrom", strerror(errno));
+        return false;
+    }
 
     if (prin)
     {

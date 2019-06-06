@@ -7,6 +7,8 @@
 
 std::vector<int> Trainer::killpids;
 
+Trainer* Trainer::_inst = NULL;
+
 bool Trainer::term;
 
 Config* Trainer::cfg;
@@ -47,6 +49,7 @@ void sigint_handle(int val)
 
     printf("%s:%d\tReceived SIGINT, closing trainer\n", FILENM, __LINE__);
     Trainer::term = true;
+    Trainer::_inst->KillDolphinHandles();
 }
 
 bool createSigIntAction()
@@ -103,6 +106,12 @@ void Trainer::KillAllpids()
 {
     for (int i = 0; i < killpids.size(); i++)
         kill(killpids[i], 9);
+}
+
+void Trainer::KillDolphinHandles()
+{
+    for (int i = 0; i < _Dhandles.size(); i++)
+        _Dhandles[i]->running = false;
 }
 
 void Trainer::runTraining()
@@ -201,7 +210,7 @@ void Trainer::runTraining()
 
         printf("%s:%d\tWaiting for notification\n", FILENM, __LINE__);
         // Lock the mutex and wait for the condition variable
-        cv.wait(lk, []{ return term; });
+        cv.wait_for(lk,std::chrono::seconds(5));
     }
 }
 
@@ -229,6 +238,7 @@ Trainer::Trainer(VsType vs)
     }
 
     initialized = true;
+    _inst = this;
 }
 
 Trainer::~Trainer()
