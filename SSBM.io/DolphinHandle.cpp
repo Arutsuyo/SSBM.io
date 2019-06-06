@@ -167,9 +167,7 @@ void DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
         bool selected = true;
         for (int i = 0; i < tHandles.size(); i++)
-        {
             selected &= tHandles[i]->SelectLocation(&mem, false);
-        }
         if (selected)
             (*ta._controllers).back()->ButtonPressRelease("START");
     }
