@@ -149,9 +149,11 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
     if (prin)
     {
-        printf("%s:%d\tParsing Buffer: %s\n", FILENM, __LINE__, buffer);
-        
+        std::string temp = buffer;
+        temp = temp.substr(0, temp.find("\n")) + " " + temp.substr(temp.find("\n") + sizeof("\n"));
+        printf("%s:%d\tParsing Buffer: %s\n", FILENM, __LINE__, temp.c_str());
     }
+        
 
     //puts(buffer);
     std::stringstream ss(buffer);
