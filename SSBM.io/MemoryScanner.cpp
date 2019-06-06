@@ -87,7 +87,7 @@ bool MemoryScanner::init_socket() {
 
 
     /*set up socket*/
-    if ((socketfd = socket(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0)) == -1)
+    if ((socketfd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:socket", strerror(errno));
 
@@ -133,6 +133,11 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
         {
             // Nothing there
+            if (prin)
+            {
+                printf("%s:%d\tNothing Read: ret%d errno:%d(%d:%d)\n", FILENM, __LINE__, ret, errno, EAGAIN, EWOULDBLOCK);
+
+            }
             return true;
         }
 

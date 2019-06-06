@@ -161,7 +161,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current state
-        if (!mem.UpdatedFrame(false))
+        if (!mem.UpdatedFrame(true))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
@@ -194,7 +194,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current cursor pos
-        if (!mem.UpdatedFrame(false))
+        if (!mem.UpdatedFrame(true))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
@@ -231,7 +231,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current cursor pos
-        if (!mem.UpdatedFrame(false))
+        if (!mem.UpdatedFrame(true))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
@@ -265,7 +265,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
             }
         }
 
-        mem.UpdatedFrame(false);
+        mem.UpdatedFrame(true);
     }
     if (CheckClose(ta))
         return false;
@@ -276,7 +276,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     bool openSocket = true, openPipe = true;
     while (*ta._running && openPipe && openSocket)
     {
-        if (!mem.UpdatedFrame(false))
+        if (!mem.UpdatedFrame(true))
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
