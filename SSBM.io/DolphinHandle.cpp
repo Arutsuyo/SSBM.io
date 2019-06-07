@@ -275,7 +275,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         FILENM, __LINE__, *ta._pid);
     int memory_update;
     bool openSocket = true, openPipe = true;
-    while (*ta._running && openPipe && openSocket)
+    while (*ta._running && openPipe && openSocket && mem.CurrentStage() != 2)
     {
         if (!mem.UpdatedFrame(true))
         {
