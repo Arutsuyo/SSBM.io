@@ -251,6 +251,7 @@ std::string TensorHandler::ReadFromPipe()
         {
             fprintf(stderr, "%s:%d\t%s(%d)\n", FILENM, __LINE__,
                 "--ERROR:NO NO TENSORFLOW!!! (Tensor Crashed)", status);
+            dumpErrorPipe();
             return "";
         }
 
@@ -427,6 +428,7 @@ TensorHandler::~TensorHandler()
     }
 
     // close the pipes
+    dumpErrorPipe();
     printf("%s:%d\tShutting Down pipes\n", FILENM, __LINE__);
     close(pipeFromPy[0]);
     close(pipeToPy[1]);
