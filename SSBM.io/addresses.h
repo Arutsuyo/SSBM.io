@@ -47,9 +47,13 @@ namespace Addresses {
         P1_CURSOR_X = 0x01118DEC,
         P1_CURSOR_Y = 0x01118DF0,
         P2_CURSOR_X = 0x0111826C,
-        P2_CURSOR_Y = 0x01118270
+        P2_CURSOR_Y = 0x01118270,
 
-
+        /*stage selection cursors */
+        STAGE_SELECT_X1 = 0x0c8ee38,
+        STAGE_SELECT_X2 = 0x0c8ee50,
+        STAGE_SELECT_Y1 = 0x0C8EE3C,
+        STAGE_SELECT_Y2 = 0x0C8EE60
 
     };
 

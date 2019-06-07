@@ -305,6 +305,35 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             p2.cursor_y = cursy;
             break; }
 
+        /*stage selection cursor different than character selection*/
+        case Addresses::PLAYER_ATTRIB::STAGE_SELECT_X1:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* sx = &val_int;
+            float scursx = *((float*)sx);
+            p2.stage_x = scursx;
+            break; }
+
+        case Addresses::PLAYER_ATTRIB::STAGE_SELECT_X2:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* sx = &val_int;
+            float scursx = *((float*)sx);
+            p2.stage_x = scursx;
+            break; }
+
+        case Addresses::PLAYER_ATTRIB::STAGE_SELECT_Y1:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* sy = &val_int;
+            float scursy = *((float*)sy);
+            p2.stage_y = scursy;
+            break; }
+
+        case Addresses::PLAYER_ATTRIB::STAGE_SELECT_Y2:{
+            val_int = std::stoul(val.c_str(), nullptr, 16);
+            unsigned int* sy = &val_int;
+            float scursy = *((float*)sy);
+            p2.stage_y = scursy;
+            break; }
+
         default:
             break;
         }

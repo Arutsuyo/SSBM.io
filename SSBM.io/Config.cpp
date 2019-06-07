@@ -101,7 +101,11 @@ std::string memlocation =
 "01118270\n"
 "01118DEC\n"
 "01118DF0\n"
-"00479D60\n" 
+"00479D60\n"
+"0c8ee38\n"
+"0c8ee50\n"
+"0C8EE3C\n"
+"0C8EE60\n" 
 "\n"; 
 #pragma endregion UtilStrings
 
