@@ -11,6 +11,7 @@ from collections import deque
 import zc.lockfile as lf
 import numpy as np
 from time import sleep
+from random import random
 """
 Author: Chase M. Craig
 Purpose: For being able to accept input from an application to train a neural network.

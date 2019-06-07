@@ -259,13 +259,15 @@ std::string TensorHandler::ReadFromPipe()
             if ((offset = output.find("pred: ")) != std::string::npos)
                 return output.substr(offset); // Add 6 to drop the "pred: "
             else
-                fprintf(stderr, "%s:%d\t%s: %s%s\n", FILENM, __LINE__,
-                    "--TENSOR: ", output.c_str());
+            {
+                if(!output.size())
+                    continue;
 
+                fprintf(stderr, "%s:%d\t%s(%lu): %s\n", FILENM, __LINE__,
+                    "--TENSOR", output.size(), output.c_str());
+                return ""; // Tensor probably crashed
+            }
         }
-
-        //We didn't find the droids we're looking for
-        // T.T
     }
     dumpErrorPipe();
 }
@@ -373,31 +375,41 @@ TensorHandler::~TensorHandler()
 {
     printf("%s:%d\tClosing TensorHandler\n", FILENM, __LINE__);
     // Write closing line to Python
-    printf("%s:%d\tWriting Close\n", FILENM, __LINE__);
-    char buff[BUFF_SIZE];
-    memset(buff, 0, BUFF_SIZE);
-    sprintf(buff, "-1 -1\n");
-    int bytesWritten = strlen(buff);
-    if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
+    int status, ret;
+    ret = waitpid(pid, &status, WNOHANG);
+    if (ret == pid)
     {
-        fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
-            "--ERROR:write", strerror(errno));
+        fprintf(stderr, "%s:%d\t%s(%d)\n", FILENM, __LINE__,
+            "--ERROR:Tensor Crashed", status);
     }
-
-    // read from pipe
-    printf("%s:%d\tWaiting for Tensor to signal closing\n", FILENM, __LINE__);
-    // Read back close
-    std::string readbuf;
-    do
+    else
     {
-        readbuf = ReadFromPipe();
-    } while (readbuf.find("-1 -1") == std::string::npos);
+        printf("%s:%d\tWriting Close\n", FILENM, __LINE__);
+        char buff[BUFF_SIZE];
+        memset(buff, 0, BUFF_SIZE);
+        sprintf(buff, "-1 -1\n");
+        int bytesWritten = strlen(buff);
+        if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
+        {
+            fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
+                "--ERROR:write", strerror(errno));
+        }
+
+        // read from pipe
+        printf("%s:%d\tWaiting for Tensor to signal closing\n", FILENM, __LINE__);
+        // Read back close
+        std::string readbuf;
+        do
+        {
+            readbuf = ReadFromPipe();
+        } while (readbuf.find("-1 -1") == std::string::npos);
 
 
-    printf("%s:%d\tWaiting for Tensor to close\n", FILENM, __LINE__);
-    int status;
-    waitpid(pid, &status, 0);
-    printf("%s:%d\tTensor(%d) closed\n", FILENM, __LINE__, status);
+        printf("%s:%d\tWaiting for Tensor to close\n", FILENM, __LINE__);
+        int status;
+        waitpid(pid, &status, 0);
+        printf("%s:%d\tTensor(%d) closed\n", FILENM, __LINE__, status);
+    }
 
     // close the pipes
     printf("%s:%d\tShutting Down pipes\n", FILENM, __LINE__);
