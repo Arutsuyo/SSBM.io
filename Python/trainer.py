@@ -199,6 +199,8 @@ while True:
 	# Output action....
 	
 	vv = [float(x) for x in input_k.strip().split(" ")] # Cur state!
+	if(len(vv) != 8):
+		continue
 	if "2" not in choice:
 		reward = agent.get_Score(pa, vv)
 		agent.remember(pa, action, reward, vv, False)
