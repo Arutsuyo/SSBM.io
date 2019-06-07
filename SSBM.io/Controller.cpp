@@ -137,7 +137,8 @@ bool Controller::sendtofifo(char fifocmd[], int limit)
     while (offset < limit)
     {
         int towrite = strlen(fifocmd + offset);
-        printf("%s:%d To FIFO: %s", FILENM, __LINE__, fifocmd + offset);
+        if(printfifo)
+            printf("%s:%d To FIFO: %s", FILENM, __LINE__, fifocmd + offset);
 
         if (towrite + offset > limit)
             fprintf(stderr, "%s:%d Cannot make the next write: total:%d limit %d\n", FILENM, __LINE__, towrite + offset, limit);
@@ -208,6 +209,8 @@ bool Controller::ButtonPressRelease(std::string btn)
 {
     char buff[BUFF_SIZE];
     int ret = 0;
+    bool ogfifo = printfifo;
+    printfifo = false;
     ret = sprintf(buff, "%s %s\n", "PRESS", btn.c_str());
     if (!sendtofifo(buff, ret))
         return false;
@@ -216,7 +219,11 @@ bool Controller::ButtonPressRelease(std::string btn)
     nsleep(pipeDelay * 1000);
 
     ret = sprintf(buff, "%s %s\n", "RELEASE", btn.c_str());
-    return sendtofifo(buff, ret);
+    if (!sendtofifo(buff, ret))
+        return false;
+    
+    printfifo = ogfifo;
+    return true;
 }
 
 Controller::Controller(bool plyr, int frameDelay) :

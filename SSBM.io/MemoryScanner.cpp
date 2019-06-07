@@ -137,7 +137,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
         return false;
     }
 
-    if (prin)
+    if (prin && 0)
     {
         std::string temp = buffer;
         temp = temp.substr(0, temp.find("\n")) + " " + temp.substr(temp.find("\n") + sizeof("\n"));
