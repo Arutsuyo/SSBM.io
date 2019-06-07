@@ -13,10 +13,11 @@
 void sigint_handle(int val);
 bool createSigIntAction();
 
+bool exists_test(const std::string& name);
+bool dir_exists(const char* path);
+
 class Trainer
 {
-    VsType _vs = VsType::Self;
-
     std::vector<DolphinHandle*> _Dhandles;
     static std::vector<int> killpids;
 public:
@@ -33,9 +34,11 @@ public:
     // Directory info
     static std::string userDir;
     static std::string dolphinDefaultUser;
+    static std::string PythonCommand;
 
     // Threading Info
     static unsigned Concurent;
+    static VsType vs;
     
     static std::mutex mut;
     static std::condition_variable cv;
@@ -45,7 +48,7 @@ public:
 
     void KillDolphinHandles();
     void runTraining();
-    Trainer(VsType vs = VsType::Self);
+    Trainer();
     ~Trainer();
 };
 

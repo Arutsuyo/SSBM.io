@@ -2,8 +2,6 @@
 #include "MemoryScanner.h"
 #include "Controller.h"
 
-bool exists_test(const std::string& name);
-
 class TensorHandler
 {
     static float finalDest[2];

@@ -29,17 +29,6 @@ pid_t waitpid(pid_t pid, int* status, int options) {};
 
 #define FILENM "TH"
 
-/* Helper Functions */
-bool exists_test(const std::string & name) {
-    if (FILE * file = fopen(name.c_str(), "r")) {
-        fclose(file);
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
 float TensorHandler::finalDest[2] = { 6.75, -8.74 };
 float TensorHandler::battlefield[2] = { 0.745, -8.5 };
 float TensorHandler::cptFalcon[2] = { 18.2, 18.29 };
@@ -119,7 +108,9 @@ bool TensorHandler::CreatePipes(Controller* ai)
         }
 
         /* Launch Python (EXE IS REQUIRED FOR WSL)*/
-        execlp("python.exe", "python.exe", "trainer.py", NULL);
+        execlp(Trainer::PythonCommand.c_str(), 
+            Trainer::PythonCommand.c_str(), 
+            "trainer.py", NULL);
 
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:EXECLP", strerror(errno));
