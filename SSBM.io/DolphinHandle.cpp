@@ -212,7 +212,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     printf("%s:%d-T%d\tSelecting Stage\n",
         FILENM, __LINE__, *ta._pid);
-    while (mem.CurrentStage() == 1 && *ta._running)
+    while (mem.CurrentStage() != 1 && *ta._running)
     {
         if (loop++ == loopLim)
         {
@@ -417,8 +417,6 @@ DolphinHandle::~DolphinHandle()
     else
         printf("%s:%d\tThread is already destroyed\n", FILENM, __LINE__);
 
-    if (targ)
-        delete targ;
     // Call each destructor
     printf("%s:%d\tDestroying %lu Controllers\n", FILENM, __LINE__,
         controllers.size());

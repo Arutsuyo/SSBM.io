@@ -7,6 +7,7 @@ bool exists_test(const std::string& name);
 class TensorHandler
 {
     static float finalDest[2];
+    static float battlefield[2];
     static float cptFalcon[2];
 
     int pid;

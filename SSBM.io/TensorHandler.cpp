@@ -40,7 +40,8 @@ bool exists_test(const std::string & name) {
     }
 }
 
-float TensorHandler::finalDest[2] = { -16.4, 18.87 };
+float TensorHandler::finalDest[2] = { 6.75, -8.74 };
+float TensorHandler::battlefield[2] = { 0.745, -8.5 };
 float TensorHandler::cptFalcon[2] = { 18.2, 18.29 };
 
 bool TensorHandler::CreatePipes(Controller* ai)
@@ -242,9 +243,17 @@ std::string TensorHandler::ReadFromPipe()
     char buff[BUFF_SIZE];
     memset(buff, 0, BUFF_SIZE);
     std::string output = "";
-    int ret = 0, offset = 0;
+    int ret = 0, status, offset = 0;
     while (true)
     {
+        ret = waitpid(pid, &status, WNOHANG);
+        if (ret == pid)
+        {
+            fprintf(stderr, "%s:%d\t%s(%d)\n", FILENM, __LINE__,
+                "--ERROR:NO NO TENSORFLOW!!! (Tensor Crashed)", status);
+            return "";
+        }
+
         // Get the current pipe buffer
         if ((ret = read(pipeFromPy[0], buff, BUFF_SIZE)) == -1)
         {
@@ -354,11 +363,13 @@ bool TensorHandler::SelectLocation(MemoryScanner* mem, bool charStg)
     sx = disx;
     sy = disy;
 
+    // Get absolute distance from mark
     float absx = sx - 0.5, absy = sy - 0.5;
     absx = absx < 0 ? -absx : absx;
     absy = absy < 0 ? -absy : absy;
 
-    if (absx < 0.1 && absy < 0.1)
+    // Are we in a good delta?
+    if (absx < 0.2 && absy < 0.2)
         ba = true;
 
     //printf("%s:%d\tSending Controls to Controller\n", FILENM, __LINE__);

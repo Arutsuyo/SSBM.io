@@ -282,7 +282,6 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
         case Addresses::PLAYER_ATTRIB::P2_CURSOR_X: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
-            printf("P1 CURSOR\n");
             unsigned int* cx = &val_int;
             float cursx = *((float*)cx);
             p2.cursor_x = cursx;
@@ -300,28 +299,28 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* sx = &val_int;
             float scursx = *((float*)sx);
-            p2.stage_x = scursx;
+            p1.stage_x = p2.stage_x = scursx;
             break; }
 
         case Addresses::PLAYER_ATTRIB::STAGE_SELECT_X2:{
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* sx = &val_int;
             float scursx = *((float*)sx);
-            p2.stage_x = scursx;
+            p1.stage_x = p2.stage_x = scursx;
             break; }
 
         case Addresses::PLAYER_ATTRIB::STAGE_SELECT_Y1:{
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* sy = &val_int;
             float scursy = *((float*)sy);
-            p2.stage_y = scursy;
+            p1.stage_y = p2.stage_y = scursy;
             break; }
 
         case Addresses::PLAYER_ATTRIB::STAGE_SELECT_Y2:{
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* sy = &val_int;
             float scursy = *((float*)sy);
-            p2.stage_y = scursy;
+            p1.stage_y = p2.stage_y = scursy;
             break; }
 
         default:

@@ -31,6 +31,9 @@ stderr = open(2, "w")
 # as the identifier for the pipe parser. by using "pred: " at the beginning we 
 # can guarantee that we know what to look for
 
+stderr.write('\0' + "GO GO TENSORFLOW!" + '\0')
+stderr.flush()
+
 def debugPrint(msg):
 	stdout.write('\0' + ("pred: " + msg) + '\0')
 	stdout.flush()
@@ -200,7 +203,7 @@ while True:
 	
 	vv = [float(x) for x in input_k.strip().split(" ")] # Cur state!
 	if(len(vv) != 8):
-		stderr.write("\0" + "MOTHERFUCKER I GOT " + str(len(vv)) + " INPUTS!\n" + "\0")
+		stderr.write('\0' + "GO GO TENSORFLOW!" + '\0')
 		stderr.flush()
 		continue
 	if "2" not in choice:
