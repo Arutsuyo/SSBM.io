@@ -7,6 +7,8 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM
 from tensorflow.keras.utils import plot_model
+import tensorflow as tf
+from tensorflow.keras import backend as kerasBE
 from collections import deque
 import zc.lockfile as lf
 import numpy as np
@@ -19,7 +21,38 @@ Purpose: For being able to accept input from an application to train a neural ne
 Using https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqns-1eed3a5338c 
 
 as a template
+
+used 
+https://michaelblogscode.wordpress.com/2017/10/10/reducing-and-profiling-gpu-memory-usage-in-keras-with-tensorflow-backend/
+
+as a GPU limiting witchcraft helper.
 """
+
+"""
+GLOBALS
+"""
+INPUT_RATE = 4 # This means that if we get input at 60 TPS, we only make predictions for every xth item. 
+FILENAME = sys.argv[1] # To be read latter
+SUICIDE_REWARD = -500 # Negative is bad
+KILL_REWARD = 100 # Reward score for calculating instant scores (should be less than suicide to prevent suiciding for score)
+KILL_SCORE = 500 # Actual score for calculating end of round score
+MAX_FRAMES_RECORDING = 120//INPUT_RATE # 120 = 2 seconds saved for inputs if 60 TPS (/divided by input dropout)
+MAX_MEMORY_FRAMES = 120//INPUT_RATE # 60 = 1 second for every batch training if 60 TPS (/divided by input dropout)
+MAX_BATCH_SIZE = 80//INPUT_RATE # Drop half of the examples from memory frames and only train on x of them...
+INPUT_SIZE = 8
+POSSIBLE_ACTIONS = [[0 for i in range(INPUT_SIZE)]]*(5*3*6)
+c = 0
+# 5 stick.x positions
+for p in [-1,-.5,0,.5,1]:
+	# 3 stick.y positions
+	for u in [-1,0,1]:
+		# 6 possible buttons states, all off or only 1 on
+		for ab in [0, 1, 2, 3, 4, 5]:
+			POSSIBLE_ACTIONS[c] = [p, u,1 if ab ==1 else 0,1 if ab ==2 else 0,1 if ab ==3 else 0,1 if ab ==4 else 0,1 if ab ==5 else 0]
+			c = c + 1
+MODEL_PARAMETERS = [(MAX_FRAMES_RECORDING,INPUT_SIZE), 30, 30, 15, len(POSSIBLE_ACTIONS)]
+MODEL_DROPOUT = [0.2, 0.5, 0.5]
+
 
 # Make sure the pipes are open!!!
 stdoin = open(0, "r")
@@ -70,23 +103,21 @@ debugPrint("Initialization: (0) New Model (1) Load Model (2) Load in Prediction-
 stderr.flush()
 
 class DQN:
-	def __init__(self):
-		self.memory  = deque(maxlen=2000)
+	def __init__(self, GPUNUM):
+		self.configStuff = tf.ConfigProto()
+		self.configStuff.gpu_options.allow_growth = True
+		self.configStuff.gpu_options.per_process_gpu_memory_fraction = 1.0 / GPUNUM
+		kerasBE.set_session(tf.Session(config=self.configStuff))
+		self.memory  = deque(maxlen=MAX_MEMORY_FRAMES*2)
 		self.game_score = 0
 		self.gamma = 0.95
 		self.epsilon = 1.0
 		self.epsilon_min = 0.01
 		self.epsilon_decay = 0.9975 # takes a LONG time to train...
 		self.learning_rate = 0.01
-		self.input_size = 8
+		self.input_size = INPUT_SIZE
 		self.tau = .05
-		self.actions = [[0,0,0,0,0,0,0]]*90
-		c = 0
-		for p in [-1,-.5,0,.5,1]:
-			for u in [-1,0,1]:
-				for ab in [0, 1, 2, 3, 4, 5]:
-					self.actions[c] = [p, u,1 if ab ==1 else 0,1 if ab ==2 else 0,1 if ab ==3 else 0,1 if ab ==4 else 0,1 if ab ==5 else 0]
-					c = c + 1
+		self.actions = POSSIBLE_ACTIONS
 		self.model = self.create_model()
 		# "hack" implemented by DeepMind to improve convergence
 		self.target_model = self.create_model()
@@ -95,9 +126,9 @@ class DQN:
 		reward = 0
 		prev_state = prev_state[-1]
 		if prev_state[4] > new_state[4] and new_state[4] == 0:
-			reward = reward + 100 # :D Not enough to overcome suicide.
+			reward = reward + KILL_REWARD # :D Not enough to overcome suicide.
 		if prev_state[0] > new_state[0] and new_state[0] == 0:
-			reward = reward - 500 # Died, get a reward of -500
+			reward = reward - SUICIDE_REWARD # Died, get a reward of -500
 		else:
 			reward = reward - (new_state[0] - prev_state[0])*.1*new_state[0] # So reward penalty gets worse for getting hit
 			reward = reward + (new_state[4] - prev_state[4])*.5*new_state[4] # Reward if hitting!
@@ -105,7 +136,7 @@ class DQN:
 		self.add_OverallScore(prev_state[0] > new_state[0], prev_state[4] > new_state[4], new_state[0]-prev_state[0], new_state[4]-prev_state[4])
 		return reward
 	def add_OverallScore(self, hasDied, otherDied, myHP, theirHP):
-		self.game_score = self.game_score + (-500 if hasDied == 1 else 0) + (500 if otherDied == 1 else 0)
+		self.game_score = self.game_score + (-SUICIDE_REWARD if hasDied == 1 else 0) + (KILL_SCORE if otherDied == 1 else 0)
 		#(-myHP * .2) + (theirHP * .15)
 		if not hasDied:
 			self.game_score = self.game_score + (-myHP * .2)
@@ -113,18 +144,16 @@ class DQN:
 			self.game_score = self.game_score + (myHP * .15)
 	def create_model(self):
 		model = Sequential()
-		model.add(fallbackLSTM(30,input_shape=(20,8), activation='tanh', return_sequences=True))
-		model.add(Dropout(0.2))
-		model.add(fallbackLSTM(30, activation='tanh'))
-		model.add(Dropout(0.5))
-		model.add(Dense(15, activation='relu'))
+		model.add(fallbackLSTM(MODEL_PARAMETERS[1],input_shape=MODEL_PARAMETERS[0], activation='tanh', return_sequences=True))
+		model.add(Dropout(MODEL_DROPOUT[0]))
+		model.add(fallbackLSTM(MODEL_PARAMETERS[2], activation='tanh'))
+		model.add(Dropout(MODEL_DROPOUT[1]))
+		model.add(Dense(MODEL_PARAMETERS[3], activation='relu'))
 		# Reason for a small second to last dense layer is that 
 		# A LOT of the values are highly correlated (sadly), so we don't expect a lot of difference here. 
-		model.add(Dropout(0.5))
-		model.add(Dense(90, activation='linear'))
-		# 5 stick positions (-.8, -.2, 0, .2, .8)
-		# A or B
-		# L or Y or Z
+		model.add(Dropout(MODEL_DROPOUT[2]))
+		model.add(Dense(MODEL_PARAMETERS[4], activation='linear'))
+		
 		self.opt = tf.keras.optimizers.Adam(lr=self.learning_rate, decay=1e-5)
 		model.compile(loss="mean_squared_error",
 			optimizer=self.opt)
@@ -137,10 +166,9 @@ class DQN:
 			if sum([(1 if abs(x[i] - action[i]) >= 0.01 else 0) for i in range(len(action))]) == 0:
 				return y
 	def replay(self):
-		batch_size = 256
-		if len(self.memory) < batch_size:
+		if len(self.memory) < MAX_BATCH_SIZE:
 			return
-		samples = random.sample(self.memory, batch_size)
+		samples = random.sample(self.memory, MAX_BATCH_SIZE)
 		for sample in samples:
 			state, action, reward, new_state, done = sample
 			action = self.get_real_action(action)
@@ -156,7 +184,7 @@ class DQN:
 		self.epsilon *= self.epsilon_decay
 		self.epsilon = max(self.epsilon_min, self.epsilon)
 		if np.random.random() < self.epsilon:
-			return self.actions[int(np.random.random()*30//1)]
+			return self.actions[int(np.random.random()*len(self.actions)//1)]
 		return self.actions[np.argmax(self.model.predict(state)[0])]
 	def target_train(self):
 		weights = self.model.get_weights()
@@ -174,10 +202,10 @@ class DQN:
 
 
 
-export_dir = os.path.join(os.getcwd(), "AI","ssbm.h5")
-best_file = os.path.join(os.getcwd(), "AI", "modelscore.txt")
+export_dir = os.path.join(os.getcwd(), "AI","ssbm"+FILENAME+".h5")
+best_file = os.path.join(os.getcwd(), "AI", "modelscore"+FILENAME+".txt")
 choice = getInput(1)
-if "0" not in choice and "1" not in choice and "2" not in choice:
+if "0" not in choice and "1" not in choice and "2" not in choice and "3" not in choice:
 	debugPrint("That was neither! Exiting.\n")
 	sys.exit(1)
 
@@ -185,21 +213,22 @@ if "0" not in choice and "1" not in choice and "2" not in choice:
 agent = None
 if "1" in choice or "2" in choice:
 	debugPrint("Loading model from file...\n")
-	agent = DQN()
+	agent = DQN(int(sys.argv[2]))
 	agent.load_model(export_dir)
 	stderr.flush()
 else:
 	debugPrint("Building model:\n")
-	agent = DQN() # Prebuilds...
+	agent = DQN(int(sys.argv[2])) # Prebuilds...
 	stderr.flush()
 #agent.test("cool")
 debugPrint("Finished building/loading!\nPlease input data in the form of:\nP1-HP P1-FD P1-X P1-Y P2-HP P2-FD P2-X P2-Y\n")
 
-pa = deque(maxlen=20)
-kill_me = deque(maxlen=20)
-for i in range(20):
-	pa.append([0,0,0,0,0,0,0,0])
-	kill_me.append([0,0,0,0,0,0,0,0])
+pa = deque(maxlen=MAX_FRAMES_RECORDING)
+kill_me = deque(maxlen=MAX_FRAMES_RECORDING)
+timeout_timer = 0
+for i in range(MAX_FRAMES_RECORDING):
+	pa.append([0 for i in range(INPUT_SIZE)])
+	kill_me.append([0 for i in range(INPUT_SIZE)])
 while True:
 	try:
 		input_k = getInput(256)
@@ -207,7 +236,7 @@ while True:
 			break
 	except:
 		break
-	action = agent.act(np.reshape(np.array(pa), (1,20,8)))
+	action = agent.act(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,8)))
 	# It is 6 values, brute force
 	PipePrint((action[0]+1)/2,(action[1]+1)/2,action[2],action[3],action[4],action[5],action[6])
 	stderr.flush()
@@ -215,17 +244,20 @@ while True:
 	
 	vv = [float(x) for x in input_k.strip().split(" ")] # Cur state!
 	
-	if(len(vv) != 8):
+	if(len(vv) != INPUT_SIZE):
 		stderr.write('\0' + "GO GO TENSORFLOW!" + '\0')
 		stderr.flush()
 		continue
 	
-	if "2" not in choice:
+	if "2" not in choice and "3" not in choice:
 		kill_me.append(vv)
-		reward = agent.get_Score(pa, vv)
-		agent.remember(np.reshape(np.array(pa), (1,20,8)), action, reward, np.reshape(np.array(kill_me), (1,20,8)), False)
-		agent.replay()
-		agent.target_train()
+		if INPUT_RATE-1 == timeout_timer:
+			timeout_timer = -1
+			reward = agent.get_Score(pa, vv)
+			agent.remember(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,8)), action, reward, np.reshape(np.array(kill_me), (1,MAX_FRAMES_RECORDING,8)), False)
+			agent.replay()
+			agent.target_train()
+		timeout_timer = timeout_timer+1
 	pa.append(vv)
 	
 if "2" not in choice:
