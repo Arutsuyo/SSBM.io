@@ -198,7 +198,7 @@ while True:
 	stderr.flush()
 	# Output action....
 	
-	vv = [float(x) for x in input_k.split(" ")] # Cur state!
+	vv = [float(x) for x in input_k.strip().split(" ")] # Cur state!
 	if "2" not in choice:
 		reward = agent.get_Score(pa, vv)
 		agent.remember(pa, action, reward, vv, False)
