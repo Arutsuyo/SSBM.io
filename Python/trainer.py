@@ -205,7 +205,9 @@ while True:
 		input_k = getInput(256)
 		if "-1 -1" in input_k:
 			break
-	except:
+	except Exception, e:
+		stderr.write(str(e)+'\0')
+		stderr.flush()
 		break
 	action = agent.act(np.reshape(np.array(pa), (1,20,8)))
 	# It is 6 values, brute force
@@ -219,8 +221,9 @@ while True:
 		stderr.write('\0' + "GO GO TENSORFLOW!" + '\0')
 		stderr.flush()
 		continue
-	kill_me.append(vv)
+	
 	if "2" not in choice:
+		kill_me.append(vv)
 		reward = agent.get_Score(pa, vv)
 		agent.remember(np.reshape(np.array(pa), (1,20,8)), action, reward, np.reshape(np.array(kill_me), (1,20,8)), False)
 		agent.replay()
