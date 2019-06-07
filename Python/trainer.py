@@ -112,7 +112,7 @@ class DQN:
 			self.game_score = self.game_score + (myHP * .15)
 	def create_model(self):
 		model = Sequential()
-		model.add(fallbackLSTM(30,input_shape=(self.input_size,1), activation='tanh', return_sequences=True))
+		model.add(fallbackLSTM(30,input_shape=(1,8), activation='tanh', return_sequences=True))
 		model.add(Dropout(0.2))
 		model.add(fallbackLSTM(30, activation='tanh'))
 		model.add(Dropout(0.5))
@@ -130,6 +130,11 @@ class DQN:
 		return model
 	def remember(self, state, action, reward, new_state, done):
 		self.memory.append([state, action, reward, new_state, done])
+	def get_real_action(self, action):
+		for y in range(len(self.actions)):
+			x = self.actions[y]
+			if sum([(1 if abs(x[i] - action[i]) >= 0.01 else 0) for i in range(len(action))]) == 0:
+				return y
 	def replay(self):
 		batch_size = 32
 		if len(self.memory) < batch_size:
@@ -137,6 +142,7 @@ class DQN:
 		samples = random.sample(self.memory, batch_size)
 		for sample in samples:
 			state, action, reward, new_state, done = sample
+			action = self.get_real_action(action)
 			target = self.target_model.predict(state)
 			if done:
 				target[0][action] = reward
@@ -195,7 +201,7 @@ while True:
 			break
 	except:
 		break
-	action = agent.act(pa) 
+	action = agent.act(np.reshape(np.array(pa), (1,1,8)))
 	# It is 6 values, brute force
 	PipePrint((action[0]+1)/2,(action[1]+1)/2,action[2],action[3],action[4],action[5],action[6])
 	stderr.flush()
@@ -208,7 +214,7 @@ while True:
 		continue
 	if "2" not in choice:
 		reward = agent.get_Score(pa, vv)
-		agent.remember(pa, action, reward, vv, False)
+		agent.remember(np.reshape(np.array(pa), (1,1,8)), action, reward, np.reshape(np.array(vv), (1,1,8)), False)
 		agent.replay()
 		agent.target_train()
 	pa = [x for x in vv]
