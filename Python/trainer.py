@@ -200,6 +200,8 @@ while True:
 	
 	vv = [float(x) for x in input_k.strip().split(" ")] # Cur state!
 	if(len(vv) != 8):
+		stderr.write("\0" + "MOTHERFUCKER I GOT " + str(len(vv)) + " INPUTS!\n" + "\0")
+		stderr.flush()
 		continue
 	if "2" not in choice:
 		reward = agent.get_Score(pa, vv)
