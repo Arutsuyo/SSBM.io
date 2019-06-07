@@ -33,6 +33,7 @@ stderr = open(2, "w")
 def debugPrint(msg):
 	stdout.write('\0' + ("pred: " + msg) + '\0')
 	stdout.flush()
+	stderr.flush()
 
 def PipePrint(*vars):
 	vLen = len(vars)
@@ -42,8 +43,10 @@ def PipePrint(*vars):
 			msg += " %s" % str(vars[i])
 		stdout.write('\0' + ("pred: " + msg) + '\0')
 		stdout.flush()
+		stderr.flush()
 
 def getInput(n):
+	stderr.flush()
 	return os.read(0, n).decode("utf-8")
 
 choice = getInput(1)
@@ -60,7 +63,7 @@ except:
 	debugPrint("Unable to import CuDNNLSTM, using fallback of LSTM with tanh activator.\n")
 	
 debugPrint("Initialization: (0) New Model (1) Load Model (2) Load in Prediction-Only\n")
-
+stderr.flush()
 
 class DQN:
 	def __init__(self):
@@ -172,9 +175,11 @@ if "1" in choice or "2" in choice:
 	debugPrint("Loading model from file...\n")
 	agent = DQN()
 	agent.load_model(export_dir)
+	stderr.flush()
 else:
 	debugPrint("Building model:\n")
 	agent = DQN() # Prebuilds...
+	stderr.flush()
 #agent.test("cool")
 debugPrint("Finished building/loading!\nPlease input data in the form of:\nP1-HP P1-FD P1-X P1-Y P2-HP P2-FD P2-X P2-Y\n")
 
@@ -202,6 +207,7 @@ while True:
 	
 if "2" not in choice:
 	# Save!
+	stderr.flush()
 	debugPrint("End of file reached. Saving model.\n")
 	while True:
 		lock = None
