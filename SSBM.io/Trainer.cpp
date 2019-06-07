@@ -209,7 +209,15 @@ void Trainer::runTraining()
             // Check if the match finished
             if (!dh->running && dh->started)
             {
-                printf("%s:%d\tDolphin Instance %d stopped, restarting\n", FILENM, __LINE__, i);
+                printf("%s:%d\tDolphin Instance %d stopped\n", FILENM, __LINE__, i);
+                if(dh->safeclose)
+                    printf("%s:%d\tDolphin Instance Closed safely\n", FILENM, __LINE__);
+                else
+                {
+                    fprintf(stderr, "%s:%d\t--ERROR:Dolphin Failed close safely\n", FILENM, __LINE__);
+                    term = true;
+                    break;
+                }
                 dh->~DolphinHandle();
                 // Remove the handler, calling the destructor
                 _Dhandles.erase(_Dhandles.begin() + i);

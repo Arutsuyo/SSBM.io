@@ -47,7 +47,8 @@ bool WaitForDolphinToClose(int pid)
     SendKill(pid);
     tpid = waitpid(pid, &status, 0);
     printf("%s:%d\tChild(Status:%d) Exited\n", FILENM, __LINE__, status);
-    return true;
+    Trainer::cv.notify_all();
+    return tpid != pid;
 }
 
 void DolphinHandle::CopyBaseFiles()
@@ -299,9 +300,7 @@ bool DolphinHandle::CheckClose(ThreadArgs& ta)
     // Closing, notify the trainer
     printf("%s:%d-T%d: Closing Thread\n",
         FILENM, __LINE__, *ta._pid);
-    WaitForDolphinToClose(*ta._pid);
-    Trainer::cv.notify_all();
-    return true;
+    return (*ta.safeClose = WaitForDolphinToClose(*ta._pid));
 }
 
 bool DolphinHandle::StartDolphin(int lst)
@@ -381,11 +380,13 @@ bool DolphinHandle::StartDolphin(int lst)
     if (!WriteToFile(dolphinConfig, hotkey))
         return false;
 
+    safeclose = false;
     ThreadArgs* ta = new ThreadArgs;
     ta->_running = &running;
     ta->_pid = &pid;
     ta->_dolphinUser = dolphinUser;
     ta->_controllers = &controllers;
+    ta->safeClose = &safeclose;
 
     printf("%s:%d\tStarting Thread\n", FILENM, __LINE__);
     Trainer::cv.notify_all();

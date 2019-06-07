@@ -7,6 +7,7 @@
 
 struct ThreadArgs
 {
+    bool* safeClose;
     bool *_running;
     int *_pid;
     std::string _dolphinUser;
@@ -35,6 +36,7 @@ class DolphinHandle
 public:
     bool running;
     bool started;
+    bool safeclose = false;
 
     bool StartDolphin(int lst);
 
