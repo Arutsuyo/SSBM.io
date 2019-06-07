@@ -35,7 +35,7 @@ public:
     static std::string dolphinDefaultUser;
 
     // Threading Info
-    static unsigned concurentThreadsSupported;
+    static unsigned Concurent;
     
     static std::mutex mut;
     static std::condition_variable cv;

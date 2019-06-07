@@ -29,7 +29,7 @@ std::string Trainer::dolphinDefaultUser = "";
 // Used for tracking events in the threads
 std::mutex Trainer::mut;
 std::condition_variable Trainer::cv;
-unsigned Trainer::concurentThreadsSupported;
+unsigned Trainer::Concurent;
 
 /* Helper Functions */
 inline bool exists_test(const std::string& name) {
@@ -136,7 +136,7 @@ void Trainer::runTraining()
         break;
     }
 
-    int numCreate = _vs == VsType::Human ? 1 : concurentThreadsSupported;
+    int numCreate = _vs == VsType::Human ? 1 : Concurent;
     //int numCreate = 1;
     printf("%s:%d\tRunning %d Instance%s\n", FILENM, __LINE__, numCreate, numCreate > 1 ? "s" : "" );
     for (int i = 0; i < numCreate; i++)
