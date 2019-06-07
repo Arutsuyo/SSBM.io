@@ -93,6 +93,7 @@ class DQN:
 		
 	def get_Score(self, prev_state, new_state):
 		reward = 0
+		prev_state = prev_state[-1]
 		if prev_state[4] > new_state[4] and new_state[4] == 0:
 			reward = reward + 100 # :D Not enough to overcome suicide.
 		if prev_state[0] > new_state[0] and new_state[0] == 0:
@@ -112,7 +113,7 @@ class DQN:
 			self.game_score = self.game_score + (myHP * .15)
 	def create_model(self):
 		model = Sequential()
-		model.add(fallbackLSTM(30,input_shape=(1,8), activation='tanh', return_sequences=True))
+		model.add(fallbackLSTM(30,input_shape=(20,8), activation='tanh', return_sequences=True))
 		model.add(Dropout(0.2))
 		model.add(fallbackLSTM(30, activation='tanh'))
 		model.add(Dropout(0.5))
@@ -136,7 +137,7 @@ class DQN:
 			if sum([(1 if abs(x[i] - action[i]) >= 0.01 else 0) for i in range(len(action))]) == 0:
 				return y
 	def replay(self):
-		batch_size = 32
+		batch_size = 256
 		if len(self.memory) < batch_size:
 			return
 		samples = random.sample(self.memory, batch_size)
@@ -150,6 +151,7 @@ class DQN:
 				Q_future = max(self.target_model.predict(new_state)[0])
 				target[0][action] = reward + Q_future * self.gamma
 			self.model.fit(state, target, epochs=1, verbose=0)
+		self.memory.clear()
 	def act(self, state):
 		self.epsilon *= self.epsilon_decay
 		self.epsilon = max(self.epsilon_min, self.epsilon)
@@ -193,7 +195,11 @@ else:
 #agent.test("cool")
 debugPrint("Finished building/loading!\nPlease input data in the form of:\nP1-HP P1-FD P1-X P1-Y P2-HP P2-FD P2-X P2-Y\n")
 
-pa = [0,0,0,0,0,0,0,0]
+pa = deque(maxlen=20)
+kill_me = deque(maxlen=20)
+for i in range(20):
+	pa.append([0,0,0,0,0,0,0,0])
+	kill_me.append([0,0,0,0,0,0,0,0])
 while True:
 	try:
 		input_k = getInput(256)
@@ -201,23 +207,25 @@ while True:
 			break
 	except:
 		break
-	action = agent.act(np.reshape(np.array(pa), (1,1,8)))
+	action = agent.act(np.reshape(np.array(pa), (1,20,8)))
 	# It is 6 values, brute force
 	PipePrint((action[0]+1)/2,(action[1]+1)/2,action[2],action[3],action[4],action[5],action[6])
 	stderr.flush()
 	# Output action....
 	
 	vv = [float(x) for x in input_k.strip().split(" ")] # Cur state!
+	
 	if(len(vv) != 8):
 		stderr.write('\0' + "GO GO TENSORFLOW!" + '\0')
 		stderr.flush()
 		continue
+	kill_me.append(vv)
 	if "2" not in choice:
 		reward = agent.get_Score(pa, vv)
-		agent.remember(np.reshape(np.array(pa), (1,1,8)), action, reward, np.reshape(np.array(vv), (1,1,8)), False)
+		agent.remember(np.reshape(np.array(pa), (1,20,8)), action, reward, np.reshape(np.array(kill_me), (1,20,8)), False)
 		agent.replay()
 		agent.target_train()
-	pa = [x for x in vv]
+	pa.append(vv)
 	
 if "2" not in choice:
 	# Save!
