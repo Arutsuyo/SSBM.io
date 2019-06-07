@@ -203,7 +203,7 @@ for i in range(20):
 while True:
 	try:
 		input_k = getInput(256)
-		if "-1 -1" == input_k:
+		if "exit please" in input_k:
 			break
 	except Exception, e:
 		stderr.write(str(e)+'\0')
