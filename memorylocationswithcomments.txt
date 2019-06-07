@@ -1,0 +1,58 @@
+004530E0 p1 health percent
+00453F70 p2 health percent
+0045310E p1 stock
+00453F9E p2 stock
+004530C0 p1 direction facing
+00453F50 p2 direction facing
+00453090 p1 xpos
+00453F20 p2 xpos
+00453094 p1 ypos
+00453F24 p2 ypos
+
+453130 player one base pointer
+
+00453130 70 action state
+00453130 20CC action count
+00453130 8F4  action frame 
+00453130 19EC invincibility
+00453130 19BC hitlag
+00453130 23a0 hitstun
+00453130 2174 charging attack?
+00453130 19C8 n jumps
+00453130 140 on ground?
+00453130 E0 x air speed
+00453130 E4 y air speed
+00453130 EC x attack
+00453130 F0 y attack
+00453130 14C knocked down
+
+453FC0 player two base pointer
+
+00453FC0 70
+00453FC0 20CC
+00453FC0 8F4
+00453FC0 19EC
+00453FC0 19BC
+00453FC0 23a0
+00453FC0 2174
+00453FC0 19C8
+00453FC0 140
+00453FC0 E0
+00453FC0 E4
+00453FC0 EC
+00453FC0 F0
+00453FC0 14C
+
+003F0E0A player one character selected
+003F0E2E player two character selected
+00479d30 Current Menu
+004D6CAD Stage selected
+0111826C p2 cursor x
+01118270 p2 cursor y
+
+00c8ee38 stage select x (p1 or p2 ? )
+00c8ee50 stage select x (p1 or p2 ? )
+00C8EE3C stage select y (p1 or p2 ? )
+00C8EE60 stage select y (p1 or p2 ? )
+
+00479D60 this was hard to tell, but i think it is a repeated flag... coulnt mess with it too much
