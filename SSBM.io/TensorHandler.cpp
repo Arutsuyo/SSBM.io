@@ -394,7 +394,7 @@ TensorHandler::~TensorHandler()
         printf("%s:%d\tWriting Close\n", FILENM, __LINE__);
         char buff[BUFF_SIZE];
         memset(buff, 0, BUFF_SIZE);
-        sprintf(buff, "-1 -1\n");
+        sprintf(buff, "exit please\n");
         int bytesWritten = strlen(buff);
         if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
         {
