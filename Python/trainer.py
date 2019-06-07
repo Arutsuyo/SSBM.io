@@ -205,9 +205,7 @@ while True:
 		input_k = getInput(256)
 		if "exit please" in input_k:
 			break
-	except Exception, e:
-		stderr.write(str(e)+'\0')
-		stderr.flush()
+	except:
 		break
 	action = agent.act(np.reshape(np.array(pa), (1,20,8)))
 	# It is 6 values, brute force
