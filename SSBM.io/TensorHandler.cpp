@@ -39,7 +39,7 @@ bool exists_test(const std::string & name) {
 }
 
 float TensorHandler::finalDest[2] = { -16.4, 18.87 };
-float TensorHandler::cptFalcon[2] = { 17.4f, 17.0f };
+float TensorHandler::cptFalcon[2] = { 18.2, 18.29 };
 
 bool TensorHandler::CreatePipes(Controller* ai)
 {
@@ -289,24 +289,29 @@ bool TensorHandler::SelectLocation(MemoryScanner* mem, bool charStg)
         disy = finalDest[1] - p.cursor_y;
     }
 
-    // Get Abs
-    float absDis = disx < 0 ? -disx : disx;
-    // Within Error?
-    if (absDis < 0.1)
-        sx = 0.5f;
-    else
-        sx = disx > 0 ? 0.75f : 0.25;
+    printf("%s:%d\tCursor Pos P%d: %4.3f %4.3f dist:%4.3f %4.3f\n", FILENM, __LINE__,
+        ctrl->player ? 2 : 1, p.cursor_x, p.cursor_y, disx, disy);
 
-    // Get Abs
-    absDis = disy < 0 ? -disy : disy;
-    // Within Error?
-    if (absDis < 0.1)
-        sy = 0.5f;
-    else
-        sy = disy > 0 ? 0.75f : 0.25;
+    if (disx > 1)
+        disx = 1;
+    else if (disx < -1)
+        disx = -1;
 
-    if (sx == 0.5f && sy == 0.5f)
+    disx = disx / 2;
+    disx += 0.5;
+
+    if (disy > 1)
+        disy = 1;
+    else if (disy < -1)
+        disy = -1;
+
+    disy = disy / 2;
+    disy += 0.5;
+
+    if ((sx = disx) == 0.5f && (sy = disy) == 0.5f)
         ba = true;
+
+    int loop = 0;
 
     printf("%s:%d\tSending Controls to Controller\n", FILENM, __LINE__);
     if (!ctrl->setControls({ sx, sy, ba, bb, by, bz, bl }) && !ctrl->IsPipeOpen())
