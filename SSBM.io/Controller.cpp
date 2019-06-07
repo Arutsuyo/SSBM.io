@@ -170,8 +170,6 @@ bool Controller::setControls(Controls inCt)
         return false;
     }
 
-    printf("%s:%d\tController: Sending Controls\n",
-        FILENM, __LINE__);
     // Main Stick
     float disx = ct.stick[0] - inCt.stick[0],
         disy = ct.stick[1] - inCt.stick[1];
@@ -181,8 +179,6 @@ bool Controller::setControls(Controls inCt)
     if (absDisx > 0.01 || absDisy > 0.01)
     {
         ret = sprintf(buff, "SET MAIN %4.4f %4.4f\n", 
-            inCt.stick[0], inCt.stick[1]);
-        fprintf(stderr, "SET MAIN %4.4f %4.4f\n", 
             inCt.stick[0], inCt.stick[1]);
         ct.stick[0] = inCt.stick[0];
         ct.stick[1] = inCt.stick[1];
@@ -194,9 +190,6 @@ bool Controller::setControls(Controls inCt)
         // Don't send repeated state
         if (ct.buttons[i] == inCt.buttons[i])
             continue;
-        fprintf(stderr, "%s %c\n",
-            inCt.buttons[i] ? "PRESS" : "RELEASE",
-            _ButtonNames[i]);
 
         ret = sprintf(buff + offset, "%s %c\n",
             inCt.buttons[i] ? "PRESS" : "RELEASE",
@@ -213,13 +206,9 @@ bool Controller::setControls(Controls inCt)
 
 bool Controller::ButtonPressRelease(std::string btn)
 {
-    printf("%s:%d Pressing Start\n", FILENM, __LINE__);
     char buff[BUFF_SIZE];
     int ret = 0;
     ret = sprintf(buff, "%s %s\n", "PRESS", btn.c_str());
-
-    printf("%s:%d %s %s\n", FILENM, __LINE__,
-        getFileName(pipePath).c_str(), buff);
     if (!sendtofifo(buff, ret))
         return false;
 
@@ -227,9 +216,6 @@ bool Controller::ButtonPressRelease(std::string btn)
     nsleep(pipeDelay * 1000);
 
     ret = sprintf(buff, "%s %s\n", "RELEASE", btn.c_str());
-    printf("%s:%d %s %s\n", FILENM, __LINE__,
-        getFileName(pipePath).c_str(), buff);
-
     return sendtofifo(buff, ret);
 }
 

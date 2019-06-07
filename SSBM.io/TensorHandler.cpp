@@ -179,17 +179,15 @@ bool TensorHandler::CreatePipes(Controller* ai)
 
 void TensorHandler::dumpErrorPipe()
 {
-    char buff[BUFF_SIZE];
-    memset(buff, 0, BUFF_SIZE);
+    char buff[BUFF_SIZE * 2];
+    memset(buff, 0, BUFF_SIZE * 2);
     std::string output = "";
     int ret = 0, offset = 0;
-
-    fprintf(stderr, "%s:%d\tDumping Error pipe\n", FILENM, __LINE__);
 
     while (true)
     {
         // Get the current pipe buffer
-        if ((ret = read(pipeErrorFromPy[0], buff, BUFF_SIZE)) == -1)
+        if ((ret = read(pipeErrorFromPy[0], buff, BUFF_SIZE * 2)) == -1)
         {
             // Check if the socket is just empty
             if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -205,7 +203,13 @@ void TensorHandler::dumpErrorPipe()
         for (int i = 0; i < ret; i += output.size() + 1)
         {
             output = &buff[i];
-            fprintf(stderr, "%s:%d\tPyErr: %s\n", FILENM, __LINE__, output.c_str());
+            fprintf(stderr, "%s:%d\tPyErr(%lu): ", 
+                FILENM, __LINE__, output.size());
+            for (int j = 0; j < output.size(); j+=strlen(output.c_str()) + 1)
+            {
+                fprintf(stderr, "%s", output.c_str() + j);
+            }
+            fprintf(stderr, "\n");
         }
 
     }
@@ -321,8 +325,8 @@ bool TensorHandler::SelectLocation(MemoryScanner* mem, bool charStg)
     }
     else
     {
-        disx = finalDest[0] - p.cursor_x;
-        disy = finalDest[1] - p.cursor_y;
+        disx = finalDest[0] - p.stage_x;
+        disy = finalDest[1] - p.stage_y;
     }
 
     //printf("%s:%d\tCursor Pos P%d: %4.3f %4.3f dist:%4.3f %4.3f\n", FILENM, __LINE__, ctrl->player ? 2 : 1, p.cursor_x, p.cursor_y, disx, disy);

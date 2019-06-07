@@ -239,7 +239,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
             return false;
         }
         if (tHandles[0]->SelectLocation(&mem, true))
-            (*ta._controllers).front()->ButtonPressRelease("START");
+            (*ta._controllers).front()->ButtonPressRelease("A");
     }
     if (CheckClose(ta))
         return false;

@@ -9,7 +9,6 @@ class TensorHandler
     static float finalDest[2];
     static float cptFalcon[2];
 
-
     int pid;
 
     // Pipes: 0 is read, 1 is write

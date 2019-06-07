@@ -49,26 +49,16 @@ Player MemoryScanner::GetPlayer(bool pl)
 
 bool MemoryScanner::print()
 {
-
+    
     /*quick check for all values to be updated before being sent to model*/
     if (p1.dir == 10 || p2.dir == 10)
-    {
-        printf("%s:%d\t--Invalid Data: %d:%d\n", FILENM, __LINE__,
-            p1.dir, p2.dir);
         return false;
-    }
+
     if (p1.pos_x == -1024 || p1.pos_y == -1024)
-    {
-        printf("%s:%d\t--Invalid Data: %f:%f\n", FILENM, __LINE__,
-            p1.pos_x, p1.pos_y);
         return false;
-    }
+
     if (p2.pos_x == -1024 || p2.pos_y == -1024)
-    {
-        printf("%s:%d\t--Invalid Data: %f:%f\n", FILENM, __LINE__,
-            p2.pos_x, p2.pos_y);
         return false;
-    }
 
     printf("%s:%d\tMemory Scan\n"
         "\tP1:%u P1:%d P1:%f P1:%f\n", FILENM, __LINE__,
