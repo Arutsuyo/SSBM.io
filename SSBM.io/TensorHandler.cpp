@@ -169,22 +169,27 @@ bool TensorHandler::CreatePipes(Controller* ai)
 
 void TensorHandler::dumpErrorPipe()
 {
-    printf("%s:%d\tDumping Error from Pipe\n", FILENM, __LINE__);
     char buff[BUFF_SIZE];
     memset(buff, 0, BUFF_SIZE);
     std::string output = "";
     int ret = 0, offset = 0;
-    while (ret >= BUFF_SIZE) // Read might be capped
+    while (true)
     {
         // Get the current pipe buffer
         if ((ret = read(pipeFromPy[0], buff, BUFF_SIZE)) == -1)
         {
-            fprintf(stderr, "ERROR: pipe read failed\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
+                "--ERROR:Error pipe read failed", strerror(errno));
+            return;
         }
 
-        // Print what was read
-        printf("PyError%d: %s\n", ret, buff);
+        // step through the gunk until we find the prediction
+        for (int i = 0; i < ret; i += output.size() + 1)
+        {
+            output = &buff[i];
+            printf("%s:%d\tPyErr: %s\n", FILENM, __LINE__, output.c_str());
+        }
+
     }
 }
 
@@ -204,7 +209,7 @@ void TensorHandler::SendToPipe(Player ai, Player enemy)
             "--ERROR:write", strerror(errno));
     }
 
-    printf("%s:%d\tSent: %s\n", FILENM, __LINE__, buff);
+    printf("%s:%d\tSent: %s", FILENM, __LINE__, buff);
 }
 
 // Scrub through the pipe until we reach the identifier, return that
@@ -237,11 +242,13 @@ std::string TensorHandler::ReadFromPipe()
         //We didn't find the droids we're looking for
         // T.T
     }
+    dumpErrorPipe();
 }
 
 bool TensorHandler::handleController(std::string tensor)
 {
-    printf("%s:%d\tParsing Tensor Output\n", FILENM, __LINE__);
+    printf("%s:%d\tParsing Tensor Output:\n\t%s\n", 
+        FILENM, __LINE__, tensor.c_str());
     float sx, sy;
     int ba, bb, by, bz, bl;
     // pred: 0.0 1.0 0 0 1 0 0
@@ -289,31 +296,39 @@ bool TensorHandler::SelectLocation(MemoryScanner* mem, bool charStg)
         disy = finalDest[1] - p.cursor_y;
     }
 
-    printf("%s:%d\tCursor Pos P%d: %4.3f %4.3f dist:%4.3f %4.3f\n", FILENM, __LINE__,
-        ctrl->player ? 2 : 1, p.cursor_x, p.cursor_y, disx, disy);
+    //printf("%s:%d\tCursor Pos P%d: %4.3f %4.3f dist:%4.3f %4.3f\n", FILENM, __LINE__, ctrl->player ? 2 : 1, p.cursor_x, p.cursor_y, disx, disy);
 
+    // Normalize
     if (disx > 1)
         disx = 1;
     else if (disx < -1)
         disx = -1;
 
+    // Scale
     disx = disx / 2;
     disx += 0.5;
 
+    // Normalize
     if (disy > 1)
         disy = 1;
     else if (disy < -1)
         disy = -1;
 
+    // Scale
     disy = disy / 2;
     disy += 0.5;
 
-    if ((sx = disx) == 0.5f && (sy = disy) == 0.5f)
+    sx = disx;
+    sy = disy;
+
+    float absx = sx - 0.5, absy = sy - 0.5;
+    absx = absx < 0 ? -absx : absx;
+    absy = absy < 0 ? -absy : absy;
+
+    if (absx < 0.1 && absy < 0.1)
         ba = true;
 
-    int loop = 0;
-
-    printf("%s:%d\tSending Controls to Controller\n", FILENM, __LINE__);
+    //printf("%s:%d\tSending Controls to Controller\n", FILENM, __LINE__);
     if (!ctrl->setControls({ sx, sy, ba, bb, by, bz, bl }) && !ctrl->IsPipeOpen())
         return false;
 

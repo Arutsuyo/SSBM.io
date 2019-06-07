@@ -137,7 +137,7 @@ bool Controller::sendtofifo(char fifocmd[], int limit)
     while (offset < limit)
     {
         int towrite = strlen(fifocmd + offset);
-        printf("%s:%d To FIFO: %s\n", FILENM, __LINE__, fifocmd + offset);
+        printf("%s:%d To FIFO: %s", FILENM, __LINE__, fifocmd + offset);
 
         if (towrite + offset > limit)
             fprintf(stderr, "%s:%d Cannot make the next write: total:%d limit %d\n", FILENM, __LINE__, towrite + offset, limit);
@@ -180,8 +180,10 @@ bool Controller::setControls(Controls inCt)
         absDisy = disy < 0 ? -disy : disy;
     if (absDisx > 0.01 || absDisy > 0.01)
     {
-        ret = sprintf(buff, "SET MAIN %4.4f %4.4f\n", inCt.stick[0], inCt.stick[0]);
-        fprintf(stderr, "SET MAIN %4.4f %4.4f\n", inCt.stick[0], inCt.stick[0]);
+        ret = sprintf(buff, "SET MAIN %4.4f %4.4f\n", 
+            inCt.stick[0], inCt.stick[1]);
+        fprintf(stderr, "SET MAIN %4.4f %4.4f\n", 
+            inCt.stick[0], inCt.stick[1]);
         ct.stick[0] = inCt.stick[0];
         ct.stick[1] = inCt.stick[1];
         offset += ret + 1;
