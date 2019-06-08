@@ -1,5 +1,6 @@
 #include "DolphinHandle.h"
 #include "TensorHandler.h"
+#include "addresses.h"
 #include "Player.h" 
 #include "Trainer.h"
 #include <stdlib.h>
@@ -159,7 +160,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     //wait until the character stage is detected
     int loop = 0, loopLim = 1000;
     TPoint lastSent = std::chrono::high_resolution_clock::now();
-    while (mem.CurrentStage() != 3 && *ta._running)
+    while (mem.CurrentStage() != Addresses::MENUS::CHARACTER_SELECT && *ta._running)
     {
         if (loop++ == loopLim)
         {
@@ -200,7 +201,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     printf("%s:%d-T%d\tSelecting Characters\n",
         FILENM, __LINE__, *ta._pid);
-    while (mem.CurrentStage() != 4 && *ta._running)
+    while (mem.CurrentStage() != Addresses::MENUS::STAGE_SELECT && *ta._running)
     {
         if (loop++ == loopLim)
         {
@@ -319,7 +320,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         FILENM, __LINE__, *ta._pid);
     int memory_update;
     bool openSocket = true, openPipe = true;
-    while (*ta._running && openPipe && openSocket && mem.CurrentStage() != 2)
+    while (*ta._running && openPipe && openSocket && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
     {
         if (!mem.UpdatedFrame(true))
         {
