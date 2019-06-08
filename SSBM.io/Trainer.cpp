@@ -31,6 +31,9 @@ std::string Trainer::userDir = "";
 std::string Trainer::dolphinDefaultUser = "";
 
 std::string Trainer::PythonCommand = "python.exe";
+std::string Trainer::modelName = "CptFalcon";
+int Trainer::predictionType = 1;
+
 
 // Used for tracking events in the threads
 std::mutex Trainer::mut;
@@ -141,6 +144,20 @@ void Trainer::KillDolphinHandles()
         _Dhandles[i]->running = false;
 }
 
+void Trainer::GetVesrionNumber(std::string& parsed)
+{
+    char version[16];
+    FILE* fd = fopen("Version/version.txt", "w");
+    if (!fd)
+    {
+        fprintf(stderr, "%s:%d --Error: Version/version.txt is missing.\n", FILENM, __LINE__);
+    }
+    fread(version, sizeof(char), 16, fd);
+    fclose(fd);
+    Trainer::modelName = parsed + version;
+    Trainer::modelName += ".h5";
+}
+
 void Trainer::runTraining()
 {
     printf("%s:%d\tInitializing Training.\n", FILENM, __LINE__);
@@ -214,7 +231,7 @@ void Trainer::runTraining()
                     printf("%s:%d\tDolphin Instance Closed safely\n", FILENM, __LINE__);
                 else
                 {
-                    fprintf(stderr, "%s:%d\t--ERROR:Dolphin Failed close safely\n", FILENM, __LINE__);
+                    fprintf(stderr, "%s:%d\t--ERROR:Dolphin failed to close safely\n", FILENM, __LINE__);
                     term = true;
                     break;
                 }

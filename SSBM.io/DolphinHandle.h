@@ -7,8 +7,9 @@
 
 struct ThreadArgs
 {
-    bool* safeClose;
-    bool *_running;
+    bool* _running;
+    bool* _pipes;
+    bool* _safeClose;
     int *_pid;
     std::string _dolphinUser;
     std::vector<Controller*> *_controllers;
@@ -31,7 +32,7 @@ class DolphinHandle
 
     static bool dolphin_thread(ThreadArgs *ta);
 
-    static bool CheckClose(ThreadArgs& ta);
+    static bool CheckClose(ThreadArgs& ta, bool force = false);
 
 public:
     bool running;

@@ -98,6 +98,8 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         fprintf(stderr, "%s:%d-T\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:execlp", strerror(errno));
         *ta._running = false;
+        CheckClose(ta);
+        Trainer::cv.notify_all();
         return false;
     }
 
@@ -116,15 +118,23 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         if (!(*ta._controllers)[i]->OpenController())
         {
             *ta._running = false;
+            CheckClose(ta);
             Trainer::cv.notify_all();
             return false;
         }
         printf("%s:%d-T%d\tLinking Controller with Tensor\n",
             FILENM, __LINE__, *ta._pid);
         TensorHandler* th = new TensorHandler;
-        th->CreatePipes((*ta._controllers)[i]);
+        if (!th->CreatePipes((*ta._controllers)[i]))
+        {
+            *ta._running = false;
+            CheckClose(ta);
+            Trainer::cv.notify_all();
+            return false;
+        }
         tHandles.push_back(th);
     }
+    *ta._pipes = true;
 
     printf("%s:%d-T%d\tCreating Memory Watcher!\n",
         FILENM, __LINE__, *ta._pid);
@@ -132,6 +142,8 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     if (mem.success == false) {
         fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
             "--ERROR:Failed to initialize Memory Scanner");
+        *ta._running = false;
+        CheckClose(ta);
         Trainer::cv.notify_all();
         return false;
     }
@@ -166,12 +178,18 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
+            *ta._running = false;
+            CheckClose(ta);
             Trainer::cv.notify_all();
             return false;
         }
     }
     if (CheckClose(ta))
+    {
+        Trainer::cv.notify_all();
         return false;
+    }
+
 
 
     printf("%s:%d-T%d\tSelecting Characters\n",
@@ -199,6 +217,8 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
+            *ta._running = false;
+            CheckClose(ta);
             Trainer::cv.notify_all();
             return false;
         }
@@ -209,7 +229,10 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
             (*ta._controllers).back()->ButtonPressRelease("START");
     }
     if (CheckClose(ta))
+    {
+        Trainer::cv.notify_all();
         return false;
+    }
 
     printf("%s:%d-T%d\tSelecting Stage\n",
         FILENM, __LINE__, *ta._pid);
@@ -236,6 +259,8 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         {
             fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
                 "--ERROR:Memory update failed");
+            *ta._running = false;
+            CheckClose(ta);
             Trainer::cv.notify_all();
             return false;
         }
@@ -243,7 +268,10 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
             (*ta._controllers).front()->ButtonPressRelease("A");
     }
     if (CheckClose(ta))
+    {
+        Trainer::cv.notify_all();
         return false;
+    }
 
     // Check mem until we get valid player numbers
     printf("%s:%d-T%d\tChecking for valid player data\n",
@@ -269,7 +297,11 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         mem.UpdatedFrame(true);
     }
     if (CheckClose(ta))
+    {
+        Trainer::cv.notify_all();
         return false;
+    }
+
 
     printf("%s:%d-T%d\tReady for input!\n",
         FILENM, __LINE__, *ta._pid);
@@ -290,17 +322,17 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     // Close out
     *ta._running = false;
-    return CheckClose(ta);
+    return CheckClose(ta, true);
 }
 
-bool DolphinHandle::CheckClose(ThreadArgs& ta)
+bool DolphinHandle::CheckClose(ThreadArgs& ta, bool force)
 {
     if (*ta._running)
         return false;
     // Closing, notify the trainer
     printf("%s:%d-T%d: Closing Thread\n",
         FILENM, __LINE__, *ta._pid);
-    return (*ta.safeClose = WaitForDolphinToClose(*ta._pid));
+    return (*ta._safeClose = WaitForDolphinToClose(*ta._pid)) && force;
 }
 
 bool DolphinHandle::StartDolphin(int lst)
@@ -380,19 +412,22 @@ bool DolphinHandle::StartDolphin(int lst)
     if (!WriteToFile(dolphinConfig, hotkey))
         return false;
 
+    bool pipes = false;
     safeclose = false;
     ThreadArgs* ta = new ThreadArgs;
     ta->_running = &running;
+    ta->_safeClose = &safeclose;
+    ta->_safeClose = &safeclose;
     ta->_pid = &pid;
     ta->_dolphinUser = dolphinUser;
     ta->_controllers = &controllers;
-    ta->safeClose = &safeclose;
 
     printf("%s:%d\tStarting Thread\n", FILENM, __LINE__);
     Trainer::cv.notify_all();
     std::unique_lock<std::mutex> lk(Trainer::mut);
     t = new std::thread(&DolphinHandle::dolphin_thread, ta);
-    Trainer::cv.wait(lk);
+    while(!pipes && running)
+        Trainer::cv.wait_for(lk, std::chrono::seconds(1));
     started = true;
     return true;
 }

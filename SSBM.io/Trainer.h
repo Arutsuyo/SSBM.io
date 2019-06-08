@@ -34,7 +34,12 @@ public:
     // Directory info
     static std::string userDir;
     static std::string dolphinDefaultUser;
+    
+    // Tensor Info
     static std::string PythonCommand;
+    static std::string modelName;
+    static int predictionType;
+    static void GetVesrionNumber(std::string& parsed);
 
     // Threading Info
     static unsigned Concurent;

@@ -173,6 +173,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\CMakeLists.txt" />
+    <Text Include="..\Version\version.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Python\trainer.py" />

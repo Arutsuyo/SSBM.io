@@ -110,7 +110,10 @@ bool TensorHandler::CreatePipes(Controller* ai)
         /* Launch Python (EXE IS REQUIRED FOR WSL)*/
         execlp(Trainer::PythonCommand.c_str(), 
             Trainer::PythonCommand.c_str(), 
-            "trainer.py", NULL);
+            "trainer.py", 
+            Trainer::modelName.c_str(),
+            Trainer::Concurent * 2,
+            NULL);
 
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:EXECLP", strerror(errno));
@@ -152,10 +155,31 @@ bool TensorHandler::CreatePipes(Controller* ai)
         return false;
     }
 
-    if (exists_test("AI/ssbm.h5"))
-        sprintf(buff, "1"); // Load existing file
+
+
+    if (exists_test(Trainer::modelName))
+    {
+        if (Trainer::predictionType == 1 || Trainer::predictionType == 2)
+            sprintf(buff, "%d", Trainer::predictionType); // Read the model
+        else
+        {
+            fprintf(stderr, "%s:%d\t%s%s%s\n", FILENM, __LINE__,
+                "--ERROR:File Exists: ",Trainer::modelName.c_str() ,"\n\tDelete file to make a new model.");
+            return false;
+        }
+    }
     else
-        sprintf(buff, "0"); // Make a new model
+    {
+        if(Trainer::predictionType == 0 || Trainer::predictionType == 3)
+            sprintf(buff, "0"); // Make a new model
+        else
+        {
+            fprintf(stderr, "%s:%d\t%s: %s%s", FILENM, __LINE__,
+                "--ERROR:File Doesn't Exist: ", Trainer::modelName.c_str(), "\n\tRun with 0|3 to make a new model.\n");
+            return false;
+        }
+    }
+
     bytesWritten = strlen(buff);
     if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
     {

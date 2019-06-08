@@ -202,8 +202,8 @@ class DQN:
 
 
 
-export_dir = os.path.join(os.getcwd(), "AI","ssbm"+FILENAME+".h5")
-best_file = os.path.join(os.getcwd(), "AI", "modelscore"+FILENAME+".txt")
+export_dir = os.path.join(os.getcwd(), FILENAME)
+best_file = os.path.join(os.getcwd(), FILENAME+".txt") # ya, not very sightly, but it should work 
 choice = getInput(1)
 if "0" not in choice and "1" not in choice and "2" not in choice and "3" not in choice:
 	debugPrint("That was neither! Exiting.\n")

@@ -13,6 +13,7 @@
 
 void ParseArgs(int argc, char* argv[])
 {
+    bool getVer = false;
     printf("%s:%d Parsing Arguments\n", FILENM, __LINE__);
     for (int i = 1; i < argc; i++)
     {
@@ -27,16 +28,19 @@ void ParseArgs(int argc, char* argv[])
 "%s:%d Usage: %s <Argument...Array>\n"
 "\t-vs <S(elf)/H(human)> Specifies Instance Type. Default is Self Training.\n"
 "\t\tIf Human is selected, it will only spawn 1 instance.\n"
-"\t-t <num_threads> : Specifies the number of dolphine insatances\n"
+"\t-t <num_threads> : Specifies the number of dolphin instances\n"
 "\t\tNormal Load: CPU_CORES / 3\t\tMax Load: CPU_CORES / 3\n"
+"\t-m <Filename>\n"
+"\t\t<Filename>: Specify a Model to load into Tensorflow. \n\t\t\tFile version and .h5 will be added in %s\n"
+"\t-pr <0|1|2|3>: Tensorflow load type: 0: new model 1: load model 2: Predict 3: New Predict\n"
 "\t-u </directory> Specify a custom directory to fill with instance folders\n"
 "\t-du </directory> Specify the Default dolphin-emu dir to copy as a template\n"
 "\t-p <python_alias> Specifies command to use then launching tensorflow/keras\n"
 "\n"
 "Human Controls (Key:GCInput): V:A C:B X:X Z:Z ENTER:Start SPACE:L Arrows:Stick\n"
 "\n"
-                , FILENM, __LINE__, argv[0]);
-            continue;
+                , FILENM, __LINE__, argv[0], argv[0]);
+            exit(EXIT_SUCCESS);
         }
 
         // Vs Type
@@ -52,6 +56,11 @@ void ParseArgs(int argc, char* argv[])
             else
             {
                 i++;
+                if(argc == i)
+                {
+                    fprintf(stderr, "%s:%d VS Override failed to parse: %s\n", FILENM, __LINE__, "Not enough arguments");
+                    exit(EXIT_FAILURE);
+                }
                 parsed = argv[i];
             }
 
@@ -61,7 +70,7 @@ void ParseArgs(int argc, char* argv[])
                 ||
                 ((parsed.find("Self") != std::string::npos
                     || parsed.find("self") != std::string::npos)
-                && parsed.size() == 4))
+                    && parsed.size() == 4))
             {
                 Trainer::vs = VsType::Self;
                 parsed = "Self";
@@ -70,9 +79,9 @@ void ParseArgs(int argc, char* argv[])
                 || parsed.find("h") != std::string::npos)
                 && parsed.size() == 1)
                 ||
-                ((parsed.find("Human") != std::string::npos 
+                ((parsed.find("Human") != std::string::npos
                     || parsed.find("human") != std::string::npos)
-                && parsed.size() == 5))
+                    && parsed.size() == 5))
             {
                 Trainer::vs = VsType::Human;
                 parsed = "Human";
@@ -83,8 +92,95 @@ void ParseArgs(int argc, char* argv[])
                 exit(EXIT_FAILURE);
             }
 
-            printf("%s:%d --Override: Vs Type: %s\n", FILENM, __LINE__, 
+            printf("%s:%d --Override: Vs Type: %s\n", FILENM, __LINE__,
                 parsed.c_str());
+            continue;
+        }
+
+        // Model File
+        if ((size = arg.find("-m:")) != std::string::npos
+            || arg.find("-m") != std::string::npos)
+        {
+            std::string parsed;
+            // is it one argument or 2?
+            if (arg.size() > size)
+            {
+                parsed = arg.substr(size);
+            }
+            else
+            {
+                i++;
+                if (argc == i)
+                {
+                    fprintf(stderr, "%s:%d Model override failed to parse: %s\n", FILENM, __LINE__, "Not enough arguments");
+                    exit(EXIT_FAILURE);
+                }
+                parsed = argv[i];
+            }
+
+            Trainer::GetVesrionNumber(parsed);
+            getVer = true;
+
+            if (!exists_test(parsed))
+            {
+                fprintf(stderr, "%s:%d Model Override failed to parse: %s does not exist.\n", FILENM, __LINE__, parsed.c_str());
+                exit(EXIT_FAILURE);
+            }
+
+            continue;
+        }
+
+        // Prediction Mode
+        if ((size = arg.find("-pr:")) != std::string::npos
+            || arg.find("-pr") != std::string::npos)
+        {
+            std::string parsed;
+            // is it one argument or 2?
+            if (arg.size() > size)
+            {
+                parsed = arg.substr(size);
+            }
+            else
+            {
+                i++;
+                if (argc == i)
+                {
+                    fprintf(stderr, "%s:%d Model override failed to parse: %s\n", FILENM, __LINE__, "Not enough arguments");
+                    exit(EXIT_FAILURE);
+                }
+                parsed = argv[i];
+            }
+
+            if (sscanf(parsed.c_str(), "%d", &Trainer::predictionType))
+            {
+                std::string pred;
+                switch (Trainer::predictionType)
+                {
+                case 0:
+                    pred = "New Model";
+                    break;
+                case 1:
+                    pred = "Load Model";
+                    break;
+                case 2:
+                    pred = "Prediction Only";
+                    break;
+                case 3:
+                    pred = "New Model + Prediction Only";
+                    break;
+                default:
+                    fprintf(stderr, "%s:%d Model Override failed to parse: see -h.\n", FILENM, __LINE__);
+                    exit(EXIT_FAILURE);
+                    break;
+                }
+                printf("Launching Python in %s mode.\n", pred.c_str());
+            }
+            else
+            {
+                fprintf(stderr, "%s:%d Model Override failed to parse: %s does not exist.\n", FILENM, __LINE__, parsed.c_str());
+                exit(EXIT_FAILURE);
+            }
+
             continue;
         }
         
@@ -103,6 +199,11 @@ void ParseArgs(int argc, char* argv[])
             else
             {
                 i++;
+                if (argc == i)
+                {
+                    fprintf(stderr, "%s:%d VS Override failed to parse: %s\n", FILENM, __LINE__, "Not enough arguments");
+                    exit(EXIT_FAILURE);
+                }
                 Trainer::Concurent = std::stoi(argv[i]);
                 printf("%s:%d --Override: Concurrent Instances: %d\n", FILENM, __LINE__, Trainer::Concurent);
             }
@@ -123,6 +224,11 @@ void ParseArgs(int argc, char* argv[])
             else
             {
                 i++;
+                if (argc == i)
+                {
+                    fprintf(stderr, "%s:%d VS Override failed to parse: %s\n", FILENM, __LINE__, "Not enough arguments");
+                    exit(EXIT_FAILURE);
+                }
                 Trainer::userDir = argv[i];
                 printf("%s:%d --Override: Custom Dir: %s#\n", FILENM, __LINE__,
                     Trainer::userDir.c_str());
@@ -144,6 +250,11 @@ void ParseArgs(int argc, char* argv[])
             else
             {
                 i++;
+                if (argc == i)
+                {
+                    fprintf(stderr, "%s:%d VS Override failed to parse: %s\n", FILENM, __LINE__, "Not enough arguments");
+                    exit(EXIT_FAILURE);
+                }
                 Trainer::dolphinDefaultUser = argv[i];
                 printf("%s:%d --Override: Custom Default Dir: %s#\n", FILENM, __LINE__,
                     Trainer::dolphinDefaultUser.c_str());
@@ -171,6 +282,17 @@ void ParseArgs(int argc, char* argv[])
             }
             continue;
         }
+    }
+
+    // Update and check for conflicts
+    if(!getVer)
+        Trainer::GetVesrionNumber(Trainer::modelName);
+    if (Trainer::vs == Human && 
+        (Trainer::predictionType == 0 || Trainer::predictionType == 1))
+    {
+            fprintf(stderr, "%s:%d VS Override failed: \n"
+                "\tvs Human must be in prediction mode(%d) 2 or 3.\n", FILENM, __LINE__, Trainer::predictionType);
+            exit(EXIT_FAILURE);
     }
 }
 
