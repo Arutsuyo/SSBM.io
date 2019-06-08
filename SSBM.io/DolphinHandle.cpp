@@ -117,6 +117,8 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
             FILENM, __LINE__, *ta._pid, i);
         if (!(*ta._controllers)[i]->OpenController())
         {
+            fprintf(stderr, "%s:%d-T%d\tController(%d) failed to open\n",
+                FILENM, __LINE__, *ta._pid, i);
             *ta._running = false;
             CheckClose(ta);
             Trainer::cv.notify_all();
@@ -127,6 +129,8 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         TensorHandler* th = new TensorHandler;
         if (!th->CreatePipes((*ta._controllers)[i]))
         {
+            fprintf(stderr, "%s:%d-T%d\tController(%d) failed create a pipe\n",
+                FILENM, __LINE__, *ta._pid, i);
             *ta._running = false;
             CheckClose(ta);
             Trainer::cv.notify_all();
@@ -140,7 +144,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         FILENM, __LINE__, *ta._pid);
     MemoryScanner mem = MemoryScanner(ta._dolphinUser);
     if (mem.success == false) {
-        fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+        fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
             "--ERROR:Failed to initialize Memory Scanner");
         *ta._running = false;
         CheckClose(ta);
@@ -176,7 +180,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         //update the frame to find the current state
         if (!mem.UpdatedFrame(true))
         {
-            fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+            fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
                 "--ERROR:Memory update failed");
             *ta._running = false;
             CheckClose(ta);
@@ -186,6 +190,8 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     }
     if (CheckClose(ta))
     {
+        fprintf(stderr, "%s:%d-T%d\tError loading menu\n",
+            FILENM, __LINE__, *ta._pid);
         Trainer::cv.notify_all();
         return false;
     }
@@ -215,7 +221,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         //update the frame to find the current cursor pos
         if (!mem.UpdatedFrame(true))
         {
-            fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+            fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
                 "--ERROR:Memory update failed");
             *ta._running = false;
             CheckClose(ta);
@@ -230,6 +236,8 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     }
     if (CheckClose(ta))
     {
+        fprintf(stderr, "%s:%d-T%d\tError Selecting Menu\n",
+            FILENM, __LINE__, *ta._pid);
         Trainer::cv.notify_all();
         return false;
     }
@@ -257,7 +265,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         //update the frame to find the current cursor pos
         if (!mem.UpdatedFrame(true))
         {
-            fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+            fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
                 "--ERROR:Memory update failed");
             *ta._running = false;
             CheckClose(ta);
@@ -269,6 +277,8 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     }
     if (CheckClose(ta))
     {
+        fprintf(stderr, "%s:%d-T%d\tError selecting stage\n",
+            FILENM, __LINE__, *ta._pid);
         Trainer::cv.notify_all();
         return false;
     }
@@ -298,6 +308,8 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     }
     if (CheckClose(ta))
     {
+        fprintf(stderr, "%s:%d-T%d\tError getting data\n",
+            FILENM, __LINE__, *ta._pid);
         Trainer::cv.notify_all();
         return false;
     }
@@ -311,7 +323,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     {
         if (!mem.UpdatedFrame(true))
         {
-            fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
+            fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
                 "--ERROR:Memory update failed");
             break;
         }

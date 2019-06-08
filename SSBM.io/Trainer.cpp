@@ -31,7 +31,7 @@ std::string Trainer::userDir = "";
 std::string Trainer::dolphinDefaultUser = "";
 
 std::string Trainer::PythonCommand = "python.exe";
-std::string Trainer::modelName = "CptFalcon";
+std::string Trainer::modelName = "AI/ssbm";
 int Trainer::predictionType = 1;
 
 
@@ -147,15 +147,19 @@ void Trainer::KillDolphinHandles()
 void Trainer::GetVesrionNumber(std::string& parsed)
 {
     char version[16];
-    FILE* fd = fopen("Version/version.txt", "w");
-    if (!fd)
+    std::fstream fs;
+    fs.open("Version/version.txt", std::fstream::in);
+    if (fs.fail())
     {
         fprintf(stderr, "%s:%d --Error: Version/version.txt is missing.\n", FILENM, __LINE__);
+        exit(EXIT_FAILURE);
     }
-    fread(version, sizeof(char), 16, fd);
-    fclose(fd);
+    fs.getline(version, 16);
+    fs.close();
+    printf("%s:%d\tModel version: %s\n", FILENM, __LINE__, version);
     Trainer::modelName = parsed + version;
     Trainer::modelName += ".h5";
+    printf("%s:%d\tUsing Model: %s\n", FILENM, __LINE__, modelName.c_str());
 }
 
 void Trainer::runTraining()

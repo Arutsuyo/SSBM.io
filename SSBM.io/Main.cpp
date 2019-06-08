@@ -85,6 +85,7 @@ void ParseArgs(int argc, char* argv[])
             {
                 Trainer::vs = VsType::Human;
                 parsed = "Human";
+                Trainer::Concurent = 1;
             }
             else
             {
@@ -173,7 +174,7 @@ void ParseArgs(int argc, char* argv[])
                     exit(EXIT_FAILURE);
                     break;
                 }
-                printf("Launching Python in %s mode.\n", pred.c_str());
+                printf("%s:%d\tLaunching Python in %s mode.\n", FILENM, __LINE__, pred.c_str());
             }
             else
             {

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <fcntl.h> // Non blocking definitions
 #include <unistd.h>
+#define PIPE_EMPTY "empty_pipe"
 
 #ifdef WIN32
 // Function definitions here are just because the 
@@ -44,7 +45,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
     }
 
     printf("%s:%d\tCreating Read Pipe\n", FILENM, __LINE__);
-    if (pipe(pipeFromPy) == -1)
+    if (pipe2(pipeFromPy, O_NONBLOCK) == -1)
     {
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:Pipe", strerror(errno));
@@ -107,16 +108,24 @@ bool TensorHandler::CreatePipes(Controller* ai)
             exit(EXIT_FAILURE);
         }
 
+        fprintf(stderr, "%s:%d\tChild: Calling Execlp:\n\t\t%s %s %s %s %d\n", 
+            FILENM, __LINE__,
+            Trainer::PythonCommand.c_str(),
+            Trainer::PythonCommand.c_str(),
+            "trainer.py",
+            Trainer::modelName.c_str(),
+            Trainer::Concurent * 2);
+
         /* Launch Python (EXE IS REQUIRED FOR WSL)*/
-        execlp(Trainer::PythonCommand.c_str(), 
-            Trainer::PythonCommand.c_str(), 
-            "trainer.py", 
+        int ret = execlp(Trainer::PythonCommand.c_str(),
+            Trainer::PythonCommand.c_str(),
+            "trainer.py",
             Trainer::modelName.c_str(),
             Trainer::Concurent * 2,
             NULL);
 
-        fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
-            "--ERROR:EXECLP", strerror(errno));
+        fprintf(stderr, "%s:%d\t%s(%d): %s\n", FILENM, __LINE__,
+            "--ERROR:EXECLP", errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -152,6 +161,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
     {
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:write", strerror(errno));
+        dumpErrorPipe();
         return false;
     }
 
@@ -164,18 +174,20 @@ bool TensorHandler::CreatePipes(Controller* ai)
         else
         {
             fprintf(stderr, "%s:%d\t%s%s%s\n", FILENM, __LINE__,
-                "--ERROR:File Exists: ",Trainer::modelName.c_str() ,"\n\tDelete file to make a new model.");
+                "--ERROR:File Exists: ", Trainer::modelName.c_str(), "\n\tDelete file to make a new model.");
+            dumpErrorPipe();
             return false;
         }
     }
     else
     {
-        if(Trainer::predictionType == 0 || Trainer::predictionType == 3)
+        if (Trainer::predictionType == 0 || Trainer::predictionType == 3)
             sprintf(buff, "0"); // Make a new model
         else
         {
             fprintf(stderr, "%s:%d\t%s: %s%s", FILENM, __LINE__,
                 "--ERROR:File Doesn't Exist: ", Trainer::modelName.c_str(), "\n\tRun with 0|3 to make a new model.\n");
+            dumpErrorPipe();
             return false;
         }
     }
@@ -185,6 +197,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
     {
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:write", strerror(errno));
+        dumpErrorPipe();
         return false;
     }
 
@@ -197,8 +210,12 @@ void TensorHandler::dumpErrorPipe()
 {
     char buff[BUFF_SIZE * 2];
     memset(buff, 0, BUFF_SIZE * 2);
-    std::string output = "";
+    std::string output = ReadFromPipe();
     int ret = 0, offset = 0;
+
+    // Check if something made it to the read pipe
+    if(output.size() > 0 && output.find(PIPE_EMPTY) == std::string::npos)
+        printf("%s:%d\tRead Pipe: %s\n", FILENM, __LINE__, output.c_str());
 
     while (true)
     {
@@ -219,9 +236,9 @@ void TensorHandler::dumpErrorPipe()
         for (int i = 0; i < ret; i += output.size() + 1)
         {
             output = &buff[i];
-            fprintf(stderr, "%s:%d\tPyErr(%lu): ", 
+            fprintf(stderr, "%s:%d\tPyErr(%lu): ",
                 FILENM, __LINE__, output.size());
-            for (int j = 0; j < output.size(); j+=strlen(output.c_str()) + 1)
+            for (int j = 0; j < output.size(); j += strlen(output.c_str()) + 1)
             {
                 fprintf(stderr, "%s", output.c_str() + j);
             }
@@ -245,6 +262,7 @@ void TensorHandler::SendToPipe(Player ai, Player enemy)
     {
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
             "--ERROR:write", strerror(errno));
+        dumpErrorPipe();
     }
 
     printf("%s:%d\tSent: %s", FILENM, __LINE__, buff);
@@ -271,12 +289,20 @@ std::string TensorHandler::ReadFromPipe()
         }
 
         // Get the current pipe buffer
-        if ((ret = read(pipeFromPy[0], buff, BUFF_SIZE)) == -1)
+        if ((ret = read(pipeErrorFromPy[0], buff, BUFF_SIZE * 2)) == -1)
         {
+            // Check if the socket is just empty
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                return PIPE_EMPTY;
+            }
+
             fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
                 "--ERROR:pipe read failed", strerror(errno));
-            exit(EXIT_FAILURE);
+            return "";
         }
+        if (!ret)
+            break;
 
         // Print what was read
         //printf("Read%d: %s\n", ret, buff);
@@ -289,11 +315,13 @@ std::string TensorHandler::ReadFromPipe()
                 return output.substr(offset); // Add 6 to drop the "pred: "
             else
             {
-                if(!output.size())
+                if (!output.size())
                     continue;
 
                 fprintf(stderr, "%s:%d\t%s(%lu): %s\n", FILENM, __LINE__,
                     "--TENSOR", output.size(), output.c_str());
+
+                dumpErrorPipe();
                 return ""; // Tensor probably crashed
             }
         }
@@ -303,7 +331,7 @@ std::string TensorHandler::ReadFromPipe()
 
 bool TensorHandler::handleController(std::string tensor)
 {
-    printf("%s:%d\tParsing Tensor Output:\n\t%s\n", 
+    printf("%s:%d\tParsing Tensor Output:\n\t%s\n",
         FILENM, __LINE__, tensor.c_str());
     float sx, sy;
     int ba, bb, by, bz, bl;
@@ -313,6 +341,8 @@ bool TensorHandler::handleController(std::string tensor)
     {
         fprintf(stderr, "%s:%d\t%s\n\t%s\n", FILENM, __LINE__,
             "--ERROR:sscanf failed to parse tensor output", tensor.c_str());
+
+        dumpErrorPipe();
         return false;
     }
 
@@ -412,6 +442,7 @@ TensorHandler::~TensorHandler()
     {
         fprintf(stderr, "%s:%d\t%s(%d)\n", FILENM, __LINE__,
             "--ERROR:Tensor Crashed", status);
+        dumpErrorPipe();
     }
     else
     {
@@ -424,6 +455,7 @@ TensorHandler::~TensorHandler()
         {
             fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
                 "--ERROR:write", strerror(errno));
+            dumpErrorPipe();
         }
 
         // read from pipe
