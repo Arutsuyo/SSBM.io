@@ -97,11 +97,11 @@ bool MemoryScanner::init_socket() {
     return true;
 }
 
-bool MemoryScanner::UpdatedFrame() {
+int MemoryScanner::UpdatedFrame() {
 
     if (socketfd < 0) {
         std::cout << "Error socket file descriptor is bad" << std::endl;
-        return false;
+        return -1;
     }
 
     int ret = -1;
@@ -120,13 +120,13 @@ bool MemoryScanner::UpdatedFrame() {
         // Check if the socket is just empty
         if (errno == EAGAIN || errno == EWOULDBLOCK)
         {
-            return true;
+            return 0;
         }
 
         // Nope, we error'd
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:recvfrom", strerror(errno));
-        return false;
+        return -1;
     }
 
 #if MEMORY_OUT
@@ -250,29 +250,29 @@ bool MemoryScanner::UpdatedFrame() {
             switch (z) {
             case Addresses::MENUS::IN_GAME:
                 current_stage = Addresses::MENUS::IN_GAME;
-#if MEMORY_OUT
-                printf("%s:%d\tSMENU_STATE:IN_GAME:: %d\n", 
+#if MEMORY_OUT || 1
+                printf("%s:%d\tMENU_STATE:IN_GAME:: %d\n", 
                     FILENM, __LINE__, current_stage);
 #endif
                 break;
             case Addresses::MENUS::POSTGAME:
                 current_stage = Addresses::MENUS::POSTGAME;
-#if MEMORY_OUT
-                printf("%s:%d\tSMENU_STATE:POSTGAME:: %d\n",
+#if MEMORY_OUT || 1
+                printf("%s:%d\tMENU_STATE:POSTGAME:: %d\n",
                     FILENM, __LINE__, current_stage);
 #endif
                 break;
             case Addresses::MENUS::CHARACTER_SELECT:
                 current_stage = Addresses::MENUS::CHARACTER_SELECT;
 #if MEMORY_OUT
-                printf("%s:%d\tSMENU_STATE:CHARACTER_SELECT:: %d\n",
+                printf("%s:%d\tMENU_STATE:CHARACTER_SELECT:: %d\n",
                     FILENM, __LINE__, current_stage);
 #endif
                 break;
             case Addresses::MENUS::STAGE_SELECT:
                 current_stage = Addresses::MENUS::STAGE_SELECT;
 #if MEMORY_OUT
-                printf("%s:%d\tSMENU_STATE:STAGE_SELECT:: %d\n",
+                printf("%s:%d\tMENU_STATE:STAGE_SELECT:: %d\n",
                     FILENM, __LINE__, current_stage);
 #endif
                 break;
@@ -374,7 +374,6 @@ bool MemoryScanner::UpdatedFrame() {
             print();
     }
 
-
-    return true;
+    return 1;
 }
 

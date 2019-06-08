@@ -214,6 +214,7 @@ void TensorHandler::dumpErrorPipe()
     {
         fprintf(stderr, "%s:%d\t%s(%d)\n", FILENM, __LINE__,
             "--ERROR:NO NO TENSORFLOW!!! (Tensor Crashed)", status);
+        pid = -1;
     }
 
     while (true)
@@ -299,6 +300,7 @@ std::string TensorHandler::ReadFromPipe()
         {
             fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
                 "--ERROR:pipe read failed", strerror(errno));
+            dumpErrorPipe();
             return "";
         }
         if (!ret)
@@ -330,8 +332,11 @@ std::string TensorHandler::ReadFromPipe()
 
 bool TensorHandler::handleController(std::string tensor)
 {
+#if CTRL_OUTPUT
     printf("%s:%d\tParsing Tensor Output:\n\t%s\n",
         FILENM, __LINE__, tensor.c_str());
+#endif
+
     float sx, sy;
     int ba, bb, by, bz, bl;
     // pred: 0.0 1.0 0 0 1 0 0
@@ -361,10 +366,12 @@ bool TensorHandler::MakeExchange(MemoryScanner* mem)
 
     std::string ret = ReadFromPipe();
     if (ret.size() == 0)
+    {
+        dumpErrorPipe();
         return false;
+    }
 
     dumpErrorPipe();
-
     return handleController(ret);
 }
 
@@ -388,7 +395,9 @@ bool TensorHandler::SelectLocation(MemoryScanner* mem, bool charStg)
         disy = finalDest[1] - p.cursor_y;
     }
 
-    //printf("%s:%d\tCursor Pos P%d: %4.3f %4.3f dist:%4.3f %4.3f\n", FILENM, __LINE__, ctrl->player ? 2 : 1, p.cursor_x, p.cursor_y, disx, disy);
+#if CTRL_OUTPUT
+    printf("%s:%d\tCursor Pos P%d: %4.3f %4.3f dist:%4.3f %4.3f\n", FILENM, __LINE__, ctrl->player ? 2 : 1, p.cursor_x, p.cursor_y, disx, disy);
+#endif
 
     // Normalize
     if (disx > 1)
@@ -418,8 +427,14 @@ bool TensorHandler::SelectLocation(MemoryScanner* mem, bool charStg)
     absx = absx < 0 ? -absx : absx;
     absy = absy < 0 ? -absy : absy;
 
-    // Are we in a good delta?
-    if (absx < 0.2 && absy < 0.2)
+    // Are we in a good deltax?
+    if (absx > 0.5 && absx < 0.5)
+    {
+        // Move x then y (helps stage selection)
+        sy = 0.5;
+    }
+
+    if (absx < 0.35 && absy < 0.35)
         ba = true;
 
     //printf("%s:%d\tSending Controls to Controller\n", FILENM, __LINE__);
@@ -447,6 +462,7 @@ TensorHandler::~TensorHandler()
         fprintf(stderr, "%s:%d\t%s(%d)\n", FILENM, __LINE__,
             "--ERROR:Tensor Crashed", status);
         dumpErrorPipe();
+        pid = -1;
     }
     else
     {

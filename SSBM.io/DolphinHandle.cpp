@@ -74,6 +74,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     std::vector<TensorHandler*> tHandles;
     ThreadArgs ta = *targ;
     *ta._pid = fork();
+    int memret = 1;
     // Child
     if (*ta._pid == 0)
     {
@@ -179,15 +180,17 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current state
-        if (!mem.UpdatedFrame())
-        {
-            fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
-                "--ERROR:Memory update failed");
-            *ta._running = false;
-            CheckClose(ta, tHandles);
-            Trainer::cv.notify_all();
-            return false;
-        }
+        do {
+            if (mem.UpdatedFrame())
+            {
+                fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
+                    "--ERROR:Memory update failed");
+                *ta._running = false;
+                CheckClose(ta, tHandles);
+                Trainer::cv.notify_all();
+                return false;
+            }
+        } while (memret > 0);
     }
     if (CheckClose(ta, tHandles))
     {
@@ -221,15 +224,17 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current cursor pos
-        if (!mem.UpdatedFrame())
-        {
-            fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
-                "--ERROR:Memory update failed");
-            *ta._running = false;
-            CheckClose(ta, tHandles);
-            Trainer::cv.notify_all();
-            return false;
-        }
+        do {
+            if (mem.UpdatedFrame())
+            {
+                fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
+                    "--ERROR:Memory update failed");
+                *ta._running = false;
+                CheckClose(ta, tHandles);
+                Trainer::cv.notify_all();
+                return false;
+            }
+        } while (memret > 0);
         bool selected = true;
         for (int i = 0; i < tHandles.size(); i++)
             selected &= tHandles[i]->SelectLocation(&mem, false);
@@ -265,15 +270,17 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current cursor pos
-        if (!mem.UpdatedFrame())
-        {
-            fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
-                "--ERROR:Memory update failed");
-            *ta._running = false;
-            CheckClose(ta, tHandles);
-            Trainer::cv.notify_all();
-            return false;
-        }
+        do {
+            if (mem.UpdatedFrame())
+            {
+                fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
+                    "--ERROR:Memory update failed");
+                *ta._running = false;
+                CheckClose(ta, tHandles);
+                Trainer::cv.notify_all();
+                return false;
+            }
+        } while (memret > 0);
         if (tHandles[0]->SelectLocation(&mem, true))
             (*ta._controllers).front()->ButtonPressRelease("A");
     }
@@ -306,7 +313,17 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
             }
         }
 
-        mem.UpdatedFrame();
+        do {
+            if (mem.UpdatedFrame())
+            {
+                fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
+                    "--ERROR:Memory update failed");
+                *ta._running = false;
+                CheckClose(ta, tHandles);
+                Trainer::cv.notify_all();
+                return false;
+            }
+        } while (memret > 0);
     }
     if (CheckClose(ta, tHandles))
     {
@@ -323,12 +340,17 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     bool openSocket = true, openPipe = true;
     while (*ta._running && openPipe && openSocket && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
     {
-        if (!mem.UpdatedFrame())
-        {
-            fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
-                "--ERROR:Memory update failed");
-            break;
-        }
+        do {
+            if (mem.UpdatedFrame())
+            {
+                fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
+                    "--ERROR:Memory update failed");
+                *ta._running = false;
+                CheckClose(ta, tHandles);
+                Trainer::cv.notify_all();
+                return false;
+            }
+        } while (memret > 0);
 
         for (int i = 0; i < tHandles.size(); i++)
             openPipe = tHandles[i]->MakeExchange(&mem);
@@ -480,6 +502,7 @@ DolphinHandle::~DolphinHandle()
         {
             n = std::chrono::high_resolution_clock::now();
             printf("%s:%d\tJoining Thread\n", FILENM, __LINE__);
+            t->join();
         }
     }
 
