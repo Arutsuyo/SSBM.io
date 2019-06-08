@@ -137,9 +137,9 @@ bool Controller::sendtofifo(char fifocmd[], int limit)
     while (offset < limit)
     {
         int towrite = strlen(fifocmd + offset);
-        if(printfifo)
-            printf("%s:%d To FIFO: %s", FILENM, __LINE__, fifocmd + offset);
-
+#if CTRL_OUTPUT
+        printf("%s:%d To FIFO: %s", FILENM, __LINE__, fifocmd + offset);
+#endif
         if (towrite + offset > limit)
             fprintf(stderr, "%s:%d Cannot make the next write: total:%d limit %d\n", FILENM, __LINE__, towrite + offset, limit);
 
@@ -166,8 +166,10 @@ bool Controller::setControls(Controls inCt)
         - lastSent;
     if (elapsed.count() < pipeDelay)
     {
+#if CTRL_OUTPUT
         printf("%s:%d\tDelay hasn't elapsed\n",
             FILENM, __LINE__);
+#endif
         return false;
     }
 

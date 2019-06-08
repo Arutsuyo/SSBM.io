@@ -36,7 +36,7 @@ MemoryScanner::~MemoryScanner() {
 
     printf("%s:%d\tDestroying MemoryScanner\n", FILENM, __LINE__);
     /*shutdown the socket*/
-    if (shutdown(this->socketfd, 2) < 0)
+    if (shutdown(socketfd, 2) < 0)
         fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
             "--ERROR:shutdown", strerror(errno));
     printf("%s:%d\tSocket Closed\n", FILENM, __LINE__);
@@ -97,9 +97,7 @@ bool MemoryScanner::init_socket() {
     return true;
 }
 
-bool MemoryScanner::UpdatedFrame(bool prin) {
-    /*if (prin)
-        printf("%s:%d\tUpdating Memory\n", FILENM, __LINE__);*/
+bool MemoryScanner::UpdatedFrame() {
 
     if (socketfd < 0) {
         std::cout << "Error socket file descriptor is bad" << std::endl;
@@ -122,12 +120,6 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
         // Check if the socket is just empty
         if (errno == EAGAIN || errno == EWOULDBLOCK)
         {
-            // Nothing there
-            if (prin)
-            {
-                /*printf("%s:%d\tNothing Read: ret%d errno:%d(%d:%d)\n", FILENM, __LINE__, ret, errno, EAGAIN, EWOULDBLOCK);*/
-
-            }
             return true;
         }
 
@@ -137,24 +129,21 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
         return false;
     }
 
-    if (prin && 0)
+#if MEMORY_OUT
     {
         std::string temp = buffer;
         temp = temp.substr(0, temp.find("\n")) + " " + temp.substr(temp.find("\n") + sizeof("\n"));
         printf("%s:%d\tParsing Buffer: %s\n", FILENM, __LINE__, temp.c_str());
     }
-        
+#endif
 
     //puts(buffer);
     std::stringstream ss(buffer);
     /*strings to hold addresses*/
     std::string base, val;
 
-
     getline(ss, base, '\n');
     getline(ss, val, '\n');
-
-
 
     /* to fix any issues with cross platform memory reading, remove commas*/
     val.erase(std::remove(val.begin(), val.end(), ','), val.end());
@@ -186,50 +175,71 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
         case Addresses::PLAYER_ATTRIB::P1_HEALTH: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             p1.health = val_int >> 16;
+#if MEMORY_OUT
+                printf("%s:%d\tP1_HEALTH: %ui\n", FILENM, __LINE__, p1.health);
+#endif
             break;  }
         case Addresses::PLAYER_ATTRIB::P1_COORD_X: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* vx = &val_int;
             float x = *((float*)vx);
             p1.pos_x = x;
+#if MEMORY_OUT
+            printf("%s:%d\tP1_COORD_X: %f\n", FILENM, __LINE__, p1.pos_x);
+#endif
             break; }
         case Addresses::PLAYER_ATTRIB::P1_COORD_Y: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* vy = &val_int;
             float y = *((float*)vy);
             p1.pos_y = y;
+#if MEMORY_OUT
+            printf("%s:%d\tP1_COORD_Y: %f\n", FILENM, __LINE__, p1.pos_y);
+#endif
             break; }
         case Addresses::PLAYER_ATTRIB::P1_DIR: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
-            
             unsigned int* d1 = &val_int;
             float dir1 = *((float*)d1);
             p1.dir = dir1;
-
+#if MEMORY_OUT
+            printf("%s:%d\tP1_DIR: %f\n", FILENM, __LINE__, p1.dir);
+#endif
             break; }
                                                /*P2 */
         case Addresses::PLAYER_ATTRIB::P2_HEALTH:
             val_int = std::stoul(val.c_str(), nullptr, 16);
             p2.health = (val_int >> 16);
+#if MEMORY_OUT
+            printf("%s:%d\tP2_HEALTH: %ui\n", FILENM, __LINE__, p2.health);
+#endif
             break;
         case Addresses::PLAYER_ATTRIB::P2_COORD_X: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* vx = &val_int;
             float x = *((float*)vx);
             p2.pos_x = x;
+#if MEMORY_OUT
+            printf("%s:%d\tP2_COORD_X: %f\n", FILENM, __LINE__, p2.pos_x);
+#endif
             break; }
         case Addresses::PLAYER_ATTRIB::P2_COORD_Y: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* vy = &val_int;
             float y = *((float*)vy);
             p2.pos_y = y;
-
+#if MEMORY_OUT
+            printf("%s:%d\tP2_COORD_Y: %f\n", FILENM, __LINE__, p2.pos_y);
+#endif
             break; }
         case Addresses::PLAYER_ATTRIB::P2_DIR: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* d2 = &val_int;
             float dir2 = *((float*)d2);
             p2.dir = dir2;
+#if MEMORY_OUT
+            printf("%s:%d\tP2_DIR: %f\n", FILENM, __LINE__, p2.dir);
+#endif
             break; }
 
         case Addresses::MENUS::MENU_STATE:
@@ -239,24 +249,32 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
             switch (z) {
             case Addresses::MENUS::IN_GAME:
-                if (prin)
-                    printf("%s:%d\tState: In Game\n", FILENM, __LINE__);
-                this->current_stage = Addresses::MENUS::IN_GAME;
+                current_stage = Addresses::MENUS::IN_GAME;
+#if MEMORY_OUT
+                printf("%s:%d\tSMENU_STATE:IN_GAME:: %d\n", 
+                    FILENM, __LINE__, current_stage);
+#endif
                 break;
             case Addresses::MENUS::POSTGAME:
-                if (prin)
-                    printf("%s:%d\tState: Post-game menu\n", FILENM, __LINE__);
-                this->current_stage = Addresses::MENUS::POSTGAME;
+                current_stage = Addresses::MENUS::POSTGAME;
+#if MEMORY_OUT
+                printf("%s:%d\tSMENU_STATE:POSTGAME:: %d\n",
+                    FILENM, __LINE__, current_stage);
+#endif
                 break;
             case Addresses::MENUS::CHARACTER_SELECT:
-                if (prin)
-                    printf("%s:%d\tState: Character Select\n", FILENM, __LINE__);
-                this->current_stage = Addresses::MENUS::CHARACTER_SELECT;
+                current_stage = Addresses::MENUS::CHARACTER_SELECT;
+#if MEMORY_OUT
+                printf("%s:%d\tSMENU_STATE:CHARACTER_SELECT:: %d\n",
+                    FILENM, __LINE__, current_stage);
+#endif
                 break;
             case Addresses::MENUS::STAGE_SELECT:
-                if (prin)
-                    printf("%s:%d\tState: Stage Select\n", FILENM, __LINE__);
-                this->current_stage = Addresses::MENUS::STAGE_SELECT;
+                current_stage = Addresses::MENUS::STAGE_SELECT;
+#if MEMORY_OUT
+                printf("%s:%d\tSMENU_STATE:STAGE_SELECT:: %d\n",
+                    FILENM, __LINE__, current_stage);
+#endif
                 break;
             default:
                 fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
@@ -267,10 +285,12 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
         case Addresses::PLAYER_ATTRIB::P1_CURSOR_X: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
-
             unsigned int* cx = &val_int;
             float cursx = *((float*)cx);
             p1.cursor_x = cursx;
+#if MEMORY_OUT
+            printf("%s:%d\tP1_CURSOR_X: %f\n", FILENM, __LINE__, p1.cursor_x);
+#endif
             break; }
 
         case Addresses::PLAYER_ATTRIB::P1_CURSOR_Y: {
@@ -278,6 +298,9 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             unsigned int* cy = &val_int;
             float cursy = *((float*)cy);
             p1.cursor_y = cursy;
+#if MEMORY_OUT
+            printf("%s:%d\tP1_CURSOR_Y: %f\n", FILENM, __LINE__, p1.cursor_y);
+#endif
             break; }
 
         case Addresses::PLAYER_ATTRIB::P2_CURSOR_X: {
@@ -285,6 +308,9 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             unsigned int* cx = &val_int;
             float cursx = *((float*)cx);
             p2.cursor_x = cursx;
+#if MEMORY_OUT
+            printf("%s:%d\tP2_CURSOR_X: %f\n", FILENM, __LINE__, p2.cursor_x);
+#endif
             break; }
 
         case Addresses::PLAYER_ATTRIB::P2_CURSOR_Y: {
@@ -292,6 +318,9 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             unsigned int* cy = &val_int;
             float cursy = *((float*)cy);
             p2.cursor_y = cursy;
+#if MEMORY_OUT
+            printf("%s:%d\tP2_CURSOR_Y: %f\n", FILENM, __LINE__, p2.cursor_y);
+#endif
             break; }
 
         /*stage selection cursor different than character selection*/
@@ -299,28 +328,40 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* sx = &val_int;
             float scursx = *((float*)sx);
-            p1.stage_x = p2.stage_x = scursx;
+            p1.cursor_x = p2.cursor_x = scursx;
+#if MEMORY_OUT
+            printf("%s:%d\tSTAGE_SELECT_X1: %f\n", FILENM, __LINE__, p1.cursor_x);
+#endif
             break; }
 
         case Addresses::PLAYER_ATTRIB::STAGE_SELECT_X2:{
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* sx = &val_int;
             float scursx = *((float*)sx);
-            p1.stage_x = p2.stage_x = scursx;
+            p1.cursor_x = p2.cursor_x = scursx;
+#if MEMORY_OUT
+            printf("%s:%d\tSTAGE_SELECT_X2: %f\n", FILENM, __LINE__, p1.cursor_x);
+#endif
             break; }
 
-        case Addresses::PLAYER_ATTRIB::STAGE_SELECT_Y1:{
+        case Addresses::PLAYER_ATTRIB::STAGE_SELECT_Y1: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* sy = &val_int;
             float scursy = *((float*)sy);
-            p1.stage_y = p2.stage_y = scursy;
+            p1.cursor_y = p2.cursor_y = scursy;
+#if MEMORY_OUT
+            printf("%s:%d\tSTAGE_SELECT_Y1: %f\n", FILENM, __LINE__, p1.cursor_y);
+#endif
             break; }
 
-        case Addresses::PLAYER_ATTRIB::STAGE_SELECT_Y2:{
+        case Addresses::PLAYER_ATTRIB::STAGE_SELECT_Y2: {
             val_int = std::stoul(val.c_str(), nullptr, 16);
             unsigned int* sy = &val_int;
             float scursy = *((float*)sy);
-            p1.stage_y = p2.stage_y = scursy;
+            p1.cursor_y = p2.cursor_y = scursy;
+#if MEMORY_OUT
+            printf("%s:%d\tSTAGE_SELECT_Y2: %f\n", FILENM, __LINE__, p1.cursor_y);
+#endif
             break; }
 
         default:
@@ -329,7 +370,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
 
         /*only print information if we are in game*/
-        if (this->in_game)
+        if (in_game)
             print();
     }
 

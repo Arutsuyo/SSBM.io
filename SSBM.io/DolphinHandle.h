@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Controller.h"
+#include "TensorHandler.h"
 #include <thread>
 #include <string>
 #include <vector>
@@ -18,7 +19,6 @@ struct ThreadArgs
 class DolphinHandle
 {
     std::thread *t;
-    ThreadArgs* targ;
     int pid;
     std::vector<Controller*> controllers;
     VsType _vs = VsType::Self;
@@ -32,7 +32,7 @@ class DolphinHandle
 
     static bool dolphin_thread(ThreadArgs *ta);
 
-    static bool CheckClose(ThreadArgs& ta, bool force = false);
+    static bool CheckClose(ThreadArgs& ta, std::vector<TensorHandler*>& tHandles, bool force = false);
 
 public:
     bool running;

@@ -24,7 +24,7 @@ public:
 
 	// 0: Player1 1: Player2
 	Player GetPlayer(bool pl);
-	bool UpdatedFrame(bool prin);
+	bool UpdatedFrame();
 	bool print();
 
 	int CurrentStage() { return this->current_stage; }

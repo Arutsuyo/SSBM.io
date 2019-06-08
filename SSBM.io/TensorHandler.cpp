@@ -26,7 +26,6 @@ pid_t waitpid(pid_t pid, int* status, int options) {};
 #include <unistd.h>
 #endif
 #define BUFF_SIZE 2048
-
 #define FILENM "TH"
 
 float TensorHandler::finalDest[2] = { 6.75, -8.74 };
@@ -237,13 +236,20 @@ void TensorHandler::dumpErrorPipe()
         for (int i = 0; i < ret; i += output.size() + 1)
         {
             output = &buff[i];
+
+#if TENSOR_ERR_PRINT
             fprintf(stderr, "%s:%d\tPyErr(%lu): ",
                 FILENM, __LINE__, output.size());
+#endif
             for (int j = 0; j < output.size(); j += strlen(output.c_str()) + 1)
             {
+#if TENSOR_ERR_PRINT
                 fprintf(stderr, "%s", output.c_str() + j);
+#endif
             }
+#if TENSOR_ERR_PRINT
             fprintf(stderr, "\n");
+#endif
         }
 
     }
@@ -251,7 +257,10 @@ void TensorHandler::dumpErrorPipe()
 
 void TensorHandler::SendToPipe(Player ai, Player enemy)
 {
+#if CTRL_OUTPUT
     printf("%s:%d\tSending Current Data\n", FILENM, __LINE__);
+#endif
+
     // Send input
     char buff[BUFF_SIZE];
     memset(buff, 0, BUFF_SIZE);
@@ -266,7 +275,9 @@ void TensorHandler::SendToPipe(Player ai, Player enemy)
         dumpErrorPipe();
     }
 
+#if CTRL_OUTPUT
     printf("%s:%d\tSent: %s", FILENM, __LINE__, buff);
+#endif
 
     dumpErrorPipe();
 }
@@ -334,13 +345,18 @@ bool TensorHandler::handleController(std::string tensor)
         return false;
     }
 
+#if CTRL_OUTPUT
     printf("%s:%d\tSending Controls to Controller\n", FILENM, __LINE__);
+#endif
     return ctrl->setControls({ sx, sy, ba, bb, by, bz, bl });
 }
 
 bool TensorHandler::MakeExchange(MemoryScanner* mem)
 {
+#if CTRL_OUTPUT
     printf("%s:%d\tMaking Exchange\n", FILENM, __LINE__);
+#endif
+
     SendToPipe(mem->GetPlayer(ctrl->player), mem->GetPlayer(!ctrl->player));
 
     std::string ret = ReadFromPipe();
@@ -368,8 +384,8 @@ bool TensorHandler::SelectLocation(MemoryScanner* mem, bool charStg)
     }
     else
     {
-        disx = finalDest[0] - p.stage_x;
-        disy = finalDest[1] - p.stage_y;
+        disx = finalDest[0] - p.cursor_x;
+        disy = finalDest[1] - p.cursor_y;
     }
 
     //printf("%s:%d\tCursor Pos P%d: %4.3f %4.3f dist:%4.3f %4.3f\n", FILENM, __LINE__, ctrl->player ? 2 : 1, p.cursor_x, p.cursor_y, disx, disy);

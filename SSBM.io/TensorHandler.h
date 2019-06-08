@@ -4,10 +4,6 @@
 
 class TensorHandler
 {
-    static float finalDest[2];
-    static float battlefield[2];
-    static float cptFalcon[2];
-
     int pid;
 
     // Pipes: 0 is read, 1 is write
@@ -25,6 +21,10 @@ class TensorHandler
     bool handleController(std::string tensor);
 
 public:
+    static float finalDest[2];
+    static float battlefield[2];
+    static float cptFalcon[2];
+
     // Must be called before exchanges can be made
     bool CreatePipes(Controller* ai);
 
