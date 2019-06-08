@@ -75,6 +75,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     ThreadArgs ta = *targ;
     *ta._pid = fork();
     int memret = 1;
+    int memloop = 10;
     // Child
     if (*ta._pid == 0)
     {
@@ -180,6 +181,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current state
+        memloop = 10;
         do {
             if (mem.UpdatedFrame() == -1)
             {
@@ -190,7 +192,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
                 Trainer::cv.notify_all();
                 return false;
             }
-        } while (memret > 0);
+        } while (memret > 0 && memloop--);
     }
     if (CheckClose(ta, tHandles))
     {
@@ -224,6 +226,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current cursor pos
+        memloop = 10;
         do {
             if (mem.UpdatedFrame() == -1)
             {
@@ -234,7 +237,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
                 Trainer::cv.notify_all();
                 return false;
             }
-        } while (memret > 0);
+        } while (memret > 0 && memloop--);
         bool selected = true;
         for (int i = 0; i < tHandles.size(); i++)
             selected &= tHandles[i]->SelectLocation(&mem, false);
@@ -270,6 +273,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current cursor pos
+        memloop = 10;
         do {
             if (mem.UpdatedFrame() == -1)
             {
@@ -280,7 +284,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
                 Trainer::cv.notify_all();
                 return false;
             }
-        } while (memret > 0);
+        } while (memret > 0 && memloop--);
         if (tHandles[0]->SelectLocation(&mem, true))
             (*ta._controllers).front()->ButtonPressRelease("A");
     }
@@ -313,6 +317,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
             }
         }
 
+        memloop = 10;
         do {
             if (mem.UpdatedFrame() == -1)
             {
@@ -323,7 +328,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
                 Trainer::cv.notify_all();
                 return false;
             }
-        } while (memret > 0);
+        } while (memret > 0 && memloop--);
     }
     if (CheckClose(ta, tHandles))
     {
@@ -340,6 +345,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     bool openSocket = true, openPipe = true;
     while (*ta._running && openPipe && openSocket && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
     {
+        memloop = 10;
         do {
             if (mem.UpdatedFrame() == -1)
             {
@@ -350,7 +356,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
                 Trainer::cv.notify_all();
                 return false;
             }
-        } while (memret > 0);
+        } while (memret > 0 && memloop--);
 
         for (int i = 0; i < tHandles.size(); i++)
             openPipe = tHandles[i]->MakeExchange(&mem);
