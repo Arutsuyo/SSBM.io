@@ -241,22 +241,22 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
             case Addresses::MENUS::IN_GAME:
                 if (prin)
                     printf("%s:%d\tState: In Game\n", FILENM, __LINE__);
-                this->current_stage = 1;
+                this->current_stage = Addresses::MENUS::IN_GAME;
                 break;
             case Addresses::MENUS::POSTGAME:
                 if (prin)
                     printf("%s:%d\tState: Post-game menu\n", FILENM, __LINE__);
-                this->current_stage = 2;
+                this->current_stage = Addresses::MENUS::POSTGAME;
                 break;
             case Addresses::MENUS::CHARACTER_SELECT:
                 if (prin)
                     printf("%s:%d\tState: Character Select\n", FILENM, __LINE__);
-                this->current_stage = 3;
+                this->current_stage = Addresses::MENUS::CHARACTER_SELECT;
                 break;
             case Addresses::MENUS::STAGE_SELECT:
                 if (prin)
                     printf("%s:%d\tState: Stage Select\n", FILENM, __LINE__);
-                this->current_stage = 4;
+                this->current_stage = Addresses::MENUS::STAGE_SELECT;
                 break;
             default:
                 fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
