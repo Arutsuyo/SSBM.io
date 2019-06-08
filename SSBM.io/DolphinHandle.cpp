@@ -181,7 +181,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
         //update the frame to find the current state
         do {
-            if (mem.UpdatedFrame())
+            if (mem.UpdatedFrame() == -1)
             {
                 fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
                     "--ERROR:Memory update failed");
@@ -225,7 +225,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
         //update the frame to find the current cursor pos
         do {
-            if (mem.UpdatedFrame())
+            if (mem.UpdatedFrame() == -1)
             {
                 fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
                     "--ERROR:Memory update failed");
@@ -271,7 +271,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
         //update the frame to find the current cursor pos
         do {
-            if (mem.UpdatedFrame())
+            if (mem.UpdatedFrame() == -1)
             {
                 fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
                     "--ERROR:Memory update failed");
@@ -314,7 +314,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         do {
-            if (mem.UpdatedFrame())
+            if (mem.UpdatedFrame() == -1)
             {
                 fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
                     "--ERROR:Memory update failed");
@@ -341,7 +341,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     while (*ta._running && openPipe && openSocket && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
     {
         do {
-            if (mem.UpdatedFrame())
+            if (mem.UpdatedFrame() == -1)
             {
                 fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
                     "--ERROR:Memory update failed");
