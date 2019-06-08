@@ -28,6 +28,13 @@ https://michaelblogscode.wordpress.com/2017/10/10/reducing-and-profiling-gpu-mem
 as a GPU limiting witchcraft helper.
 """
 
+# Make sure the pipes are open!!!
+# KEEP AT TOP
+stdoin = open(0, "r")
+stdout = open(1, "w")
+stderr = open(2, "w")
+
+
 """
 GLOBALS
 """
@@ -53,11 +60,6 @@ for p in [-1,-.5,0,.5,1]:
 MODEL_PARAMETERS = [(MAX_FRAMES_RECORDING,INPUT_SIZE), 30, 30, 15, len(POSSIBLE_ACTIONS)]
 MODEL_DROPOUT = [0.2, 0.5, 0.5]
 
-
-# Make sure the pipes are open!!!
-stdoin = open(0, "r")
-stdout = open(1, "w")
-stderr = open(2, "w")
 
 # When writing to the pipe, we're using 
 # '\0' + ("pred: " + <str>msg) + '\0'

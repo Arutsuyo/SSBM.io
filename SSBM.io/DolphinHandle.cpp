@@ -46,9 +46,9 @@ bool WaitForDolphinToClose(int pid)
     int tpid;
     SendKill(pid);
     tpid = waitpid(pid, &status, 0);
-    printf("%s:%d\tChild(Status:%d) Exited\n", FILENM, __LINE__, status);
+    printf("%s:%d\tChild(%d:%d:%d) Exited\n", FILENM, __LINE__,tpid, pid, status);
     Trainer::cv.notify_all();
-    return tpid != pid;
+    return tpid == pid;
 }
 
 void DolphinHandle::CopyBaseFiles()
@@ -63,7 +63,7 @@ std::string DolphinHandle::AddController(int player, int pipe_count, std::string
 {
     printf("%s:%d\tCreating AI Controller: %d\n", FILENM, __LINE__, player + 1);
     Controller* ctrl = new Controller(player); // TODO add delay arg to main
-    !ctrl->CreateFifo(aiPipe, pipe_count);
+    ctrl->CreateFifo(aiPipe, pipe_count);
     controllers.push_back(ctrl);
     return Trainer::cfg->getAIPipeConfig(player, pipe_count, id);
 }
@@ -334,6 +334,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     // Close out
     *ta._running = false;
+    *ta._safeClose = true;
     return CheckClose(ta, true);
 }
 
@@ -428,7 +429,7 @@ bool DolphinHandle::StartDolphin(int lst)
     safeclose = false;
     ThreadArgs* ta = new ThreadArgs;
     ta->_running = &running;
-    ta->_safeClose = &safeclose;
+    ta->_pipes = &pipes;
     ta->_safeClose = &safeclose;
     ta->_pid = &pid;
     ta->_dolphinUser = dolphinUser;
@@ -457,13 +458,15 @@ DolphinHandle::~DolphinHandle()
     printf("%s:%d\tClosing DolphinHandle\n", FILENM, __LINE__);
     running = false;
     printf("%s:%d\tChecking Thread\n", FILENM, __LINE__);
-    if (t && t->joinable())
+    TPoint n = std::chrono::high_resolution_clock::now();
+    while (t && t->joinable())
     {
-        printf("%s:%d\tJoining Thread\n", FILENM, __LINE__);
-        t->join();
+        std::chrono::duration<double> elapsed =
+            std::chrono::high_resolution_clock::now()
+            - n;
+        if(elapsed.count() > 2)
+            printf("%s:%d\tJoining Thread\n", FILENM, __LINE__);
     }
-    else
-        printf("%s:%d\tThread is already destroyed\n", FILENM, __LINE__);
 
     // Call each destructor
     printf("%s:%d\tDestroying %lu Controllers\n", FILENM, __LINE__,

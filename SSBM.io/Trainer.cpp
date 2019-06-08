@@ -231,7 +231,7 @@ void Trainer::runTraining()
             if (!dh->running && dh->started)
             {
                 printf("%s:%d\tDolphin Instance %d stopped\n", FILENM, __LINE__, i);
-                if(dh->safeclose)
+                if (dh->safeclose)
                     printf("%s:%d\tDolphin Instance Closed safely\n", FILENM, __LINE__);
                 else
                 {
