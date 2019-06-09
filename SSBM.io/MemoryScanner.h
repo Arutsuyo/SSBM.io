@@ -19,6 +19,9 @@ class MemoryScanner {
 
 	int current_stage = -1;
 
+	//helper function for debugging to display player actions
+	void display_player_actions(Player p);
+
 public:
 	bool success = false;
 
