@@ -231,7 +231,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
                         this->p1.hitstun_remaining = hs;
                         break;
                     }
-                    /*charging attack indicator*/
+                    /*charging attack indicator
                     case Addresses::FRAMES::SMASH_CHARGE:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
@@ -243,7 +243,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
                         (val_int = 2) ? this->p1.charging = 1 : this->p1.charging = 0;
                         break;
-                    }
+                    }*/
                     default:
                     
                     {
@@ -318,7 +318,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
                         this->p2.hitstun_remaining = hs;
                         break;
                     }
-                    /*charging attack indicator*/
+                    /*charging attack indicator
                     case Addresses::FRAMES::SMASH_CHARGE:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
@@ -330,7 +330,7 @@ bool MemoryScanner::UpdatedFrame(bool prin) {
 
                         (val_int = 2) ? this->p2.charging = 1 : this->p2.charging = 0;
                         break;
-                    }
+                    }*/
                     default:
                     {
                         
@@ -528,8 +528,7 @@ void MemoryScanner::display_player_actions(Player p){
                     "Invicible : %d \n"
                     "Hitlag Left: %.4f \n"
                     "Hitstun Left: %.4f \n"
-                    "Charging : %d \n"
                 , FILENM, __LINE__, p.action, p.action_frame, p.action_count, 
-                p.invincibility, p.hitlag_remaining, p.hitstun_remaining, p.charging);
+                p.invincibility, p.hitlag_remaining, p.hitstun_remaining);
 
 }

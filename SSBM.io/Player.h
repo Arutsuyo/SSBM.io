@@ -18,8 +18,6 @@ struct Player{
 	unsigned int invincibility;
 	float hitlag_remaining;
 	float hitstun_remaining;
-	unsigned int charging;
-	unsigned int grounded;
 };
 
 #endif
