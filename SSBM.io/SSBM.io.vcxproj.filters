@@ -67,8 +67,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\CMakeLists.txt" />
     <Text Include="..\Version\version.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\CMakeLists.txt">
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>

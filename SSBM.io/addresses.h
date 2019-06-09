@@ -6,13 +6,9 @@ namespace Addresses {
 
 
     enum PLAYERS {
-
+        /*ATTRIBUTE BASE POINTER*/
         PLAYER_ONE = 0x453130,
         PLAYER_TWO = 0x453FC0,
-
-        /*ATTRIBUTE BASE POINTER*/
-        PLAYER_ONE_BASE_POINTER = 0x453130,
-        PLAYER_TWO_BASE_POINTER = 0x453FC0
     };
 
     enum MENUS{
@@ -22,7 +18,7 @@ namespace Addresses {
         CHARACTER_SELECT = 3328,
         STAGE_SELECT = 3329,
         IN_GAME = 3330,
-        POSTGAME = 3332   
+        POSTGAME = 3332,
 
     };
 

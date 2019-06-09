@@ -396,7 +396,7 @@ bool DolphinHandle::StartDolphin(int lst)
     std::string dolphinConfig = dolphinUser + "Config/";
 
     // Copy the user folder
-    printf("%s:%d\tPrepping the user folder: %s\n", FILENM, __LINE__,
+    printf("%s:%d\tCopying the user folder: %s\n", FILENM, __LINE__,
         dolphinUser.c_str());
     sprintf(buff, "cp -r %s %s", Trainer::dolphinDefaultUser.c_str(), dolphinUser.c_str());
     system(buff);
@@ -410,6 +410,12 @@ bool DolphinHandle::StartDolphin(int lst)
 
     // Making sure the pipe folder exists
     aiPipe = dolphinUser + "Pipes/";
+    printf("%s:%d\tDeleting Current Pipes: %s\n", FILENM, __LINE__,
+        aiPipe.c_str());
+    sprintf(buff, "rm -rf %s", aiPipe.c_str());
+    system(buff);
+    printf("%s:%d\tMaking New Pipe Folder: %s\n", FILENM, __LINE__,
+        aiPipe.c_str());
     sprintf(buff, "mkdir %s", aiPipe.c_str());
     system(buff);
     aiPipe += id;

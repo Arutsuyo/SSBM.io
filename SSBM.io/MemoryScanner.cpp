@@ -110,8 +110,10 @@ int MemoryScanner::UpdatedFrame() {
 
     unsigned int val_int;
 
-    if (prin)
+#if MEMORY_OUT
         printf("%s:%d\tReading Socket\n", FILENM, __LINE__);
+#endif
+
     struct sockaddr recvsock;
     socklen_t sock_len;
     if ((ret = recvfrom(socketfd, 
@@ -120,6 +122,9 @@ int MemoryScanner::UpdatedFrame() {
         // Check if the socket is just empty
         if (errno == EAGAIN || errno == EWOULDBLOCK)
         {
+#if MEMORY_OUT
+            printf("%s:%d\tBuffer was empty\n", FILENM, __LINE__);
+#endif
             return 0;
         }
 
@@ -153,7 +158,6 @@ int MemoryScanner::UpdatedFrame() {
     /*check until the end*/
     if ( pointer_ref != std::string::npos) 
     {
-        
         std::string offset = base.substr(pointer_ref + 1);
         std::string ptr_base = base.substr(0, pointer_ref);
 
@@ -165,92 +169,100 @@ int MemoryScanner::UpdatedFrame() {
         switch( p_base)
         {   
             /*Player 1 offsets*/
-            case Addresses::PLAYERS::PLAYER_ONE_BASE_POINTER:
-
+            case Addresses::PLAYERS::PLAYER_ONE:
                 switch(ptr)
                 {
                     /*action*/
                     case Addresses::FRAMES::ACTION:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        if (prin)
-                            printf("%s:%d\tP1 Action: %x \n", FILENM, __LINE__, val_int);
-                        this->p1.action = val_int;
+                        p1.action = val_int;
+#if MEMORY_OUT
+                        printf("%s:%d\tP1 ACTION: %x \n", FILENM, __LINE__, p1.action);
+#endif
                         break;
                     }
                     /*action frame*/
                     case Addresses::FRAMES::ACTION_FRAME:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        uint* vp = &val_int;
+                        unsigned int* vp = &val_int;
                         float af = *((float*)vp);
-                        this->p1.action_frame = af;
+                        p1.action_frame = af;
+#if MEMORY_OUT
+                        printf("%s:%d\tP1 ACTION_FRAME: %f\n", FILENM, __LINE__, p1.action_frame);
+#endif
                         break;
                     }
                     /*action counter*/
                     case Addresses::FRAMES::ACTION_COUNTER:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        this->p1.action_count = val_int;
+                        p1.action_count = val_int;
+#if MEMORY_OUT
+                        printf("%s:%d\tP1 ACTION_COUNTER: %x \n", FILENM, __LINE__, p1.action_count);
+#endif
                         break;
                     }
                     /*invincibility frame*/
                     case Addresses::FRAMES::INVINCIBLE:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        this->p1.invincibility = val_int;
+                        p1.invincibility = val_int;
+#if MEMORY_OUT
+                        printf("%s:%d\tP1 INVINCIBLE: %x \n", FILENM, __LINE__, p1.invincibility);
+#endif
                         break;
                     }
                     /*remaining frames left in hitlag*/
                     case Addresses::FRAMES::HITLAG:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        uint* hpnt = &val_int;
+                        unsigned int* hpnt = &val_int;
                         float hl = *((float*)hpnt);
-                        this->p1.hitlag_remaining = hl;
+                        p1.hitlag_remaining = hl;
+#if MEMORY_OUT
+                        printf("%s:%d\tP1 HITLAG: %f\n", FILENM, __LINE__, p1.hitlag_remaining);
+#endif
                         break;
                     }
                     /*remaining frames left in hitstun*/
                     case Addresses::FRAMES::HITSTUN:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        uint* hpnt = &val_int;
+                        unsigned int* hpnt = &val_int;
                         float hs = *((float*)hpnt);
-                        this->p1.hitstun_remaining = hs;
+                        p1.hitstun_remaining = hs;
+#if MEMORY_OUT
+                        printf("%s:%d\tP1 HITSTUN: %f\n", FILENM, __LINE__, p1.hitstun_remaining);
+#endif
                         break;
                     }
                     /*charging attack indicator*/
                     case Addresses::FRAMES::SMASH_CHARGE:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        this->p1.action = val_int;
-
-                        if (prin)
-                            printf("%s:%d\tP1 Charging Action: %x \n"
-                                        , FILENM, __LINE__, val_int);
-
-                        (val_int = 2) ? this->p1.charging = 1 : this->p1.charging = 0;
+                        p1.action = val_int;
+#if MEMORY_OUT
+                        printf("%s:%d\tP1 Charging Action: %x \n"
+                            , FILENM, __LINE__, val_int);
+#endif
+                        (val_int = 2) ? p1.charging = 1 : p1.charging = 0;
                         break;
                     }
                     default:
-                    
                     {
-                        
-                        if (prin)
-                            printf("%s:%d\tP1 BASE FOUND: %x as offset but not caught\n", 
-                                FILENM, __LINE__, val_int);       
-                                
+#if MEMORY_OUT
+                        printf("%s:%d\tWARNING::P1 BASE FOUND: %x as offset but not caught\n",
+                            FILENM, __LINE__, val_int);
+#endif
                     }
-                    
-
-                }
+                }// Player one switch
                 break;
 
             /*Player Two*/
-            case Addresses::PLAYERS::PLAYER_TWO_BASE_POINTER:
-            
-                
-                
+            case Addresses::PLAYERS::PLAYER_TWO:
+
                 /*found a value follow the pointer arithmetic*/
                 switch(ptr)
                 {
@@ -259,32 +271,42 @@ int MemoryScanner::UpdatedFrame() {
                     case Addresses::FRAMES::ACTION:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        if (prin)
-                            printf("%s:%d\tP2 Action: %x \n", FILENM, __LINE__, val_int);
-                        this->p2.action = val_int;
+                        p2.action = val_int;
+#if MEMORY_OUT
+                        printf("%s:%d\tP2 ACTION: %x \n", FILENM, __LINE__, p2.action);
+#endif
                         break;
                     }
                     /*action frame*/
                     case Addresses::FRAMES::ACTION_FRAME:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        uint* vp = &val_int;
+                        unsigned int* vp = &val_int;
                         float af = *((float*)vp);
-                        this->p2.action_frame = af;
+                        p2.action_frame = af;
+#if MEMORY_OUT
+                        printf("%s:%d\tP2 ACTION_FRAME: %f\n", FILENM, __LINE__, p2.action_frame);
+#endif
                         break;
                     }
                     /*action counter*/
                     case Addresses::FRAMES::ACTION_COUNTER:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        this->p2.action_count = val_int;
+                        p2.action_count = val_int;
+#if MEMORY_OUT
+                        printf("%s:%d\tP2 ACTION_COUNTER: %x \n", FILENM, __LINE__, p2.action_count);
+#endif
                         break;
                     }
                     /*invincibility frame*/
                     case Addresses::FRAMES::INVINCIBLE:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        this->p2.invincibility = val_int;
+                        p2.invincibility = val_int;
+#if MEMORY_OUT
+                        printf("%s:%d\tP2 INVINCIBLE: %x \n", FILENM, __LINE__, p2.invincibility);
+#endif
                         break;
                     }
                     /*remaining frames left in hitlag*/
@@ -292,53 +314,58 @@ int MemoryScanner::UpdatedFrame() {
                     {
                         //should be correct
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        uint* hpnt = &val_int;
+                        unsigned int* hpnt = &val_int;
                         float hl = *((float*)hpnt);
-                        this->p2.hitlag_remaining = hl;
+                        p2.hitlag_remaining = hl;
+#if MEMORY_OUT
+                        printf("%s:%d\tP2 HITLAG: %f\n", FILENM, __LINE__, p2.hitlag_remaining);
+#endif
                         break;
                     }
                     /*remaining frames left in hitstun*/
                     case Addresses::FRAMES::HITSTUN:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        uint* hpnt = &val_int;
+                        unsigned int* hpnt = &val_int;
                         float hs = *((float*)hpnt);
-                        this->p2.hitstun_remaining = hs;
+                        p2.hitstun_remaining = hs;
+#if MEMORY_OUT
+                        printf("%s:%d\tP2 HITSTUN: %f\n", FILENM, __LINE__, p2.hitstun_remaining);
+#endif
                         break;
                     }
                     /*charging attack indicator*/
                     case Addresses::FRAMES::SMASH_CHARGE:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
-                        this->p2.action = val_int;
-
-                        if (prin)
-                            printf("%s:%d\tP2 Charging Action: %x \n"
-                                        , FILENM, __LINE__, val_int);
-
-                        (val_int = 2) ? this->p2.charging = 1 : this->p2.charging = 0;
+                        p2.action = val_int;
+                        p2.charging = val_int == 2 ? 1 : 0;
+#if MEMORY_OUT
+                        printf("%s:%d\tP2 Charging Action: %x \n"
+                            , FILENM, __LINE__, val_int);
+#endif
                         break;
                     }
                     default:
                     {
-                        
-                        if (prin)
-                            printf("%s:%d\tDEFAULT CASE P2 BASE FOUND: %x as offset but not caught\n", 
-                                FILENM, __LINE__, val_int);       
+#if MEMORY_OUT
+                        printf("%s:%d\tWARNING::P2 BASE FOUND: %x as offset but not caught\n",
+                            FILENM, __LINE__, val_int);
+#endif
                     }
 
-                }
+                } // End Player Two switch
                 break;
-            /*pointer value read, but don't know what it is*/
-            default:{}
-                
-                if (prin)
-                    printf("%s:%d\tvalue found, read as %x, but not caught\n", 
-                                FILENM, __LINE__, val);
-                                
-        }
-
-    } else {
+                /*pointer value read, but don't know what it is*/
+            default: 
+            {
+                printf("%s:%d\tWARNING::value found, read as %x, but not caught\n",
+                    FILENM, __LINE__, val);
+            }                   
+        } // End Base Switch
+    } // End base.find(" ") != std::string::npos
+    else
+    { // Globals
 
         unsigned int player_val = std::stoul(base.c_str(), nullptr, 16);
         switch (player_val) {
@@ -449,7 +476,7 @@ int MemoryScanner::UpdatedFrame() {
                 break;
             default:
                 fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
-                    "--ERROR:Menu offset read, but returned unknown value");
+                    "--WARNING::Menu offset read, but returned unknown value");
                 break;
             }
             break;
@@ -536,23 +563,26 @@ int MemoryScanner::UpdatedFrame() {
             break; }
 
         default:
-            break;
+        {
+#if MEMORY_OUT
+            printf("%s:%d\tWARNING::P2 BASE FOUND: %x as offset but not caught\n",
+                FILENM, __LINE__, val_int);
+#endif
+        }
         }
 
 
         /*only print information if we are in game*/
-        if (this->in_game)
+
+#if MEMORY_OUT
+        if (in_game)
         {
             print();
-            
-            if ( prin)
-            {           
             display_player_actions(p1);
             display_player_actions(p2);
-            }
-            
         }
-    }
+#endif
+    } // End Globals
 
     return 1;
 }
