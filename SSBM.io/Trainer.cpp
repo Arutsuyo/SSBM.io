@@ -34,7 +34,7 @@ std::string Trainer::dolphinDefaultUser = "";
 
 std::string Trainer::PythonCommand = "python.exe";
 std::string Trainer::modelName = "AI/ssbm";
-PREDICTION_MODE Trainer::predictionType = LOAD_MODEL;
+Pred_Modes Trainer::predictionType = LOAD_MODEL;
 
 
 // Used for tracking events in the threads
@@ -248,6 +248,8 @@ void Trainer::runTraining()
                 // We can now load the new model!
                 if (predictionType == NEW_MODEL)
                     predictionType = LOAD_MODEL;
+                if (predictionType == NEW_PREDICTION)
+                    predictionType = PREDICTION_ONLY;
 
                 // push a new one
                 DolphinHandle* dh = new DolphinHandle(vs);

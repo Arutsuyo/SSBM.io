@@ -16,7 +16,7 @@ bool createSigIntAction();
 bool exists_test(const std::string& name);
 bool dir_exists(const char* path);
 
-enum PREDICTION_MODE
+enum Pred_Modes
 {
     LOAD_MODEL = 0,
     NEW_MODEL = 1,
@@ -49,7 +49,7 @@ public:
     // Tensor Info
     static std::string PythonCommand;
     static std::string modelName;
-    static PREDICTION_MODE predictionType;
+    static Pred_Modes predictionType;
     static void GetVersionNumber(std::string& parsed);
 
     // Threading Info

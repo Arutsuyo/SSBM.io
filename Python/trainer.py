@@ -47,9 +47,16 @@ MAX_FRAMES_RECORDING = 120//INPUT_RATE # 120 = 2 seconds saved for inputs if 60 
 MAX_MEMORY_FRAMES = 120//INPUT_RATE # 60 = 1 second for every batch training if 60 TPS (/divided by input dropout)
 MAX_BATCH_SIZE = 80//INPUT_RATE # Drop half of the examples from memory frames and only train on x of them...
 
-#ai.health, ai.dir, ai.pos_x, ai.pos_y, ai.action, ai.action_frame,
-#enemy.health, enemy.dir, enemy.pos_x, enemy.pos_y, enemy.action, enemy.action_frame
+# 0:ai.health, 1:ai.dir, 2:ai.pos_x, 3:ai.pos_y, 4:ai.action, 5:ai.action_frame,
+# 6:enemy.health, 7:enemy.dir, 8:enemy.pos_x, 9:enemy.pos_y, 10:enemy.action, 11:enemy.action_frame
 INPUT_SIZE = 12
+MY_HP_IDX = 0
+MY_X = 2
+MY_Y = 3
+ENEMY_HP_IDX = 6
+ENEMY_X = 8
+ENEMY_Y = 9
+
 
 POSSIBLE_ACTIONS = [[0 for i in range(INPUT_SIZE)]]*(5*3*6)
 c = 0
@@ -131,15 +138,15 @@ class DQN:
 	def get_Score(self, prev_state, new_state):
 		reward = 0
 		prev_state = prev_state[-1]
-		if prev_state[4] > new_state[4] and new_state[4] == 0:
+		if prev_state[ENEMY_HP_IDX] > new_state[ENEMY_HP_IDX] and new_state[ENEMY_HP_IDX] == 0:
 			reward = reward + KILL_REWARD # :D Not enough to overcome suicide.
-		if prev_state[0] > new_state[0] and new_state[0] == 0:
+		if prev_state[MY_HP_IDX] > new_state[MY_HP_IDX] and new_state[MY_HP_IDX] == 0:
 			reward = reward - SUICIDE_REWARD # Died, get a reward of -500
 		else:
-			reward = reward - (new_state[0] - prev_state[0])*.1*new_state[0] # So reward penalty gets worse for getting hit
-			reward = reward + (new_state[4] - prev_state[4])*.5*new_state[4] # Reward if hitting!
-		reward = reward - ((abs(new_state[2] - new_state[6]) * .25) + (abs(new_state[3] - new_state[7])*.1)) # Slight penalty for going away from the user.
-		self.add_OverallScore(prev_state[0] > new_state[0], prev_state[4] > new_state[4], new_state[0]-prev_state[0], new_state[4]-prev_state[4])
+			reward = reward - (new_state[MY_HP_IDX] - prev_state[MY_HP_IDX])*.1*new_state[MY_HP_IDX] # So reward penalty gets worse for getting hit
+			reward = reward + (new_state[ENEMY_HP_IDX] - prev_state[ENEMY_HP_IDX])*.5*new_state[ENEMY_HP_IDX] # Reward if hitting!
+		reward = reward - ((abs(new_state[MY_X] - new_state[ENEMY_X]) * .25) + (abs(new_state[MY_Y] - new_state[ENEMY_Y])*.1)) # Slight penalty for going away from the user.
+		self.add_OverallScore(prev_state[MY_HP_IDX] > new_state[MY_HP_IDX], prev_state[ENEMY_HP_IDX] > new_state[ENEMY_HP_IDX], new_state[MY_HP_IDX]-prev_state[MY_HP_IDX], new_state[ENEMY_HP_IDX]-prev_state[ENEMY_HP_IDX])
 		return reward
 	def add_OverallScore(self, hasDied, otherDied, myHP, theirHP):
 		self.game_score = self.game_score + (-SUICIDE_REWARD if hasDied == 1 else 0) + (KILL_SCORE if otherDied == 1 else 0)
@@ -150,7 +157,7 @@ class DQN:
 			self.game_score = self.game_score + (myHP * .15)
 	def create_model(self):
 		model = Sequential()
-		model.add(fallbackLSTM(MODEL_PARAMETERS[1],input_shape=MODEL_PARAMETERS[0], activation='tanh', return_sequences=True))
+		model.add(fallbackLSTM(MODEL_PARAMETERS[1],input_shape=MODEL_PARAMETERS[MY_HP_IDX], activation='tanh', return_sequences=True))
 		model.add(Dropout(MODEL_DROPOUT[0]))
 		model.add(fallbackLSTM(MODEL_PARAMETERS[2], activation='tanh'))
 		model.add(Dropout(MODEL_DROPOUT[1]))
