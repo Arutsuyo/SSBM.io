@@ -19,7 +19,9 @@ namespace Addresses {
         STAGE_SELECT = 3329,
         IN_GAME = 3330,
         POSTGAME = 3332,
-
+        ERROR_VS_2CHAR = 100,
+        ERROR_CHAR_2VS = 200,
+        ERROR_STAGE = 01,//this is also the video that plays but if we are there we should probably leave anyway
     };
 
     enum PLAYER_ATTRIB {

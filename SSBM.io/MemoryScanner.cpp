@@ -476,6 +476,21 @@ int MemoryScanner::UpdatedFrame() {
                     FILENM, __LINE__, current_stage);
 #endif
                 break;
+            //detecting menu transistions... should ideally not get here
+            case Addresses::MENUS::ERROR_VS_2CHAR: //vs select to character 
+                current_stage = Addresses::MENUS::ERROR_STAGE;
+#if MEMORY_OUT            
+                fprintf(stderr, "%s:%d%s", FILENM, __LINE__, 
+                    "-- Error: Detected select game-mode to character select");
+#endif          
+                break;
+            case Addresses::MENUS::ERROR_CHAR_2VS: //character to vs select
+                current_stage = Addresses::MENUS::ERROR_STAGE;
+#if MEMORY_OUT
+                fprintf(stderr, "%s:%d%s", FILENM, __LINE__, 
+                    "-- Error: Detected exit from character select to select game-mode");
+#endif
+                break;
             default:
                 fprintf(stderr, "%s:%d\t%s %x\n", FILENM, __LINE__,
                     "--WARNING::Menu offset read, but returned unknown value", z);
