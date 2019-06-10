@@ -242,7 +242,7 @@ while True:
 			break
 	except:
 		break
-	action = agent.act(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,8)))
+	action = agent.act(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,INPUT_SIZE)))
 	# It is 6 values, brute force
 	PipePrint((action[0]+1)/2,(action[1]+1)/2,action[2],action[3],action[4],action[5],action[6])
 	stderr.flush()
@@ -260,7 +260,7 @@ while True:
 		if INPUT_RATE-1 == timeout_timer:
 			timeout_timer = -1
 			reward = agent.get_Score(pa, vv)
-			agent.remember(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,8)), action, reward, np.reshape(np.array(kill_me), (1,MAX_FRAMES_RECORDING,8)), False)
+			agent.remember(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,INPUT_SIZE)), action, reward, np.reshape(np.array(kill_me), (1,MAX_FRAMES_RECORDING,INPUT_SIZE)), False)
 			agent.replay()
 			agent.target_train()
 		timeout_timer = timeout_timer+1
