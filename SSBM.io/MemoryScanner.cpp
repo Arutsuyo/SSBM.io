@@ -359,8 +359,8 @@ int MemoryScanner::UpdatedFrame() {
                 /*pointer value read, but don't know what it is*/
             default: 
             {
-                printf("%s:%d\tWARNING::value found, read as %x, but not caught\n",
-                    FILENM, __LINE__, val);
+                printf("%s:%d\tWARNING::value found, read as %s, but not caught\n",
+                    FILENM, __LINE__, val.c_str());
             }                   
         } // End Base Switch
     } // End base.find(" ") != std::string::npos
