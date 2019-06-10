@@ -75,7 +75,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     ThreadArgs ta = *targ;
     *ta._pid = fork();
     int memret = 1;
-    int memloop = 10;
+    int memloop = Trainer::memoryCount;
     // Child
     if (*ta._pid == 0)
     {

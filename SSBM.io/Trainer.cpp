@@ -22,9 +22,11 @@ std::string Trainer::_ssbmisoLocs[] = {
     "/mnt/f/Program Files/Dolphin-x64/iso/ssbm.gcm",
     "/mnt/c/Program Files/Dolphin-x64/iso/ssbm.gcm",
     "/mnt/c/User/Nara/Desktop/Dolphin-x64/iso/ssbm.gcm",
-    "/mnt/c/Users/aruts/OneDrive/UO/CIS 472/Project/ssbm.gcm"
+    "/mnt/c/Users/aruts/OneDrive/UO/CIS 472/Project/ssbm.gcm",
+    "/home/zach/Desktop/CIS472/ssbm.gcm"
 };
 int Trainer::_isoidx = -1;
+int Trainer::memoryCount = 0;
 
 // To be filled out in main
 std::string Trainer::userDir = "";
@@ -32,7 +34,7 @@ std::string Trainer::dolphinDefaultUser = "";
 
 std::string Trainer::PythonCommand = "python.exe";
 std::string Trainer::modelName = "AI/ssbm";
-PREDICTION_MODE Trainer::predictionType = LOAD_MODEL;
+int Trainer::predictionType = 1;
 
 
 // Used for tracking events in the threads
@@ -144,7 +146,7 @@ void Trainer::KillDolphinHandles()
         _Dhandles[i]->running = false;
 }
 
-void Trainer::GetVersionNumber(std::string& parsed)
+void Trainer::GetVesrionNumber(std::string& parsed)
 {
     char version[16];
     std::fstream fs;
@@ -290,6 +292,7 @@ Trainer::Trainer()
     {
         printf("%s:%d\tCreating Config\n", FILENM, __LINE__);
         cfg = new Config(vs);
+        memoryCount = cfg->getMemlocationLines();
     }
 
     initialized = true;
