@@ -38,7 +38,7 @@ PREDICTION_MODE Trainer::predictionType = LOAD_MODEL;
 // Used for tracking events in the threads
 std::mutex Trainer::mut;
 std::condition_variable Trainer::cv;
-unsigned Trainer::Concurent;
+unsigned Trainer::Concurent = 1;
 
 VsType Trainer::vs = VsType::Self;
 

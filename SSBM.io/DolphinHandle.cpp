@@ -46,7 +46,7 @@ bool WaitForDolphinToClose(int pid)
     int tpid;
     SendKill(pid);
     tpid = waitpid(pid, &status, 0);
-    printf("%s:%d\tChild(%d:%d:%d) Exited\n", FILENM, __LINE__,tpid, pid, status);
+    printf("%s:%d\tChild(%d:%d:%d) Exited\n", FILENM, __LINE__, tpid, pid, status);
     Trainer::cv.notify_all();
     return tpid == pid;
 }
@@ -74,8 +74,6 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     std::vector<TensorHandler*> tHandles;
     ThreadArgs ta = *targ;
     *ta._pid = fork();
-    int memret = 1;
-    int memloop = 10;
     // Child
     if (*ta._pid == 0)
     {
@@ -144,6 +142,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     printf("%s:%d-T%d\tCreating Memory Watcher!\n",
         FILENM, __LINE__, *ta._pid);
+
     MemoryScanner mem = MemoryScanner(ta._dolphinUser);
     if (mem.success == false) {
         fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
@@ -154,50 +153,35 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         return false;
     }
 
+    // Start the memory reading thread. 
+    // Make sure to join the thread before closing.
+    std::thread memThread(&ReadMemory, &mem, ta._running);
+
     // Do Input
     Trainer::cv.notify_all();
     printf("%s:%d-T%d\tPausing to load Menu\n",
         FILENM, __LINE__, *ta._pid);
     //wait until the character stage is detected
-    int loop = 0, loopLim = 1000;
     TPoint lastSent = std::chrono::high_resolution_clock::now();
-    while (mem.CurrentStage() != Addresses::MENUS::CHARACTER_SELECT 
+    while (mem.CurrentStage() != Addresses::MENUS::CHARACTER_SELECT
         && *ta._running)
     {
-        if (loop++ == loopLim)
+        std::chrono::duration<double> elapsed =
+            std::chrono::high_resolution_clock::now()
+            - lastSent;
+        if (elapsed.count() > 3) // wait for 3 seconds
         {
-            loop = 0;
-
-            std::chrono::duration<double> elapsed =
-                std::chrono::high_resolution_clock::now()
-                - lastSent;
-            if (elapsed.count() > 3) // wait for 3 seconds
-            {
-                lastSent = std::chrono::high_resolution_clock::now();
-                printf("%s:%d-T%d\t%dPausing to load Menu(%d): %d\n",
-                    FILENM, __LINE__, *ta._pid, *ta._running ? 1 : 0,
-                    mem.CurrentStage(), Addresses::MENUS::CHARACTER_SELECT);
-            }
+            lastSent = std::chrono::high_resolution_clock::now();
+            printf("%s:%d-T%d\t%dPausing to load Menu(%d): %d\n",
+                FILENM, __LINE__, *ta._pid, *ta._running ? 1 : 0,
+                mem.CurrentStage(), Addresses::MENUS::CHARACTER_SELECT);
         }
-
-        //update the frame to find the current state
-        memloop = 10;
-        do {
-            if (mem.UpdatedFrame() == -1)
-            {
-                fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
-                    "--ERROR:Memory update failed");
-                *ta._running = false;
-                CheckClose(ta, tHandles);
-                Trainer::cv.notify_all();
-                return false;
-            }
-        } while (memret > 0 && memloop--);
     }
     if (CheckClose(ta, tHandles))
     {
         fprintf(stderr, "%s:%d-T%d\tError loading menu\n",
             FILENM, __LINE__, *ta._pid);
+        memThread.join();
         Trainer::cv.notify_all();
         return false;
     }
@@ -206,38 +190,20 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     printf("%s:%d-T%d\tSelecting Characters\n",
         FILENM, __LINE__, *ta._pid);
-    while (mem.CurrentStage() != Addresses::MENUS::STAGE_SELECT 
+    while (mem.CurrentStage() != Addresses::MENUS::STAGE_SELECT
         && *ta._running)
     {
-        if (loop++ == loopLim)
+        std::chrono::duration<double> elapsed =
+            std::chrono::high_resolution_clock::now()
+            - lastSent;
+        if (elapsed.count() > 3) // wait for 3 seconds
         {
-            loop = 0;
-
-            std::chrono::duration<double> elapsed =
-                std::chrono::high_resolution_clock::now()
-                - lastSent;
-            if (elapsed.count() > 3) // wait for 3 seconds
-            {
-                lastSent = std::chrono::high_resolution_clock::now();
-                printf("%s:%d-T%d\tSelecting Characters(%d): %d\n",
-                    FILENM, __LINE__, *ta._pid,
-                    mem.CurrentStage(), Addresses::MENUS::STAGE_SELECT);
-            }
+            lastSent = std::chrono::high_resolution_clock::now();
+            printf("%s:%d-T%d\tSelecting Characters(%d): %d\n",
+                FILENM, __LINE__, *ta._pid,
+                mem.CurrentStage(), Addresses::MENUS::STAGE_SELECT);
         }
 
-        //update the frame to find the current cursor pos
-        memloop = 10;
-        do {
-            if (mem.UpdatedFrame() == -1)
-            {
-                fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
-                    "--ERROR:Memory update failed");
-                *ta._running = false;
-                CheckClose(ta, tHandles);
-                Trainer::cv.notify_all();
-                return false;
-            }
-        } while (memret > 0 && memloop--);
         bool selected = true;
         for (int i = 0; i < tHandles.size(); i++)
             selected &= tHandles[i]->SelectLocation(&mem, false);
@@ -248,6 +214,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     {
         fprintf(stderr, "%s:%d-T%d\tError Selecting Menu\n",
             FILENM, __LINE__, *ta._pid);
+        memThread.join();
         Trainer::cv.notify_all();
         return false;
     }
@@ -256,35 +223,17 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         FILENM, __LINE__, *ta._pid);
     while (mem.CurrentStage() != Addresses::IN_GAME && *ta._running)
     {
-        if (loop++ == loopLim)
+        std::chrono::duration<double> elapsed =
+            std::chrono::high_resolution_clock::now()
+            - lastSent;
+        if (elapsed.count() > 3) // wait for 3 seconds
         {
-            loop = 0;
-
-            std::chrono::duration<double> elapsed =
-                std::chrono::high_resolution_clock::now()
-                - lastSent;
-            if (elapsed.count() > 3) // wait for 3 seconds
-            {
-                lastSent = std::chrono::high_resolution_clock::now();
-                printf("%s:%d-T%d\tSelecting Stage(%d): %d\n",
-                    FILENM, __LINE__, *ta._pid,
-                    mem.CurrentStage(), Addresses::IN_GAME);
-            }
+            lastSent = std::chrono::high_resolution_clock::now();
+            printf("%s:%d-T%d\tSelecting Stage(%d): %d\n",
+                FILENM, __LINE__, *ta._pid,
+                mem.CurrentStage(), Addresses::IN_GAME);
         }
 
-        //update the frame to find the current cursor pos
-        memloop = 10;
-        do {
-            if (mem.UpdatedFrame() == -1)
-            {
-                fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
-                    "--ERROR:Memory update failed");
-                *ta._running = false;
-                CheckClose(ta, tHandles);
-                Trainer::cv.notify_all();
-                return false;
-            }
-        } while (memret > 0 && memloop--);
         if (tHandles[0]->SelectLocation(&mem, true))
             (*ta._controllers).front()->ButtonPressRelease("A");
     }
@@ -292,6 +241,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     {
         fprintf(stderr, "%s:%d-T%d\tError selecting stage\n",
             FILENM, __LINE__, *ta._pid);
+        memThread.join();
         Trainer::cv.notify_all();
         return false;
     }
@@ -301,39 +251,23 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         FILENM, __LINE__, *ta._pid);
     while (*ta._running && !mem.print())
     {
-        if (loop++ == loopLim)
+        std::chrono::duration<double> elapsed =
+            std::chrono::high_resolution_clock::now()
+            - lastSent;
+        if (elapsed.count() > 3) // wait for 3 seconds
         {
-            loop = 0;
-
-            std::chrono::duration<double> elapsed =
-                std::chrono::high_resolution_clock::now()
-                - lastSent;
-            if (elapsed.count() > 3) // wait for 3 seconds
-            {
-                lastSent = std::chrono::high_resolution_clock::now();
-                printf("%s:%d-T%d\tChecking for valid player data: %d:%f\n",
-                    FILENM, __LINE__, *ta._pid,
-                    mem.GetPlayer(false).dir, mem.GetPlayer(false).pos_x);
-            }
+            lastSent = std::chrono::high_resolution_clock::now();
+            printf("%s:%d-T%d\tChecking for valid player data: %d:%f\n",
+                FILENM, __LINE__, *ta._pid,
+                mem.GetPlayer(false).dir, mem.GetPlayer(false).pos_x);
         }
 
-        memloop = 10;
-        do {
-            if (mem.UpdatedFrame() == -1)
-            {
-                fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
-                    "--ERROR:Memory update failed");
-                *ta._running = false;
-                CheckClose(ta, tHandles);
-                Trainer::cv.notify_all();
-                return false;
-            }
-        } while (memret > 0 && memloop--);
     }
     if (CheckClose(ta, tHandles))
     {
         fprintf(stderr, "%s:%d-T%d\tError getting data\n",
             FILENM, __LINE__, *ta._pid);
+        memThread.join();
         Trainer::cv.notify_all();
         return false;
     }
@@ -345,22 +279,6 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     bool openSocket = true, openPipe = true;
     while (*ta._running && openPipe && openSocket && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
     {
-        // Call advance frame
-        (*ta._controllers).back()->ButtonPressRelease("R");
-
-        memloop = 10;
-        do {
-            if (mem.UpdatedFrame() == -1)
-            {
-                fprintf(stderr, "%s:%d-T%d\t%s\n", FILENM, __LINE__, *ta._pid,
-                    "--ERROR:Memory update failed");
-                *ta._running = false;
-                CheckClose(ta, tHandles);
-                Trainer::cv.notify_all();
-                return false;
-            }
-        } while (memret > 0 && memloop--);
-
         for (int i = 0; i < tHandles.size(); i++)
             openPipe = tHandles[i]->MakeExchange(&mem);
     }
@@ -368,11 +286,30 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     // Close out
     *ta._running = false;
     *ta._safeClose = true;
+    memThread.join();
     return CheckClose(ta, tHandles, true);
 }
 
+bool DolphinHandle::ReadMemory(MemoryScanner *mem, bool *running)
+{
+    int ret = 1;
+    while (*running && ret >= 0)
+    {
+        // Read memory
+        ret = mem->UpdatedFrame();
+
+        // Check for error
+        if (ret == -1)
+        {
+            fprintf(stderr, "%s:%d\t--ERROR:Memory failed to read\n", FILENM, __LINE__);
+            *running = false;
+            return false;
+        }
+    }
+}
+
 bool DolphinHandle::CheckClose(
-    ThreadArgs& ta, std::vector<TensorHandler*> &tHandles, bool force)
+    ThreadArgs& ta, std::vector<TensorHandler*>& tHandles, bool force)
 {
     if (*ta._running)
         return false;
@@ -488,7 +425,7 @@ bool DolphinHandle::StartDolphin(int lst)
     Trainer::cv.notify_all();
     std::unique_lock<std::mutex> lk(Trainer::mut);
     t = new std::thread(&DolphinHandle::dolphin_thread, ta);
-    while(!pipes && running)
+    while (!pipes && running)
         Trainer::cv.wait_for(lk, std::chrono::seconds(1));
     started = true;
     return true;
@@ -526,10 +463,10 @@ DolphinHandle::~DolphinHandle()
         controllers.size());
 
     // Call each destructor
-    for(int i = controllers.size()-1; i >= 0; i--)
+    for (int i = controllers.size() - 1; i >= 0; i--)
     {
         // Move the controller into scope so it kills itself
-        if(controllers[i])
+        if (controllers[i])
             Controller ctrl = &controllers[i];
         controllers.pop_back();
     }

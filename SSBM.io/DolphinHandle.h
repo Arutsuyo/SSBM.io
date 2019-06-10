@@ -32,6 +32,8 @@ class DolphinHandle
 
     static bool dolphin_thread(ThreadArgs *ta);
 
+    // Thread Helper Functions //
+    static bool ReadMemory(MemoryScanner* mem, bool* running);
     static bool CheckClose(ThreadArgs& ta, std::vector<TensorHandler*>& tHandles, bool force = false);
 
 public:
