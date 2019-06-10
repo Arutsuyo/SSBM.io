@@ -55,58 +55,59 @@ std::string AIController =
 "C-Stick/Right = `Axis C X + `\n";
 
 std::string memlocation = 
-"004530E0\n" //p1 %
-"00453F70\n" //p2 %
-//"0045310E\n" p1stock
-//"00453F9E\n" p2stock
+"004530E0\n" // p1 %
+"00453F70\n" // p2 %
+//"0045310E\n" // p1stock
+//"00453F9E\n" // p2stock
 "004530C0\n" // p1 direction
-"00453F50\n" //p2 direction
-"00453090\n" //p1 xpos
-"00453F20\n" //p2 xpos
-"00453094\n" //p1 ypos
-"00453F24\n" //p2 ypos
+"00453F50\n" // p2 direction
+"00453090\n" // p1 xpos
+"00453F20\n" // p2 xpos
+"00453094\n" // p1 ypos
+"00453F24\n" // p2 ypos
 
-"00453130 70\n" //p1 action state
-"00453130 20CC\n" //p1 action count
-"00453130 8F4\n" //p1 acction frame
-"00453130 19EC\n" //p1 invicible
-"00453130 19BC\n" //p1 hitlag
-"00453130 23a0\n" //p1 hitstun
-//"00453130 2174\n" p1charging
-//"00453130 19C8\n" jumps
-//"00453130 140\n" grounded
-//"00453130 E0\n" xair
-//"00453130 E4\n" yair
-//"00453130 EC\n" xattackspd
-//"00453130 F0\n" yattackspd
-//"00453130 14C\n" knockeddown
-"00453FC0 70\n" //p2 action stae
-"00453FC0 20CC\n" //p2 action count
-"00453FC0 8F4\n" //p2 action frame
-"00453FC0 19EC\n" //p2 invicible
-"00453FC0 19BC\n" //p2 hitlag
-"00453FC0 23a0\n" //p2 hitstun
-//"00453FC0 2174\n" 
-//"00453FC0 19C8\n" 
-//"00453FC0 140\n" 
-//"00453FC0 E0\n" 
-//"00453FC0 E4\n" 
-//"00453FC0 EC\n" 
-//"00453FC0 F0\n" 
-//"00453FC0 14C\n" 
-//"003F0E0A\n" p1 char
-//"003F0E2E\n" p2 char
-"00479d30\n" //current menu
-//"004D6CAD\n" //stage selected
-"0111826C\n" //p2 cursor x
+"00453130 70\n" // p1 action state
+"00453130 8F4\n" // p1 action frame
+//"00453130 20CC\n" // p1 action count
+//"00453130 19EC\n" // p1 invicible
+//"00453130 19BC\n" // p1 hitlag
+//"00453130 23a0\n" // p1 hitstun
+//"00453130 2174\n" // p1charging
+//"00453130 19C8\n" // jumps
+//"00453130 140\n" // grounded
+//"00453130 E0\n" // xair
+//"00453130 E4\n" // yair
+//"00453130 EC\n" // xattackspd
+//"00453130 F0\n" // yattackspd
+//"00453130 14C\n" // knockeddown
+"00453FC0 70\n" // p2 action state
+"00453FC0 8F4\n" // p2 action frame
+//"00453FC0 20CC\n" // p2 action count
+//"00453FC0 19EC\n" // p2 invicible
+//"00453FC0 19BC\n" // p2 hitlag
+//"00453FC0 23a0\n" // p2 hitstun
+//"00453FC0 2174\n" // MISSING
+//"00453FC0 19C8\n" // MISSING
+//"00453FC0 140\n" // MISSING
+//"00453FC0 E0\n" // MISSING
+//"00453FC0 E4\n" // MISSING
+//"00453FC0 EC\n" // MISSING
+//"00453FC0 F0\n" // MISSING
+//"00453FC0 14C\n" // MISSING
+//"003F0E0A\n" // p1 char
+//"003F0E2E\n" // p2 char
+"00479d30\n" // current menu
+//"004D6CAD\n" // stage selected
+"0111826C\n" // p2 cursor x
 "01118270\n" // p2 cursor y
 "01118DEC\n" // p1 cursor x
-"01118DF0\n" //p1 cursor y
-//"00479D60\n" still under investigation, but i think is repeated
+"01118DF0\n" // p1 cursor y
+//"00479D60\n" // still under investigation, but i think is repeated
 "00c8ee38\n" // stage select x
 "00c8ee50\n" // stage select x
-"00C8EE3C\n" //stage select y
-"00C8EE60\n"; //stage selecty
+"00C8EE3C\n" // stage select y
+"00C8EE60\n" // stage select y
+;
 #pragma endregion UtilStrings
 
 std::string hotkey =

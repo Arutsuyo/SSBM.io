@@ -12,7 +12,6 @@ class Config
     bool _gfx;
     bool _fullscreen;
 
-    int _memorylines;
     VsType _vs;
 
 public:
