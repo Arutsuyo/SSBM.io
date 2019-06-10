@@ -245,6 +245,10 @@ void Trainer::runTraining()
                 // Remove the handler, calling the destructor
                 _Dhandles.erase(_Dhandles.begin() + i);
 
+                // We can now load the new model!
+                if (predictionType == NEW_MODEL)
+                    predictionType = LOAD_MODEL;
+
                 // push a new one
                 DolphinHandle* dh = new DolphinHandle(vs);
                 lk.unlock();
