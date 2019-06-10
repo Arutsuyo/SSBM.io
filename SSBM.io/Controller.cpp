@@ -218,7 +218,7 @@ bool Controller::ButtonPressRelease(std::string btn)
         return false;
 
     // delay. pipeDelay needs to be converted to ms from seconds
-    nsleep(pipeDelay * 1000);
+    nsleep(2 * pipeDelay * 1000);
 
     ret = sprintf(buff, "%s %s\n", "RELEASE", btn.c_str());
     if (!sendtofifo(buff, ret))

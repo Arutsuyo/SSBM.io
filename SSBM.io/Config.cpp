@@ -109,7 +109,7 @@ std::string memlocation =
 #pragma endregion UtilStrings
 
 std::string hotkey =
-"Keys/Load State Slot 1 = `Button R`";
+"Keys/Frame Advance = `Button R`";
 
 Config::Config(VsType vType)
 {

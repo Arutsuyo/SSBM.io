@@ -345,6 +345,9 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     bool openSocket = true, openPipe = true;
     while (*ta._running && openPipe && openSocket && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
     {
+        // Call advance frame
+        (*ta._controllers).back()->ButtonPressRelease("R");
+
         memloop = 10;
         do {
             if (mem.UpdatedFrame() == -1)
