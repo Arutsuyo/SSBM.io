@@ -337,6 +337,11 @@ bool DolphinHandle::StartDolphin(int lst)
     std::string dolphinConfig = dolphinUser + "Config/";
 
     // Copy the user folder
+    printf("%s:%d\tMaking sure the old dir is gone: %s\n", FILENM, __LINE__,
+        dolphinUser.c_str());
+    sprintf(buff, "rm -rf %s", dolphinUser.c_str());
+    system(buff);
+
     printf("%s:%d\tCopying the user folder: %s\n", FILENM, __LINE__,
         dolphinUser.c_str());
     sprintf(buff, "cp -r %s %s", Trainer::dolphinDefaultUser.c_str(), dolphinUser.c_str());

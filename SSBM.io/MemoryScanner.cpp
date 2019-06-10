@@ -255,10 +255,8 @@ int MemoryScanner::UpdatedFrame() {
                     }
                     default:
                     {
-#if MEMORY_OUT
                         printf("%s:%d\tWARNING::P1 BASE FOUND: %x as offset but not caught\n",
                             FILENM, __LINE__, val_int);
-#endif
                     }
                 }// Player one switch
                 break;
@@ -354,10 +352,8 @@ int MemoryScanner::UpdatedFrame() {
                     }
                     default:
                     {
-#if MEMORY_OUT
                         printf("%s:%d\tWARNING::P2 BASE FOUND: %x as offset but not caught\n",
                             FILENM, __LINE__, val_int);
-#endif
                     }
 
                 } // End Player Two switch
@@ -481,8 +477,8 @@ int MemoryScanner::UpdatedFrame() {
 #endif
                 break;
             default:
-                fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__,
-                    "--WARNING::Menu offset read, but returned unknown value");
+                fprintf(stderr, "%s:%d\t%s %x\n", FILENM, __LINE__,
+                    "--WARNING::Menu offset read, but returned unknown value", z);
                 break;
             }
             break;
@@ -570,10 +566,8 @@ int MemoryScanner::UpdatedFrame() {
 
         default:
         {
-#if MEMORY_OUT
             printf("%s:%d\tWARNING::P2 BASE FOUND: %x as offset but not caught\n",
                 FILENM, __LINE__, val_int);
-#endif
         }
         }
 

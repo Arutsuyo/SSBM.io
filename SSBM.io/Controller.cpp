@@ -145,8 +145,8 @@ bool Controller::sendtofifo(char fifocmd[], int limit)
 
         if ((ret = write(fifo_fd, fifocmd + offset, towrite)) == -1)
         {
-            fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-                "--ERROR:write", strerror(errno));
+            fprintf(stderr, "%s:%d: %s: %s\n\t%s\n", FILENM, __LINE__,
+                "--ERROR:write", strerror(errno), pipePath.c_str());
             pipeOpen = false;
             return false;
         }
