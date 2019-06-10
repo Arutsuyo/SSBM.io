@@ -20,12 +20,18 @@ class Trainer
 {
     std::vector<DolphinHandle*> _Dhandles;
     static std::vector<int> killpids;
+
+
+
 public:
     static Trainer* _inst;
+
 
     static bool term;
     bool initialized;
     static Config* cfg;
+
+    static int memoryCount;
 
     // ISO info
     static std::string _ssbmisoLocs[];
