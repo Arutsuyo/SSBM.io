@@ -101,7 +101,7 @@ try:
 except:
 	debugPrint("Unable to import CuDNNLSTM, using fallback of LSTM with tanh activator.\n")
 	
-debugPrint("Initialization: (0) New Model (1) Load Model (2) Load in Prediction-Only\n")
+debugPrint("Initialization: (0) Load Model (1) New Model (2) Load in Prediction-Only (3) New in Prediction-Only\n")
 stderr.flush()
 
 class DQN:
@@ -213,13 +213,13 @@ if "0" not in choice and "1" not in choice and "2" not in choice and "3" not in 
 
 # BUILD MODEL SECTION!
 agent = None
-if "1" in choice or "2" in choice:
+if "0" in choice or "2" in choice:
 	debugPrint("Loading model from file...\n")
 	agent = DQN(int(sys.argv[2]))
 	agent.load_model(export_dir)
 	stderr.flush()
 else:
-	debugPrint("Building model:\n")
+	debugPrint("Building model...\n")
 	agent = DQN(int(sys.argv[2])) # Prebuilds...
 	stderr.flush()
 #agent.test("cool")

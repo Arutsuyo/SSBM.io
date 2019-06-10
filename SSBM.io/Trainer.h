@@ -16,6 +16,14 @@ bool createSigIntAction();
 bool exists_test(const std::string& name);
 bool dir_exists(const char* path);
 
+enum PREDICTION_MODE
+{
+    LOAD_MODEL = 0,
+    NEW_MODEL = 1,
+    PREDICTION_ONLY = 2,
+    NEW_PREDICTION = 3,
+};
+
 class Trainer
 {
     std::vector<DolphinHandle*> _Dhandles;
@@ -38,8 +46,8 @@ public:
     // Tensor Info
     static std::string PythonCommand;
     static std::string modelName;
-    static int predictionType;
-    static void GetVesrionNumber(std::string& parsed);
+    static PREDICTION_MODE predictionType;
+    static void GetVersionNumber(std::string& parsed);
 
     // Threading Info
     static unsigned Concurent;

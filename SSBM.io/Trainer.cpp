@@ -32,7 +32,7 @@ std::string Trainer::dolphinDefaultUser = "";
 
 std::string Trainer::PythonCommand = "python.exe";
 std::string Trainer::modelName = "AI/ssbm";
-int Trainer::predictionType = 1;
+PREDICTION_MODE Trainer::predictionType = LOAD_MODEL;
 
 
 // Used for tracking events in the threads
@@ -144,7 +144,7 @@ void Trainer::KillDolphinHandles()
         _Dhandles[i]->running = false;
 }
 
-void Trainer::GetVesrionNumber(std::string& parsed)
+void Trainer::GetVersionNumber(std::string& parsed)
 {
     char version[16];
     std::fstream fs;
