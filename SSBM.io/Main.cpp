@@ -32,7 +32,7 @@ void ParseArgs(int argc, char* argv[])
 "\t\tNormal Load: CPU_CORES / 3\t\tMax Load: CPU_CORES / 3\n"
 "\t-m <Filename>\n"
 "\t\t<Filename>: Specify a Model to load into Tensorflow. \n\t\t\tFile version and .h5 will be added in %s\n"
-"\t-pr <0|1|2|3>: Tensorflow load type: 0: new model 1: load model 2: Predict 3: New Predict\n"
+"\t-pr <0|1|2|3>: Tensorflow load type: 0=LOAD_MODEL 1=NEW_MODEL 2=PREDICTION_ONLY 3=NEW_PREDICTION\n"
 "\t-u </directory> Specify a custom directory to fill with instance folders\n"
 "\t-du </directory> Specify the Default dolphin-emu dir to copy as a template\n"
 "\t-p <python_alias> Specifies command to use then launching tensorflow/keras\n"
@@ -119,7 +119,7 @@ void ParseArgs(int argc, char* argv[])
                 parsed = argv[i];
             }
 
-            Trainer::GetVesrionNumber(parsed);
+            Trainer::GetVersionNumber(parsed);
             getVer = true;
 
             if (!exists_test(parsed))
@@ -151,22 +151,21 @@ void ParseArgs(int argc, char* argv[])
                 }
                 parsed = argv[i];
             }
-
-            if (sscanf(parsed.c_str(), "%d", &Trainer::predictionType))
+            if ( sscanf(parsed.c_str(), "%d", (int*)&Trainer::predictionType) )
             {
                 std::string pred;
                 switch (Trainer::predictionType)
                 {
-                case 0:
-                    pred = "New Model";
-                    break;
-                case 1:
+                case LOAD_MODEL:
                     pred = "Load Model";
                     break;
-                case 2:
+                case NEW_MODEL:
+                    pred = "New Model";
+                    break;
+                case PREDICTION_ONLY:
                     pred = "Prediction Only";
                     break;
-                case 3:
+                case NEW_PREDICTION:
                     pred = "New Model + Prediction Only";
                     break;
                 default:
@@ -287,13 +286,20 @@ void ParseArgs(int argc, char* argv[])
 
     // Update and check for conflicts
     if(!getVer)
-        Trainer::GetVesrionNumber(Trainer::modelName);
+        Trainer::GetVersionNumber(Trainer::modelName);
     if (Trainer::vs == Human && 
-        (Trainer::predictionType == 0 || Trainer::predictionType == 1))
+        (Trainer::predictionType == LOAD_MODEL || Trainer::predictionType == NEW_MODEL))
     {
             fprintf(stderr, "%s:%d VS Override failed: \n"
-                "\tvs Human must be in prediction mode(%d) 2 or 3.\n", FILENM, __LINE__, Trainer::predictionType);
+                "\tvs Human must be in prediction mode(%d) %d or %d.\n", 
+                FILENM, __LINE__, 
+                Trainer::predictionType, PREDICTION_ONLY, NEW_PREDICTION);
             exit(EXIT_FAILURE);
+    }
+    if (Trainer::predictionType == NEW_MODEL || Trainer::predictionType == NEW_PREDICTION)
+    {
+        printf("%s:%d --Override: New Model was selected, forcing Concurent = 1\n", FILENM, __LINE__);
+        Trainer::Concurent = 1;
     }
 }
 

@@ -38,31 +38,34 @@ bool TensorHandler::CreatePipes(Controller* ai)
     printf("%s:%d\tInitializing Tensor\n", FILENM, __LINE__);
     char buff[BUFF_SIZE];
     memset(buff, 0, BUFF_SIZE);
+
+    // First, we need to figure out if the model exists
     if (exists_test(Trainer::modelName))
     {
-        if (Trainer::predictionType == 1 || Trainer::predictionType == 2)
-            printf("%s:%d\tFile Exists\n",
+        if (Trainer::predictionType == LOAD_MODEL || Trainer::predictionType == PREDICTION_ONLY)
+            printf("%s:%d\tFile Exists, loading model\n",
                 FILENM, __LINE__);
         else
         {
             fprintf(stderr, "%s:%d\t%s%s%s\n", FILENM, __LINE__,
                 "--ERROR:File Exists: ", Trainer::modelName.c_str(), "\n\tDelete file to make a new model.");
+            Trainer::term = true;
             return false;
         }
     }
     else
     {
-        if (Trainer::predictionType == 0 || Trainer::predictionType == 3)
-            printf("%s:%d\tFile Doesn't Exist\n",
+        if (Trainer::predictionType == NEW_MODEL || Trainer::predictionType == NEW_PREDICTION)
+            printf("%s:%d\tFile Doesn't Exist, making new model\n",
                 FILENM, __LINE__);
         else
         {
-            fprintf(stderr, "%s:%d\t%s: %s%s", FILENM, __LINE__,
-                "--ERROR:File Doesn't Exist: ", Trainer::modelName.c_str(), "\n\tRun with 0|3 to make a new model.\n");
+            fprintf(stderr, "%s:%d\t%s: %s\n\tRun with %d|%d to make a new model.\n", FILENM, __LINE__,
+                "--ERROR:File Doesn't Exists:", Trainer::modelName.c_str(), NEW_MODEL, NEW_PREDICTION);
+            Trainer::term = true;
             return false;
         }
     }
-
 
     printf("%s:%d\tCreating Write Pipe\n", FILENM, __LINE__);
     if (pipe(pipeToPy) == -1)
@@ -72,6 +75,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
         return false;
     }
 
+    // This pipe should block, as we want to guarantee that we read 
     printf("%s:%d\tCreating Read Pipe\n", FILENM, __LINE__);
     if (pipe(pipeFromPy) == -1)
     {
@@ -80,6 +84,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
         return false;
     }
 
+    // This pipe shouldn't block
     printf("%s:%d\tCreating Error Pipe\n", FILENM, __LINE__);
     if (pipe2(pipeErrorFromPy, O_NONBLOCK) == -1)
     {
@@ -174,7 +179,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
     // Send initialization
     printf("%s:%d\tInitializing Tensor\n", FILENM, __LINE__);
     memset(buff, 0, BUFF_SIZE);
-    sprintf(buff, "0");
+    sprintf(buff, "0"); // This silences the debug printing
     int bytesWritten = strlen(buff);
     if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
     {
@@ -203,6 +208,9 @@ bool TensorHandler::CreatePipes(Controller* ai)
 
 void TensorHandler::dumpErrorPipe()
 {
+    if (pid == -1)
+        return;
+
     char buff[BUFF_SIZE * 2];
     memset(buff, 0, BUFF_SIZE * 2);
     std::string output = "";
@@ -210,7 +218,7 @@ void TensorHandler::dumpErrorPipe()
 
     int status;
     ret = waitpid(pid, &status, WNOHANG);
-    if (ret == pid)
+    if (ret == pid || pid == -1)
     {
         fprintf(stderr, "%s:%d\t%s(%d)\n", FILENM, __LINE__,
             "--ERROR:NO NO TENSORFLOW!!! (Tensor Crashed)", status);
@@ -258,6 +266,9 @@ void TensorHandler::dumpErrorPipe()
 
 void TensorHandler::SendToPipe(Player ai, Player enemy)
 {
+    if (pid == -1)
+        return;
+
 #if CTRL_OUTPUT
     printf("%s:%d\tSending Current Data\n", FILENM, __LINE__);
 #endif
@@ -291,7 +302,6 @@ std::string TensorHandler::ReadFromPipe()
     memset(buff, 0, BUFF_SIZE);
     std::string output = "";
     int ret = 0, status, offset = 0;
-
 
     while (true)
     {
@@ -358,6 +368,9 @@ bool TensorHandler::handleController(std::string tensor)
 
 bool TensorHandler::MakeExchange(MemoryScanner* mem)
 {
+    if (pid == -1)
+        return false;
+
 #if CTRL_OUTPUT
     printf("%s:%d\tMaking Exchange\n", FILENM, __LINE__);
 #endif
@@ -464,7 +477,7 @@ TensorHandler::~TensorHandler()
         dumpErrorPipe();
         pid = -1;
     }
-    else
+    else if(pid != -1)
     {
         printf("%s:%d\tWriting Close\n", FILENM, __LINE__);
         char buff[BUFF_SIZE];
@@ -492,6 +505,10 @@ TensorHandler::~TensorHandler()
         int status;
         waitpid(pid, &status, 0);
         printf("%s:%d\tTensor(%d) closed\n", FILENM, __LINE__, status);
+    }
+    else
+    {
+        printf("%s:%d\tTensor already closed\n", FILENM, __LINE__);
     }
 
     // close the pipes

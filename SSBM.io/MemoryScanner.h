@@ -27,10 +27,16 @@ public:
 
 	// 0: Player1 1: Player2
 	Player GetPlayer(bool pl);
-	int UpdatedFrame();
 	bool print();
 
 	int CurrentStage() { return this->current_stage; }
+
+	// Read a DGRAM from Dolphin. This will return:
+	// 1 on a successful parse
+	// 0 Nothing in the socket
+	// -1 error
+	int UpdatedFrame();
+
 	MemoryScanner(std::string s);
 	~MemoryScanner();
 
