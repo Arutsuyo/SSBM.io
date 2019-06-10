@@ -89,7 +89,6 @@ void ParseArgs(int argc, char* argv[])
             {
                 Trainer::vs = VsType::Human;
                 parsed = "Human";
-                Trainer::Concurent = 1;
             }
             else
             {
