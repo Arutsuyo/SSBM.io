@@ -266,7 +266,7 @@ while True:
 		timeout_timer = timeout_timer+1
 	pa.append(vv)
 	
-if "2" not in choice:
+if "2" not in choice and "3" not in choice:
 	# Save!
 	stderr.flush()
 	debugPrint("End of file reached. Saving model.\n")
