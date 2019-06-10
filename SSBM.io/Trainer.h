@@ -40,7 +40,7 @@ public:
 
     // ISO info
     static std::string _ssbmisoLocs[];
-    static int _isoidx;
+    static unsigned int _isoidx;
 
     // Directory info
     static std::string userDir;

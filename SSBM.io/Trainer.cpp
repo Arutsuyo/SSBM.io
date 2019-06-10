@@ -25,7 +25,7 @@ std::string Trainer::_ssbmisoLocs[] = {
     "/mnt/c/Users/aruts/OneDrive/UO/CIS 472/Project/ssbm.gcm",
     "/home/zach/Desktop/CIS472/ssbm.gcm"
 };
-int Trainer::_isoidx = -1;
+unsigned int Trainer::_isoidx = -1;
 int Trainer::memoryCount = 0;
 
 // To be filled out in main
@@ -136,13 +136,13 @@ void Trainer::AddToKillList(int pid)
 
 void Trainer::KillAllpids()
 {
-    for (int i = 0; i < killpids.size(); i++)
+    for (unsigned int i = 0; i < killpids.size(); i++)
         kill(killpids[i], 9);
 }
 
 void Trainer::KillDolphinHandles()
 {
-    for (int i = 0; i < _Dhandles.size(); i++)
+    for (unsigned int i = 0; i < _Dhandles.size(); i++)
         _Dhandles[i]->running = false;
 }
 

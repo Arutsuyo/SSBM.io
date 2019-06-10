@@ -9,7 +9,6 @@
 #define _FULLSCREEN_DEFAULT false
 #define FILENM "CFG"
 
-#pragma region UtilStrings
 std::string PlayerKeyboard =
 "Device = Xlib/0/Keyboard Mouse\n"
 "Buttons/A = V\n"
@@ -110,7 +109,6 @@ std::string memlocation =
 //"004D6CAD\n" // stage selected
 //"00479D60\n" // still under investigation, but i think is repeated
 ;
-#pragma endregion UtilStrings
 
 Config::Config(VsType vType)
 {

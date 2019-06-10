@@ -111,7 +111,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     // Do this AFTER launching Dolphin, otherwise it will block
     printf("%s:%d-T%d\tOpening controllers\n",
         FILENM, __LINE__, *ta._pid);
-    for (int i = 0; i < (*ta._controllers).size(); i++)
+    for (unsigned int i = 0; i < (*ta._controllers).size(); i++)
     {
         printf("%s:%d-T%d\tOpening Controller %d\n",
             FILENM, __LINE__, *ta._pid, i);
@@ -204,7 +204,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         bool selected = true;
-        for (int i = 0; i < tHandles.size(); i++)
+        for (unsigned int i = 0; i < tHandles.size(); i++)
             selected &= tHandles[i]->SelectLocation(&mem, false);
         if (selected)
             (*ta._controllers).back()->ButtonPressRelease("START");
@@ -274,11 +274,10 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     printf("%s:%d-T%d\tReady for input!\n",
         FILENM, __LINE__, *ta._pid);
-    int memory_update;
     bool openSocket = true, openPipe = true;
     while (*ta._running && openPipe && openSocket && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
     {
-        for (int i = 0; i < tHandles.size(); i++)
+        for (unsigned int i = 0; i < tHandles.size(); i++)
             openPipe = tHandles[i]->MakeExchange(&mem);
     }
 
@@ -307,6 +306,7 @@ bool DolphinHandle::ReadMemory(MemoryScanner *mem, bool *running)
             return false;
         }
     }
+    return true;
 }
 
 bool DolphinHandle::CheckClose(

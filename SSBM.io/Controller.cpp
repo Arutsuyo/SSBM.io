@@ -229,8 +229,8 @@ bool Controller::ButtonPressRelease(std::string btn)
 }
 
 Controller::Controller(bool plyr, int frameDelay) :
-    player(plyr),
-    ct{ 0.5f, 0.5f, false, false, false, false, false }
+    ct{ 0.5f, 0.5f, false, false, false, false, false },
+    player(plyr)
 {
     // calculate frametime (ms)
     double frametime = FPS / 1000.0;

@@ -176,6 +176,9 @@ int MemoryScanner::UpdatedFrame() {
                     case Addresses::FRAMES::ACTION:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
+                        // Check for stage end v2
+                        current_stage = (p1.action == 0 && val_int == 9) ?
+                            Addresses::MENUS::POSTGAME : current_stage;
                         p1.action = val_int;
 #if MEMORY_OUT
                         printf("%s:%d\tP1 ACTION: %x \n", FILENM, __LINE__, p1.action);
@@ -271,6 +274,9 @@ int MemoryScanner::UpdatedFrame() {
                     case Addresses::FRAMES::ACTION:
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
+                        // Check for stage end v2
+                        current_stage = (p2.action == 0 && val_int == 9) ?
+                            Addresses::MENUS::POSTGAME : current_stage;
                         p2.action = val_int;
 #if MEMORY_OUT
                         printf("%s:%d\tP2 ACTION: %x \n", FILENM, __LINE__, p2.action);
