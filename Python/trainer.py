@@ -46,7 +46,11 @@ KILL_SCORE = 500 # Actual score for calculating end of round score
 MAX_FRAMES_RECORDING = 120//INPUT_RATE # 120 = 2 seconds saved for inputs if 60 TPS (/divided by input dropout)
 MAX_MEMORY_FRAMES = 120//INPUT_RATE # 60 = 1 second for every batch training if 60 TPS (/divided by input dropout)
 MAX_BATCH_SIZE = 80//INPUT_RATE # Drop half of the examples from memory frames and only train on x of them...
-INPUT_SIZE = 8
+
+#ai.health, ai.dir, ai.pos_x, ai.pos_y, ai.action, ai.action_frame,
+#enemy.health, enemy.dir, enemy.pos_x, enemy.pos_y, enemy.action, enemy.action_frame
+INPUT_SIZE = 12
+
 POSSIBLE_ACTIONS = [[0 for i in range(INPUT_SIZE)]]*(5*3*6)
 c = 0
 # 5 stick.x positions
@@ -238,7 +242,7 @@ while True:
 			break
 	except:
 		break
-	action = agent.act(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,8)))
+	action = agent.act(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,INPUT_SIZE)))
 	# It is 6 values, brute force
 	PipePrint((action[0]+1)/2,(action[1]+1)/2,action[2],action[3],action[4],action[5],action[6])
 	stderr.flush()
@@ -256,13 +260,13 @@ while True:
 		if INPUT_RATE-1 == timeout_timer:
 			timeout_timer = -1
 			reward = agent.get_Score(pa, vv)
-			agent.remember(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,8)), action, reward, np.reshape(np.array(kill_me), (1,MAX_FRAMES_RECORDING,8)), False)
+			agent.remember(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,INPUT_SIZE)), action, reward, np.reshape(np.array(kill_me), (1,MAX_FRAMES_RECORDING,INPUT_SIZE)), False)
 			agent.replay()
 			agent.target_train()
 		timeout_timer = timeout_timer+1
 	pa.append(vv)
 	
-if "2" not in choice:
+if "2" not in choice and "3" not in choice:
 	# Save!
 	stderr.flush()
 	debugPrint("End of file reached. Saving model.\n")

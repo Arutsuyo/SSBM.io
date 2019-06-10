@@ -276,9 +276,9 @@ void TensorHandler::SendToPipe(Player ai, Player enemy)
     // Send input
     char buff[BUFF_SIZE];
     memset(buff, 0, BUFF_SIZE);
-    sprintf(buff, "%u %d %f %f %u %d %f %f\n",
-        ai.health, ai.dir, ai.pos_x, ai.pos_y,
-        enemy.health, enemy.dir, enemy.pos_x, enemy.pos_y);
+    sprintf(buff, "%u %d %f %f %u %f %u %d %f %f %u %f\n",
+        ai.health, ai.dir, ai.pos_x, ai.pos_y, ai.action, ai.action_frame,
+        enemy.health, enemy.dir, enemy.pos_x, enemy.pos_y, enemy.action, enemy.action_frame);
     int bytesWritten = strlen(buff);
     if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
     {
