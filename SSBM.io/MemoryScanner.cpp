@@ -247,7 +247,7 @@ int MemoryScanner::UpdatedFrame() {
                         printf("%s:%d\tP1 Charging Action: %x \n"
                             , FILENM, __LINE__, val_int);
 #endif
-                        (val_int = 2) ? p1.charging = 1 : p1.charging = 0;
+                        p1.charging = val_int == 2 ? 1 : 0;
                         break;
                     }
                     default:

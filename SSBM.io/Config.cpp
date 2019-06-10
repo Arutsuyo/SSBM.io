@@ -56,28 +56,29 @@ std::string AIController =
 std::string memlocation = 
 "004530E0\n" 
 "00453F70\n" 
-"0045310E\n" 
-"00453F9E\n" 
+//"0045310E\n" p1stock
+//"00453F9E\n" p2stock
 "004530C0\n" 
 "00453F50\n" 
 "00453090\n" 
 "00453F20\n" 
 "00453094\n" 
 "00453F24\n" 
+
 "00453130 70\n" 
 "00453130 20CC\n" 
 "00453130 8F4\n" 
 "00453130 19EC\n" 
 "00453130 19BC\n" 
 "00453130 23a0\n" 
-"00453130 2174\n" 
-"00453130 19C8\n" 
-"00453130 140\n" 
-"00453130 E0\n" 
-"00453130 E4\n" 
-"00453130 EC\n" 
-"00453130 F0\n" 
-"00453130 14C\n" 
+"00453130 2174\n" //p1charging
+//"00453130 19C8\n" jumps
+//"00453130 140\n" grounded
+//"00453130 E0\n" xair
+//"00453130 E4\n" yair
+//"00453130 EC\n" xattackspd
+//"00453130 F0\n" yattackspd
+//"00453130 14C\n" knockeddown
 "00453FC0 70\n" 
 "00453FC0 20CC\n" 
 "00453FC0 8F4\n" 
@@ -85,13 +86,13 @@ std::string memlocation =
 "00453FC0 19BC\n" 
 "00453FC0 23a0\n" 
 "00453FC0 2174\n" 
-"00453FC0 19C8\n" 
-"00453FC0 140\n" 
-"00453FC0 E0\n" 
-"00453FC0 E4\n" 
-"00453FC0 EC\n" 
-"00453FC0 F0\n" 
-"00453FC0 14C\n" 
+//"00453FC0 19C8\n" 
+//"00453FC0 140\n" 
+//"00453FC0 E0\n" 
+//"00453FC0 E4\n" 
+//"00453FC0 EC\n" 
+//"00453FC0 F0\n" 
+//"00453FC0 14C\n" 
 "003F0E0A\n" 
 "003F0E2E\n" 
 "00479d30\n" 
@@ -100,7 +101,7 @@ std::string memlocation =
 "01118270\n"
 "01118DEC\n"
 "01118DF0\n"
-"00479D60\n"
+//"00479D60\n" still under investigation, but i think is repeated
 "00c8ee38\n"
 "00c8ee50\n"
 "00C8EE3C\n"
