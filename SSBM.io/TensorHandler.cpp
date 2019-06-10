@@ -142,7 +142,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
         }
 
         /* Launch Python (EXE IS REQUIRED FOR WSL)*/
-        int ret = execlp(
+        execlp(
             Trainer::PythonCommand.c_str(),
             Trainer::PythonCommand.c_str(),
             "trainer.py",
@@ -214,7 +214,7 @@ void TensorHandler::dumpErrorPipe()
     char buff[BUFF_SIZE * 2];
     memset(buff, 0, BUFF_SIZE * 2);
     std::string output = "";
-    int ret = 0, offset = 0;
+    int ret = 0;
 
     int status;
     ret = waitpid(pid, &status, WNOHANG);
@@ -250,7 +250,7 @@ void TensorHandler::dumpErrorPipe()
             fprintf(stderr, "%s:%d\tPyErr(%lu): ",
                 FILENM, __LINE__, output.size());
 #endif
-            for (int j = 0; j < output.size(); j += strlen(output.c_str()) + 1)
+            for (unsigned int j = 0; j < output.size(); j += strlen(output.c_str()) + 1)
             {
 #if TENSOR_ERR_PRINT
                 fprintf(stderr, "%s", output.c_str() + j);
@@ -301,7 +301,8 @@ std::string TensorHandler::ReadFromPipe()
     char buff[BUFF_SIZE];
     memset(buff, 0, BUFF_SIZE);
     std::string output = "";
-    int ret = 0, status, offset = 0;
+    int ret = 0;
+    unsigned int offset = 0;
 
     while (true)
     {
@@ -322,11 +323,19 @@ std::string TensorHandler::ReadFromPipe()
         // step through the gunk until we find the prediction
         for (int i = 0; i < ret; i += output.size() + 1)
         {
+            // Check for leading 0, message can be hiding beyond. . .
+            if (buff[i] == '\0')
+            {
+                output = "";
+                continue;
+            }
+
             output = &buff[i];
             if ((offset = output.find("pred: ")) != std::string::npos)
                 return output.substr(offset); // Add 6 to drop the "pred: "
             else
             {
+                // Shouldn't trigger. . .
                 if (!output.size())
                     continue;
 
@@ -338,6 +347,7 @@ std::string TensorHandler::ReadFromPipe()
             }
         }
     }
+    return ""; // nothing read. . . probably crashed
 }
 
 bool TensorHandler::handleController(std::string tensor)
