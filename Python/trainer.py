@@ -46,7 +46,11 @@ KILL_SCORE = 500 # Actual score for calculating end of round score
 MAX_FRAMES_RECORDING = 120//INPUT_RATE # 120 = 2 seconds saved for inputs if 60 TPS (/divided by input dropout)
 MAX_MEMORY_FRAMES = 120//INPUT_RATE # 60 = 1 second for every batch training if 60 TPS (/divided by input dropout)
 MAX_BATCH_SIZE = 80//INPUT_RATE # Drop half of the examples from memory frames and only train on x of them...
-INPUT_SIZE = 8
+
+#ai.health, ai.dir, ai.pos_x, ai.pos_y, ai.action, ai.action_frame,
+#enemy.health, enemy.dir, enemy.pos_x, enemy.pos_y, enemy.action, enemy.action_frame
+INPUT_SIZE = 12
+
 POSSIBLE_ACTIONS = [[0 for i in range(INPUT_SIZE)]]*(5*3*6)
 c = 0
 # 5 stick.x positions
