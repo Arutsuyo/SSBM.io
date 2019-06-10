@@ -22,9 +22,11 @@ std::string Trainer::_ssbmisoLocs[] = {
     "/mnt/f/Program Files/Dolphin-x64/iso/ssbm.gcm",
     "/mnt/c/Program Files/Dolphin-x64/iso/ssbm.gcm",
     "/mnt/c/User/Nara/Desktop/Dolphin-x64/iso/ssbm.gcm",
-    "/mnt/c/Users/aruts/OneDrive/UO/CIS 472/Project/ssbm.gcm"
+    "/mnt/c/Users/aruts/OneDrive/UO/CIS 472/Project/ssbm.gcm",
+    "/home/zach/Desktop/CIS472/ssbm.gcm"
 };
 int Trainer::_isoidx = -1;
+int Trainer::memoryCount = 0;
 
 // To be filled out in main
 std::string Trainer::userDir = "";
@@ -290,6 +292,7 @@ Trainer::Trainer()
     {
         printf("%s:%d\tCreating Config\n", FILENM, __LINE__);
         cfg = new Config(vs);
+        memoryCount = cfg->getMemlocationLines();
     }
 
     initialized = true;

@@ -75,7 +75,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     ThreadArgs ta = *targ;
     *ta._pid = fork();
     int memret = 1;
-    int memloop = 10;
+    int memloop = Trainer::memoryCount;
     // Child
     if (*ta._pid == 0)
     {
@@ -181,7 +181,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current state
-        memloop = 10;
+        memloop = 10
         do {
             if (mem.UpdatedFrame() == -1)
             {
@@ -226,7 +226,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current cursor pos
-        memloop = 10;
+        memloop = Trainer::memoryCount;
         do {
             if (mem.UpdatedFrame() == -1)
             {
@@ -273,7 +273,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current cursor pos
-        memloop = 10;
+        memloop = Trainer::memoryCount;
         do {
             if (mem.UpdatedFrame() == -1)
             {
@@ -317,7 +317,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
             }
         }
 
-        memloop = 10;
+        memloop = Trainer::memoryCount;
         do {
             if (mem.UpdatedFrame() == -1)
             {
@@ -345,7 +345,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     bool openSocket = true, openPipe = true;
     while (*ta._running && openPipe && openSocket && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
     {
-        memloop = 10;
+        memloop = Trainer::memoryCount;
         do {
             if (mem.UpdatedFrame() == -1)
             {

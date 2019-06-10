@@ -20,7 +20,7 @@ public:
     std::string getAIPipeConfig(int player, int pipe_count, std::string id);
     std::string getHotkeyINI(int player, int pipe_count, std::string id);
     std::string getLocations();
-
+    int getMemlocationLines();
     bool IsInitialized();
     Config(VsType vType = VsType::Self);
     ~Config();

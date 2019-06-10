@@ -35,6 +35,9 @@ public:
     bool initialized;
     static Config* cfg;
 
+    static int memoryCount;
+
+
     // ISO info
     static std::string _ssbmisoLocs[];
     static int _isoidx;
