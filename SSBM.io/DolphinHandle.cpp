@@ -181,7 +181,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         }
 
         //update the frame to find the current state
-        memloop = Trainer::memoryCount;
+        memloop = 10
         do {
             if (mem.UpdatedFrame() == -1)
             {
