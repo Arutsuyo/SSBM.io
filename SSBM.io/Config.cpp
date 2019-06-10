@@ -110,9 +110,6 @@ std::string memlocation =
 ;
 #pragma endregion UtilStrings
 
-std::string hotkey =
-"Keys/Load State Slot 1 = `Button R`";
-
 Config::Config(VsType vType)
 {
     // Set the vs type
@@ -169,20 +166,6 @@ std::string Config::getAIPipeConfig(int player, int pipe_count, std::string id)
         pipe_count);
     std::string pipeOut(buff);
     pipeOut += AIController;
-    return pipeOut;
-}
-
-std::string Config::getHotkeyINI(int player, int pipe_count, std::string id)
-{
-    printf("%s:%d\tCreating Hotkey INI on AI %d\n", FILENM, __LINE__, player + 1);
-    char buff[256];
-    sprintf(buff,
-        "[Hotkeys1]\nDevice = Pipe/%d/%s%d\n",
-        pipe_count,
-        id.c_str(),
-        pipe_count);
-    std::string pipeOut(buff);
-    pipeOut += hotkey;
     return pipeOut;
 }
 

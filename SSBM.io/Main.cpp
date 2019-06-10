@@ -29,7 +29,8 @@ void ParseArgs(int argc, char* argv[])
 "\t-vs <S(elf)/H(human)> Specifies Instance Type. Default is Self Training.\n"
 "\t\tIf Human is selected, it will only spawn 1 instance.\n"
 "\t-t <num_threads> : Specifies the number of dolphin instances\n"
-"\t\tNormal Load: CPU_CORES / 3\t\tMax Load: CPU_CORES / 3\n"
+"\t\tNormal Load: consists of Main + 5(4 if vs human) active threads\n"
+"\t\tOnly increase this if your system can handle it. \n"
 "\t-m <Filename>\n"
 "\t\t<Filename>: Specify a Model to load into Tensorflow. \n\t\t\tFile version and .h5 will be added in %s\n"
 "\t-pr <0|1|2|3>: Tensorflow load type: 0=LOAD_MODEL 1=NEW_MODEL 2=PREDICTION_ONLY 3=NEW_PREDICTION\n"
@@ -205,7 +206,8 @@ void ParseArgs(int argc, char* argv[])
                     exit(EXIT_FAILURE);
                 }
                 Trainer::Concurent = std::stoi(argv[i]);
-                printf("%s:%d --Override: Concurrent Instances: %d\n", FILENM, __LINE__, Trainer::Concurent);
+                printf("%s:%d --WARNING::Override: Concurrent Instances: %d\n"
+                    "\tTHIS CAN BE PROBLEMATIC FOR SYSTEMS WITH LOW CORE COUNT\n", FILENM, __LINE__, Trainer::Concurent);
             }
             continue;
         }
@@ -311,15 +313,7 @@ int main(int argc, char* argv[])
     struct passwd* pw = getpwuid(getuid());
     Trainer::userDir = pw->pw_dir;
     Trainer::dolphinDefaultUser = Trainer::userDir + "/.local/share/dolphin-emu";
-
-    Trainer::Concurent =
-        std::thread::hardware_concurrency() / 3;
     Trainer::term = false;
-
-    printf("%s:%d Detected %d cores, running %d Instances for safe load.\n", FILENM, __LINE__,
-        std::thread::hardware_concurrency(), Trainer::Concurent);
-    printf("%s:%d Use \"-t %d\" for Max Load\n", FILENM, __LINE__,
-        std::thread::hardware_concurrency() / 2);
 
     ParseArgs(argc, argv);
 
