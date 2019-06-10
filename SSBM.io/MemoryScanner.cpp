@@ -243,11 +243,11 @@ int MemoryScanner::UpdatedFrame() {
                     {
                         val_int = std::stoul(val.c_str(), nullptr, 16);
                         p1.action = val_int;
+                        p1.charging = val_int == 2 ? 1 : 0;
 #if MEMORY_OUT
                         printf("%s:%d\tP1 Charging Action: %x \n"
                             , FILENM, __LINE__, val_int);
 #endif
-                        (val_int = 2) ? p1.charging = 1 : p1.charging = 0;
                         break;
                     }
                     default:
