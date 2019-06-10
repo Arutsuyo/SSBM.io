@@ -86,14 +86,14 @@ std::string memlocation =
 //"00453FC0 19EC\n" // p2 invicible
 //"00453FC0 19BC\n" // p2 hitlag
 //"00453FC0 23a0\n" // p2 hitstun
-//"00453FC0 2174\n" // MISSING
-//"00453FC0 19C8\n" // MISSING
-//"00453FC0 140\n" // MISSING
-//"00453FC0 E0\n" // MISSING
-//"00453FC0 E4\n" // MISSING
-//"00453FC0 EC\n" // MISSING
-//"00453FC0 F0\n" // MISSING
-//"00453FC0 14C\n" // MISSING
+//"00453FC0 2174\n" // p2 charging
+//"00453FC0 19C8\n" // p2 jumps
+//"00453FC0 140\n" // p2 grounded
+//"00453FC0 E0\n" // p2 xair
+//"00453FC0 E4\n" // p2 yair
+//"00453FC0 EC\n" // p2 xattackspd
+//"00453FC0 F0\n" // p2 yattackspd
+//"00453FC0 14C\n" // knockeddown
 //"003F0E0A\n" // p1 char
 //"003F0E2E\n" // p2 char
 "00479d30\n" // current menu
@@ -107,7 +107,7 @@ std::string memlocation =
 "00c8ee50\n" // stage select x
 "00C8EE3C\n" // stage select y
 "00C8EE60\n" // stage select y
-; 
+;
 #pragma endregion UtilStrings
 
 std::string hotkey =
