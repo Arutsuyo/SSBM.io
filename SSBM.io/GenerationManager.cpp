@@ -43,11 +43,16 @@ std::string GenerationManager::GetParentFile()
         || Trainer::predictionType == Pred_Modes::NEW_PREDICTION)
         return "";
 
-    // Get a randomized parent file 
-    // Or get a parent file based off current child numbers, this way we can 
-    // equalize the parent training distribution
-    std::string pName = curParentDir + std::to_string(rand() % SIZE_CULL_TO) + ".h5";
-
+    // We want to evenly distribute the matches throughout the generation
+    std::string pName;
+    if (childCount % 2)
+    {
+        pName = curParentDir + std::to_string(childCount / 4) + ".h5";
+    }
+    else
+    {
+        pName = curParentDir + std::to_string(childCount / 16) + ".h5";
+    }
     printf("%s:%d\tRetrieved: %s\n",
         FILENM, __LINE__, pName.c_str());
     return pName;
