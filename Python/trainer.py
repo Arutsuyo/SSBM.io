@@ -297,12 +297,12 @@ while True:
 		stderr.write('\0' + "GO GO TENSORFLOW!" + '\0')
 		stderr.flush()
 		continue
-	
+	reward = agent.get_Score(pa, vv)
 	if modelMode < 2:
 		kill_me.append(vv)
 		if INPUT_RATE-1 == timeout_timer:
 			timeout_timer = -1
-			reward = agent.get_Score(pa, vv)
+			
 			agent.remember(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,INPUT_SIZE)), action, reward, np.reshape(np.array(kill_me), (1,MAX_FRAMES_RECORDING,INPUT_SIZE)), False)
 			agent.replay()
 			agent.target_train()
