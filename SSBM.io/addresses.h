@@ -1,4 +1,4 @@
-#ifndef _ADDRESSES_H
+﻿#ifndef _ADDRESSES_H
 #define _ADDRESSES_H
 
 // a good portion of these addresses came from https://smashboards.com 
@@ -15,11 +15,14 @@ namespace Addresses {
         /*offset to get stage */
         MENU_STATE = 0x479d30,
 
-        CHARACTER_SELECT = 3328,
-        STAGE_SELECT = 3329,
-        IN_GAME = 3330,
-        POSTGAME = 3332,
-
+        // Menus / Stages
+        CHARACTER_SELECT = 0xD00,
+        STAGE_SELECT = 0xD01,
+        IN_GAME = 0xD02,
+        POSTGAME = 0xD04,
+        ERROR_VS_2CHAR = 0x100,
+        ERROR_CHAR_2VS = 0x200,
+        ERROR_STAGE = 0x01,//this is also the video that plays but if we are there we should probably leave anyway
     };
 
     enum PLAYER_ATTRIB {
@@ -71,7 +74,7 @@ namespace Addresses {
     };
 
     enum CHARACTERS {
-        
+        // Listed in Roster Order
         DR_MARIO = 0,
         MARIO = 1,
         LUIGI = 2,
@@ -99,7 +102,7 @@ namespace Addresses {
         ROY = 24
     };
 
-    enum ACTION {
+    enum ACTIONS {
 
         ON_HALO = 0x0d,
         STANDING = 0x0e,

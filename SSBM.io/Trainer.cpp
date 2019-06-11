@@ -102,44 +102,6 @@ bool createSigIntAction()
     return true;
 }
 
-void sigusr_handle(int val)
-{
-    if (val != SIGUSR1)
-        return;
-
-    printf("%s:%d\tReceived SIGUSR1, Killing subprocesses\n", FILENM, __LINE__);
-    Trainer::KillAllpids();
-}
-
-bool createSigUSR1Action()
-{
-    // Create signal action
-    struct sigaction sa;
-    sa.sa_flags = 0;
-    sa.sa_handler = sigusr_handle;
-    sigemptyset(&sa.sa_mask);
-    if (sigaction(SIGUSR1, &sa, NULL) == -1)
-    {
-        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
-            "--ERROR:sigaction", strerror(errno));
-        return false;
-    }
-
-    printf("%s:%d\tSIGUSR1 Handler Created\n", FILENM, __LINE__);
-    return true;
-}
-
-void Trainer::AddToKillList(int pid)
-{
-    //killpids.push_back(pid);
-}
-
-void Trainer::KillAllpids()
-{
-    for (unsigned int i = 0; i < killpids.size(); i++)
-        kill(killpids[i], 9);
-}
-
 void Trainer::KillDolphinHandles()
 {
     for (unsigned int i = 0; i < _Dhandles.size(); i++)
@@ -169,7 +131,6 @@ void Trainer::runTraining()
     printf("%s:%d\tInitializing Training.\n", FILENM, __LINE__);
 
     createSigIntAction();
-    createSigUSR1Action();
 
     switch (vs)
     {
@@ -196,10 +157,16 @@ void Trainer::runTraining()
         _Dhandles.push_back(dh);
     }
 
+    // Cycle user folders to allow controllers to close completely.
+    unsigned int userFolder = 0;
     printf("%s:%d\tEntering Management Loop\n", FILENM, __LINE__);
     printf("%s:%d\t--Stop the Trainer with CTRL+C\n", FILENM, __LINE__);
     while (!term)
     {
+        // Make sure to use a dynamic amount
+        if (userFolder > Concurent * 10)
+            userFolder = 0; // Reset
+
         cv.notify_all();
         std::unique_lock<std::mutex> lk(mut);
         for (int i = 0; i < numCreate; i++)
@@ -210,7 +177,7 @@ void Trainer::runTraining()
                 lk.unlock();
                 cv.notify_all();
                 printf("%s:%d\tStarting(0) Dolphin Instance %d\n", FILENM, __LINE__, i);
-                if (!dh->StartDolphin(i))
+                if (!dh->StartDolphin(userFolder++))
                 {
                     printf("%s:%d\t--ERROR: Dolphin Failed to start(0)\n", FILENM, __LINE__);
                     term = true;
@@ -256,7 +223,7 @@ void Trainer::runTraining()
                 lk.unlock();
                 cv.notify_all();
                 printf("%s:%d\tStarting(1) Dolphin Instance %d\n", FILENM, __LINE__, i);
-                if (!dh->StartDolphin(i))
+                if (!dh->StartDolphin(userFolder++))
                 {
                     fprintf(stderr, "%s:%d\t--ERROR:Dolphin Failed to start(1)", FILENM, __LINE__);
                     term = true;

@@ -255,7 +255,7 @@ int MemoryScanner::UpdatedFrame() {
                     }
                     default:
                     {
-                        printf("%s:%d\tWARNING::P1 BASE FOUND: %x as offset but not caught\n",
+                        printf("%s:%d\tWARNING::P1 BASE FOUND: 0x%x as offset but not caught\n",
                             FILENM, __LINE__, val_int);
                     }
                 }// Player one switch
@@ -352,7 +352,7 @@ int MemoryScanner::UpdatedFrame() {
                     }
                     default:
                     {
-                        printf("%s:%d\tWARNING::P2 BASE FOUND: %x as offset but not caught\n",
+                        printf("%s:%d\tWARNING::P2 BASE FOUND: 0x%x as offset but not caught\n",
                             FILENM, __LINE__, val_int);
                     }
 
@@ -476,8 +476,23 @@ int MemoryScanner::UpdatedFrame() {
                     FILENM, __LINE__, current_stage);
 #endif
                 break;
+            //detecting menu transitions... should ideally not get here
+            case Addresses::MENUS::ERROR_VS_2CHAR: //vs select to character 
+                current_stage = Addresses::MENUS::ERROR_STAGE;
+#if MEMORY_OUT            
+                fprintf(stderr, "%s:%d%s\n", FILENM, __LINE__, 
+                    "-- Error: Detected select game-mode to character select");
+#endif          
+                break;
+            case Addresses::MENUS::ERROR_CHAR_2VS: //character to vs select
+                current_stage = Addresses::MENUS::ERROR_STAGE;
+#if MEMORY_OUT
+                fprintf(stderr, "%s:%d%s\n", FILENM, __LINE__, 
+                    "-- Error: Detected exit from character select to select game-mode");
+#endif
+                break;
             default:
-                fprintf(stderr, "%s:%d\t%s %x\n", FILENM, __LINE__,
+                fprintf(stderr, "%s:%d\t%s 0x%x\n", FILENM, __LINE__,
                     "--WARNING::Menu offset read, but returned unknown value", z);
                 break;
             }
@@ -566,7 +581,7 @@ int MemoryScanner::UpdatedFrame() {
 
         default:
         {
-            printf("%s:%d\tWARNING::P2 BASE FOUND: %x as offset but not caught\n",
+            printf("%s:%d\tWARNING::P2 BASE FOUND: 0x%x as offset but not caught\n",
                 FILENM, __LINE__, val_int);
         }
         }
