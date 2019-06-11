@@ -10,7 +10,8 @@ from tensorflow.keras.utils import plot_model
 import tensorflow as tf
 from tensorflow.keras import backend as kerasBE
 from collections import deque
-import zc.lockfile as lf
+#TESTING
+#import zc.lockfile as lf
 import numpy as np
 
 import gspread
@@ -43,14 +44,28 @@ stdoin = open(0, "r")
 stdout = open(1, "w")
 stderr = open(2, "w")
 
+"""
+Argument Updates by Nara
+1:parentFile - if 0, spawn new model
+2:childFile - if 0, load in predict mode
+3:GPU_Partition
+"""
+parentFile = sys.argv[1]
+childFile = sys.argv[2]
+GPU_Partition = sys.argv[3]
+
+# This will properly fall through and load the mode we desire!
+modelMode = 0
+if len(parentFile) == 0:
+	modelMode += 1 # new Model
+if len(childFile) == 0:
+	modelMode += 2 # Prediction
 
 """
 GLOBALS
 """
-TRAINING_SCORES_FILE_NAME = "training_epochs"
-TRAINING_SCORES_FILE_PATH = os.path.join(os.getcwd(), TRAINING_SCORES_FILE_NAME+".csv")
 INPUT_RATE = 4 # This means that if we get input at 60 TPS, we only make predictions for every xth item. 
-FILENAME = sys.argv[1] # To be read latter
+#FILENAME = sys.argv[1] # To be read latter
 SUICIDE_REWARD = -500 # Negative is bad
 KILL_REWARD = 100 # Reward score for calculating instant scores (should be less than suicide to prevent suiciding for score)
 KILL_SCORE = 500 # Actual score for calculating end of round score
@@ -164,6 +179,7 @@ class DQN:
 		reward = reward - ((abs(new_state[MY_X] - new_state[ENEMY_X]) * .25) + (abs(new_state[MY_Y] - new_state[ENEMY_Y])*.1)) # Slight penalty for going away from the user.
 		self.add_OverallScore(prev_state[MY_HP_IDX] > new_state[MY_HP_IDX], prev_state[ENEMY_HP_IDX] > new_state[ENEMY_HP_IDX], new_state[MY_HP_IDX]-prev_state[MY_HP_IDX], new_state[ENEMY_HP_IDX]-prev_state[ENEMY_HP_IDX])
 		return reward
+
 	def add_OverallScore(self, hasDied, otherDied, myHP, theirHP):
 		self.game_score = self.game_score + (-SUICIDE_REWARD if hasDied == 1 else 0) + (KILL_SCORE if otherDied == 1 else 0)
 		self.my_de = self.my_de + (1 if hasDied == 1 else 0)
@@ -175,8 +191,6 @@ class DQN:
 		if not otherDied:
 			self.game_score = self.game_score + (theirHP * THEIR_HP_REWARD)
 			self.my_dmg = self.my_dmg + theirHP
-		
-		
 		
 	def create_model(self):
 		model = Sequential()
@@ -194,13 +208,16 @@ class DQN:
 		model.compile(loss="mean_squared_error",
 			optimizer=self.opt)
 		return model
+
 	def remember(self, state, action, reward, new_state, done):
 		self.memory.append([state, action, reward, new_state, done])
+
 	def get_real_action(self, action):
 		for y in range(len(self.actions)):
 			x = self.actions[y]
 			if sum([(1 if abs(x[i] - action[i]) >= 0.01 else 0) for i in range(len(action))]) == 0:
 				return y
+
 	def replay(self):
 		if len(self.memory) < MAX_BATCH_SIZE:
 			return
@@ -216,48 +233,40 @@ class DQN:
 				target[0][action] = reward + Q_future * self.gamma
 			self.model.fit(state, target, epochs=1, verbose=0)
 		self.memory.clear()
+
 	def act(self, state):
 		self.epsilon *= self.epsilon_decay
 		self.epsilon = max(self.epsilon_min, self.epsilon)
 		if np.random.random() < self.epsilon:
 			return self.actions[int(np.random.random()*len(self.actions)//1)]
 		return self.actions[np.argmax(self.model.predict(state)[0])]
+
 	def target_train(self):
 		weights = self.model.get_weights()
 		target_weights = self.target_model.get_weights()
 		for i in range(len(target_weights)):
 			target_weights[i] = weights[i] * self.tau + target_weights[i] * (1 - self.tau)
 		self.target_model.set_weights(target_weights)
+	
 	def save_model(self, fn):
 		self.model.save(fn)
+	
 	def load_model(self, fn):
 		self.model = tf.keras.models.load_model(fn)
 		self.target_model = tf.keras.models.load_model(fn)
+	
 	def test(self, fn):
 		plot_model(self.model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
 
-
-
-export_dir = os.path.join(os.getcwd(), FILENAME)
-best_file = os.path.join(os.getcwd(), FILENAME+".txt") # ya, not very sightly, but it should work 
-choice = getInput(1)
-if "0" not in choice and "1" not in choice and "2" not in choice and "3" not in choice:
-	debugPrint("That was neither! Exiting.\n")
-	sys.exit(1)
-
 # BUILD MODEL SECTION!
-agent = None
-if "0" in choice or "2" in choice:
+agent = DQN(int(GPU_Partition))
+if modelMode % 2 == 0:
 	debugPrint("Loading model from file...\n")
-	agent = DQN(int(sys.argv[2]))
-	agent.load_model(export_dir)
-	stderr.flush()
+	agent.load_model(parentFile)
 else:
 	debugPrint("Building model...\n")
-	agent = DQN(int(sys.argv[2])) # Prebuilds...
-	stderr.flush()
-#agent.test("cool")
-debugPrint("Finished building/loading!\nPlease input data in the form of:\nP1-HP P1-FD P1-X P1-Y P2-HP P2-FD P2-X P2-Y\n")
+stderr.flush()
+debugPrint("Finished!\nPlease input data:\n")
 
 pa = deque(maxlen=MAX_FRAMES_RECORDING)
 kill_me = deque(maxlen=MAX_FRAMES_RECORDING)
@@ -289,7 +298,7 @@ while True:
 		stderr.flush()
 		continue
 	
-	if "2" not in choice and "3" not in choice:
+	if modelMode < 2:
 		kill_me.append(vv)
 		if INPUT_RATE-1 == timeout_timer:
 			timeout_timer = -1
@@ -300,39 +309,32 @@ while True:
 		timeout_timer = timeout_timer+1
 	pa.append(vv)
 	
-if "2" not in choice and "3" not in choice:
-	# Save!
+def SaveModel(filename):
 	stderr.flush()
 	debugPrint("End of file reached. Saving model.\n")
-	while True:
-		lock = None
-		try: 
-			lock = lf.LockFile('lock.lck')
-			# We got it fam
-			e = os.path.isfile(best_file)
-			if e:
-				f = open(best_file, 'r')
-				s = f.read()
-				f.close()
-				if float(s) > agent.game_score:
-					debugPrint("A worse score was recorded! Not going to save this model.\n")
-					lock.close()
-					break
-			f = open(best_file, 'w+')
-			f.write(str(agent.game_score) + "")
-			f.close()
-			agent.save_model(export_dir)
-			# now for the fun part
-			scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-			creds = ServiceAccountCredentials.from_json_keyfile_name('../../../client_secret.json', scope)
-			client = gspread.authorize(creds)
-			sheet = client.open("SSBM.io Statistics")
-			s1 = sheet.sheet1
-			row = [agent.game_score, agent.my_dmg, agent.my_hp, agent.my_de, agent.my_kill,time.time() - STARTING_TIME, *[i for i in outval]]
-			s1.append_row(row)
-			lock.close()
-			break
-		except lf.LockError:
-			sleep(0.05)			
-	debugPrint("Finished saving...exiting...\n")
+	scoreFile = filename + "txt"
+	e = os.path.isfile(scoreFile)
+	if e:
+		f = open(scoreFile, 'r')
+		s = f.read()
+		f.close()
+		if float(s) > agent.game_score:
+			debugPrint("A worse score was recorded! Not going to save this model.\n")
+			return
+	f = open(scoreFile, 'w')
+	f.write(str(agent.game_score) + "")
+	f.close()
+	agent.save_model(filename)
+	# now for the fun part
+	scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+	creds = ServiceAccountCredentials.from_json_keyfile_name('../../../client_secret.json', scope)
+	client = gspread.authorize(creds)
+	sheet = client.open("SSBM.io Statistics")
+	s1 = sheet.sheet1
+	row = [agent.game_score, agent.my_dmg, agent.my_hp, agent.my_de, agent.my_kill,time.time() - STARTING_TIME, *[i for i in outval]]
+	s1.append_row(row)
+
+if modelMode < 2:
+	SaveModel(childFile)
+	debugPrint("Finished savinge,exiting...\n")
 PipePrint(-1,-1)
