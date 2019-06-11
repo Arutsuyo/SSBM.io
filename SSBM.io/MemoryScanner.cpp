@@ -491,6 +491,15 @@ int MemoryScanner::UpdatedFrame() {
                     "-- Error: Detected exit from character select to select game-mode");
 #endif
                 break;
+            case 256:
+                fprintf(stderr, "%s\n","This is a test the values for stage detect are odd: 256\n" );
+                current_stage = Addresses::MENUS::ERROR_STAGE;
+                break;
+            case 512:
+                fprintf(stderr, "%s\n","This is a test the values for stage detect are odd 512\n" );
+                current_stage = Addresses::MENUS::ERROR_STAGE;
+                break;
+
             default:
                 fprintf(stderr, "%s:%d\t%s %x\n", FILENM, __LINE__,
                     "--WARNING::Menu offset read, but returned unknown value", z);
