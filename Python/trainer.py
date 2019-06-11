@@ -172,7 +172,7 @@ class DQN:
 		if prev_state[ENEMY_HP_IDX] > new_state[ENEMY_HP_IDX] and new_state[ENEMY_HP_IDX] == 0:
 			reward = reward + KILL_REWARD # :D Not enough to overcome suicide.
 		if prev_state[MY_HP_IDX] > new_state[MY_HP_IDX] and new_state[MY_HP_IDX] == 0:
-			reward = reward - SUICIDE_REWARD # Died, get a reward of -500
+			reward = reward + SUICIDE_REWARD # Died, get a reward of -500
 		else:
 			reward = reward - (new_state[MY_HP_IDX] - prev_state[MY_HP_IDX])*MY_HP_PENALTY*new_state[MY_HP_IDX] # So reward penalty gets worse for getting hit
 			reward = reward + (new_state[ENEMY_HP_IDX] - prev_state[ENEMY_HP_IDX])*THEIR_HP_REWARD*new_state[ENEMY_HP_IDX] # Reward if hitting!
@@ -181,7 +181,7 @@ class DQN:
 		return reward
 
 	def add_OverallScore(self, hasDied, otherDied, myHP, theirHP):
-		self.game_score = self.game_score + (-SUICIDE_REWARD if hasDied == 1 else 0) + (KILL_SCORE if otherDied == 1 else 0)
+		self.game_score = self.game_score + (SUICIDE_REWARD if hasDied == 1 else 0) + (KILL_SCORE if otherDied == 1 else 0)
 		self.my_de = self.my_de + (1 if hasDied == 1 else 0)
 		self.my_kill = self.my_kill + (1 if otherDied == 1 else 0)
 		#(-myHP * .2) + (theirHP * .15)
