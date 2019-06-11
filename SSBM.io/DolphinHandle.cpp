@@ -153,7 +153,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     // Start the memory reading thread. 
     // Make sure to join the thread before closing.
-    std::thread memThread(&ReadMemory, &mem, ta._running);
+    std::thread memThread(&ReadMemory, &mem, ta._running, ta._safeClose);
 
     // Do Input
     Trainer::cv.notify_all();
@@ -279,19 +279,19 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
     {
         for (unsigned int i = 0; i < tHandles.size(); i++)
-            openPipe = tHandles[i]->MakeExchange(&mem);
+            openPipe &= tHandles[i]->MakeExchange(&mem);
     }
 
     // Close out
     *ta._running = false;
-    *ta._safeClose = true;
+    *ta._safeClose = openPipe;
     memThread.join();
     return CheckClose(ta, tHandles, true);
 }
 
 // Threaded function to be run by the dolphin_thread. 
 // Spawn 1 per instance of dolphin
-bool DolphinHandle::ReadMemory(MemoryScanner *mem, bool *running)
+bool DolphinHandle::ReadMemory(MemoryScanner *mem, bool *running, bool* closeSafe)
 {
     int ret = 1;
     while (*running && ret >= 0)
@@ -310,6 +310,7 @@ bool DolphinHandle::ReadMemory(MemoryScanner *mem, bool *running)
         if (mem->CurrentStage() == Addresses::MENUS::ERROR_STAGE)
             break;
     }
+    *closeSafe = true;
     *running = false;
     return true;
 }
