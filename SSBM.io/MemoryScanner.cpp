@@ -451,28 +451,28 @@ int MemoryScanner::UpdatedFrame() {
             case Addresses::MENUS::IN_GAME:
                 current_stage = Addresses::MENUS::IN_GAME;
 #if MEMORY_OUT || 1
-                printf("%s:%d\tMENU_STATE:IN_GAME:: %d\n", 
+                printf("%s:%d\tMENU_STATE:IN_GAME:: 0x%x\n", 
                     FILENM, __LINE__, current_stage);
 #endif
                 break;
             case Addresses::MENUS::POSTGAME:
                 current_stage = Addresses::MENUS::POSTGAME;
 #if MEMORY_OUT || 1
-                printf("%s:%d\tMENU_STATE:POSTGAME:: %d\n",
+                printf("%s:%d\tMENU_STATE:POSTGAME:: 0x%x\n",
                     FILENM, __LINE__, current_stage);
 #endif
                 break;
             case Addresses::MENUS::CHARACTER_SELECT:
                 current_stage = Addresses::MENUS::CHARACTER_SELECT;
 #if MEMORY_OUT
-                printf("%s:%d\tMENU_STATE:CHARACTER_SELECT:: %d\n",
+                printf("%s:%d\tMENU_STATE:CHARACTER_SELECT:: 0x%x\n",
                     FILENM, __LINE__, current_stage);
 #endif
                 break;
             case Addresses::MENUS::STAGE_SELECT:
                 current_stage = Addresses::MENUS::STAGE_SELECT;
 #if MEMORY_OUT
-                printf("%s:%d\tMENU_STATE:STAGE_SELECT:: %d\n",
+                printf("%s:%d\tMENU_STATE:STAGE_SELECT:: 0x%x\n",
                     FILENM, __LINE__, current_stage);
 #endif
                 break;
@@ -480,14 +480,14 @@ int MemoryScanner::UpdatedFrame() {
             case Addresses::MENUS::ERROR_VS_2CHAR: //vs select to character 
                 current_stage = Addresses::MENUS::ERROR_STAGE;
 #if MEMORY_OUT            
-                fprintf(stderr, "%s:%d%s\n", FILENM, __LINE__, 
+                fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__, 
                     "-- Error: Detected select game-mode to character select");
 #endif          
                 break;
             case Addresses::MENUS::ERROR_CHAR_2VS: //character to vs select
                 current_stage = Addresses::MENUS::ERROR_STAGE;
 #if MEMORY_OUT
-                fprintf(stderr, "%s:%d%s\n", FILENM, __LINE__, 
+                fprintf(stderr, "%s:%d\t%s\n", FILENM, __LINE__, 
                     "-- Error: Detected exit from character select to select game-mode");
 #endif
                 break;
