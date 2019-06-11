@@ -301,6 +301,20 @@ bool GenerationManager::Initialize(std::string model_path)
         }
     } while (true);
 
+    if (childDirCount == 0)
+    {
+        printf("%s:%d\tFreash AI in: %s\n",
+            FILENM, __LINE__, curChildDir.c_str());
+
+        // Make the new folder
+        sprintf(buff, "mkdir -p ./%s", curChildDir.c_str());
+        if (system(buff) == -1)
+        {
+            fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+                "--ERROR:system", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+    }
     printf("%s:%d\tReading children in: %s\n",
         FILENM, __LINE__, curChildDir.c_str());
 
