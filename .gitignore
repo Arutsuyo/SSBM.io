@@ -343,3 +343,5 @@ Makefile
 build/
 
 b/
+
+Python/SPOILER_client_secret\.json
