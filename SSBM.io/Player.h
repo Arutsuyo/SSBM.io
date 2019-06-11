@@ -9,6 +9,7 @@ struct Player{
 	float pos_y;
 	float cursor_x;
 	float cursor_y;
+	unsigned int stock;
 	/*actions and frames*/
 	unsigned int action;
 	float action_frame;

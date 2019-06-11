@@ -25,7 +25,7 @@ MemoryScanner::MemoryScanner(std::string inUserDir)
     p1.dir = 10; p2.dir = 10;
     p1.pos_y = -1024; p1.pos_x = -1024;
     p2.pos_y = -1024; p2.pos_x = -1024;
-
+    p1.stock = 4; p2.stock = 4;
     userPath = inUserDir;
     success = init_socket();
 
@@ -257,6 +257,7 @@ int MemoryScanner::UpdatedFrame() {
                     {
                         printf("%s:%d\tWARNING::P1 BASE FOUND: 0x%x as offset but not caught\n",
                             FILENM, __LINE__, val_int);
+                            
                     }
                 }// Player one switch
                 break;
@@ -351,7 +352,7 @@ int MemoryScanner::UpdatedFrame() {
                         break;
                     }
                     default:
-                    {
+                    {	
                         printf("%s:%d\tWARNING::P2 BASE FOUND: 0x%x as offset but not caught\n",
                             FILENM, __LINE__, val_int);
                     }
@@ -360,9 +361,9 @@ int MemoryScanner::UpdatedFrame() {
                 break;
                 /*pointer value read, but don't know what it is*/
             default: 
-            {
+            { 	/*
                 printf("%s:%d\tWARNING::value found, read as %s, but not caught\n",
-                    FILENM, __LINE__, val.c_str());
+                    FILENM, __LINE__, val.c_str());	*/
             }                   
         } // End Base Switch
     } // End base.find(" ") != std::string::npos
@@ -578,10 +579,26 @@ int MemoryScanner::UpdatedFrame() {
             printf("%s:%d\tSTAGE_SELECT_Y2: %f\n", FILENM, __LINE__, p1.cursor_y);
 #endif
             break; }
+        //stock is 8bit value, so shift by 24
+        case Addresses::PLAYER_ATTRIB::P1_STOCK:
+         	val_int = std::stoul(val.c_str(), nullptr, 16);
+#if MEMORY_OUT
+			printf("%s:%d\tSTAGE_SELECT_Y2: %f\n", FILENM, __LINE__, p1.cursor_y);         
+#endif
+         	p1.stock = val_int >> 24;
+         	break;
+        //p2 stock
+        case Addresses::PLAYER_ATTRIB::P2_STOCK:
+         	val_int = std::stoul(val.c_str(), nullptr, 16);
+#if MEMORY_OUT
+         	printf("%s:%d\tSTAGE_SELECT_Y2: %f\n", FILENM, __LINE__, val_int >> 24);
+#endif
+         	p2.stock = val_int >> 24;
+         	break;	
 
         default:
-        {
-            printf("%s:%d\tWARNING::P2 BASE FOUND: 0x%x as offset but not caught\n",
+        {	
+            printf("%s:%d\tWARNING::FOUND ADDR: 0x%x as offset but not caught\n",
                 FILENM, __LINE__, val_int);
         }
         }

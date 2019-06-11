@@ -76,10 +76,9 @@ std::string memlocation =
 "00c8ee50\n" // stage select x
 "00C8EE3C\n" // stage select y
 "00C8EE60\n" // stage select y
-
-// Unused
-//"0045310E\n" // p1stock
-//"00453F9E\n" // p2stock
+"0045310E\n" // p1stock
+"00453F9E\n" // p2stock
+//Unused
 //"00453130 20CC\n" // p1 action count
 //"00453130 19EC\n" // p1 invicible
 //"00453130 19BC\n" // p1 hitlag
