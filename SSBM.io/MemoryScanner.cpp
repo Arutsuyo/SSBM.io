@@ -256,7 +256,7 @@ int MemoryScanner::UpdatedFrame() {
                     }
                     default:
                     {
-                    	 TEMPORARY COMMENT
+                    	
                         printf("%s:%d\tWARNING::P1 BASE FOUND: 0x%x as offset but not caught\n",
                             FILENM, __LINE__, val_int); 
                             
