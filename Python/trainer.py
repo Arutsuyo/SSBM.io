@@ -335,7 +335,7 @@ def SaveModel(filename):
 	client = gspread.authorize(creds)
 	sheet = client.open("SSBM.io Statistics")
 	s1 = sheet.sheet1
-	row = [agent.game_score, agent.my_dmg, agent.my_hp, agent.my_de, agent.my_kill,time.time() - STARTING_TIME, *[i for i in outval]]
+	row = [agent.game_score, agent.my_dmg, agent.my_hp, agent.my_de, agent.my_kill,time.time() - STARTING_TIME, *[i for i in outval], float(sys.argv[4])]
 	s1.append_row(row)
 	stderr.write('\0' + "MISSION COMPLETE" + '\0')
 	stderr.flush()
