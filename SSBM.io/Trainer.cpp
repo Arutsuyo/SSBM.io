@@ -155,15 +155,11 @@ void Trainer::runTraining()
     //int numCreate = 1;
     printf("%s:%d\tRunning %d Instance%s\n", FILENM, __LINE__, numCreate, numCreate > 1 ? "s" : "");
     // Cycle user folders to allow controllers to close completely.
-    unsigned int userFolder = 0;
+    unsigned int usernum = 0;
     printf("%s:%d\tEntering Management Loop\n", FILENM, __LINE__);
     printf("%s:%d\t--Stop the Trainer with CTRL+C\n", FILENM, __LINE__);
     while (!term)
     {
-        // Make sure to use a dynamic amount
-        if (userFolder > Concurent * 10)
-            userFolder = 0; // Reset
-
         cv.notify_all();
         std::unique_lock<std::mutex> lk(mut);
 
@@ -184,7 +180,7 @@ void Trainer::runTraining()
                 lk.unlock();
                 cv.notify_all();
                 printf("%s:%d\tStarting(0) Dolphin Instance %d\n", FILENM, __LINE__, i);
-                if (!dh->StartDolphin(userFolder++))
+                if (!dh->StartDolphin(usernum++))
                 {
                     printf("%s:%d\t--ERROR: Dolphin Failed to start(0)\n", FILENM, __LINE__);
                     term = true;
@@ -226,7 +222,7 @@ void Trainer::runTraining()
                     lk.unlock();
                     cv.notify_all();
                     printf("%s:%d\tStarting(1) Dolphin Instance %d\n", FILENM, __LINE__, i);
-                    if (!dh->StartDolphin(userFolder++))
+                    if (!dh->StartDolphin(usernum++))
                     {
                         fprintf(stderr, "%s:%d\t--ERROR:Dolphin Failed to start(1)", FILENM, __LINE__);
                         term = true;
@@ -253,6 +249,11 @@ void Trainer::runTraining()
             if (predictionType == NEW_PREDICTION)
                 predictionType = PREDICTION_ONLY;
 
+            // Purge the old, in with the new
+            char buff[256];
+            memset(buff, 0, 256);
+            sprintf(buff, "rm -rf %s/ssbm*", Trainer::userDir.c_str());
+            system(buff);
         }
 
         printf("%s:%d\tWaiting for notification\n", FILENM, __LINE__);
