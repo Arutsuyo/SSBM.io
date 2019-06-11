@@ -153,7 +153,7 @@ class DQN:
 		self.gamma = 0.95
 		self.epsilon = 1.0
 		self.epsilon_min = 0.01
-		self.epsilon_decay = 0.9975 # takes a LONG time to train...
+		self.epsilon_decay = float(sys.argv[4]) # takes a LONG time to train...
 		self.learning_rate = 0.01
 		self.input_size = INPUT_SIZE
 		self.tau = .05
