@@ -36,7 +36,7 @@ void ParseArgs(int argc, char* argv[])
 "\t\tOnly increase this if your system can handle it. \n"
 "\t-m <Filename>\n"
 "\t\t<Filename>: Specify a Model to load into Tensorflow. \n\t\t\tFile version and .h5 will be added in %s\n"
-"\t-pr <0|1|2|3>: Tensorflow load type: 0=LOAD_MODEL 1=NEW_MODEL 2=PREDICTION_ONLY 3=NEW_PREDICTION\n"
+"\t-pr Predict only mode. This will load the latest set of parent AI's\n"
 "\t-u </directory> Specify a custom directory to fill with instance folders\n"
 "\t-du </directory> Specify the Default dolphin-emu dir to copy as a template\n"
 "\t-p <python_alias> Specifies command to use then launching tensorflow/keras\n"
@@ -125,7 +125,7 @@ void ParseArgs(int argc, char* argv[])
             Trainer::GetVersionNumber(parsed);
             getVer = true;
 
-            if (!exists_test(parsed))
+            if (!file_exists(parsed.c_str()))
             {
                 fprintf(stderr, "%s:%d Model Override failed to parse: %s does not exist.\n", FILENM, __LINE__, parsed.c_str());
                 exit(EXIT_FAILURE);
@@ -138,52 +138,8 @@ void ParseArgs(int argc, char* argv[])
         if ((size = arg.find("-pr:")) != std::string::npos
             || arg.find("-pr") != std::string::npos)
         {
-            std::string parsed;
-            // is it one argument or 2?
-            if (arg.size() > size)
-            {
-                parsed = arg.substr(size);
-            }
-            else
-            {
-                i++;
-                if (argc == i)
-                {
-                    fprintf(stderr, "%s:%d Model override failed to parse: %s\n", FILENM, __LINE__, "Not enough arguments");
-                    exit(EXIT_FAILURE);
-                }
-                parsed = argv[i];
-            }
-            if ( sscanf(parsed.c_str(), "%d", (int*)&Trainer::predictionType) )
-            {
-                std::string pred;
-                switch (Trainer::predictionType)
-                {
-                case LOAD_MODEL:
-                    pred = "Load Model";
-                    break;
-                case NEW_MODEL:
-                    pred = "New Model";
-                    break;
-                case PREDICTION_ONLY:
-                    pred = "Prediction Only";
-                    break;
-                case NEW_PREDICTION:
-                    pred = "New Model + Prediction Only";
-                    break;
-                default:
-                    fprintf(stderr, "%s:%d Model Override failed to parse: see -h.\n", FILENM, __LINE__);
-                    exit(EXIT_FAILURE);
-                    break;
-                }
-                printf("%s:%d\tLaunching Python in %s mode.\n", FILENM, __LINE__, pred.c_str());
-            }
-            else
-            {
-                fprintf(stderr, "%s:%d Model Override failed to parse: %s does not exist.\n", FILENM, __LINE__, parsed.c_str());
-                exit(EXIT_FAILURE);
-            }
-
+            printf("%s:%d --Override: Launching Tensor in Predict mode\n", FILENM, __LINE__);
+            Trainer::predictionType += 2;
             continue;
         }
         
@@ -291,20 +247,6 @@ void ParseArgs(int argc, char* argv[])
     // Update and check for conflicts
     if(!getVer)
         Trainer::GetVersionNumber(Trainer::modelName);
-    if (Trainer::vs == Human && 
-        (Trainer::predictionType == LOAD_MODEL || Trainer::predictionType == NEW_MODEL))
-    {
-            fprintf(stderr, "%s:%d VS Override failed: \n"
-                "\tvs Human must be in prediction mode(%d) %d or %d.\n", 
-                FILENM, __LINE__, 
-                Trainer::predictionType, PREDICTION_ONLY, NEW_PREDICTION);
-            exit(EXIT_FAILURE);
-    }
-    if (Trainer::predictionType == NEW_MODEL || Trainer::predictionType == NEW_PREDICTION)
-    {
-        printf("%s:%d --Override: New Model was selected, forcing Concurent = 1\n", FILENM, __LINE__);
-        Trainer::Concurent = 1;
-    }
 }
 
 int main(int argc, char* argv[])

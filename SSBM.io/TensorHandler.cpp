@@ -39,33 +39,8 @@ bool TensorHandler::CreatePipes(Controller* ai)
     char buff[BUFF_SIZE];
     memset(buff, 0, BUFF_SIZE);
 
-    // First, we need to figure out if the model exists
-    if (exists_test(Trainer::modelName))
-    {
-        if (Trainer::predictionType == LOAD_MODEL || Trainer::predictionType == PREDICTION_ONLY)
-            printf("%s:%d\tFile Exists, loading model\n",
-                FILENM, __LINE__);
-        else
-        {
-            fprintf(stderr, "%s:%d\t%s%s%s\n", FILENM, __LINE__,
-                "--ERROR:File Exists: ", Trainer::modelName.c_str(), "\n\tDelete file to make a new model.");
-            Trainer::term = true;
-            return false;
-        }
-    }
-    else
-    {
-        if (Trainer::predictionType == NEW_MODEL || Trainer::predictionType == NEW_PREDICTION)
-            printf("%s:%d\tFile Doesn't Exist, making new model\n",
-                FILENM, __LINE__);
-        else
-        {
-            fprintf(stderr, "%s:%d\t%s: %s\n\tRun with %d|%d to make a new model.\n", FILENM, __LINE__,
-                "--ERROR:File Doesn't Exists:", Trainer::modelName.c_str(), NEW_MODEL, NEW_PREDICTION);
-            Trainer::term = true;
-            return false;
-        }
-    }
+    std::string pModel = GenerationManager::GetParentFile();
+    std::string cModel = GenerationManager::GetChildFile();
 
     printf("%s:%d\tCreating Write Pipe\n", FILENM, __LINE__);
     if (pipe(pipeToPy) == -1)
@@ -146,7 +121,8 @@ bool TensorHandler::CreatePipes(Controller* ai)
             Trainer::PythonCommand.c_str(),
             Trainer::PythonCommand.c_str(),
             "trainer.py",
-            Trainer::modelName.c_str(),
+            pModel.c_str(),
+            cModel.c_str(),
             std::to_string(Trainer::Concurent * 2).c_str(),
             NULL);
 
@@ -179,16 +155,6 @@ bool TensorHandler::CreatePipes(Controller* ai)
     memset(buff, 0, BUFF_SIZE);
     sprintf(buff, "0"); // This silences the debug printing
     int bytesWritten = strlen(buff);
-    if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
-    {
-        fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
-            "--ERROR:write", strerror(errno));
-        dumpErrorPipe();
-        return false;
-    }
-
-    sprintf(buff, "%d", Trainer::predictionType);
-    bytesWritten = strlen(buff);
     if (write(pipeToPy[1], buff, bytesWritten) != bytesWritten)
     {
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
@@ -240,7 +206,7 @@ void TensorHandler::dumpErrorPipe()
             break;
 
         // step through the gunk until we find the prediction
-        for (int i = 0; i < ret; i += output.size() + 1)
+        for (int i = 0; i < ret; i += (int)(output.size() + 1))
         {
             output = &buff[i];
 
@@ -296,8 +262,8 @@ void TensorHandler::SendToPipe(Player ai, Player enemy)
 std::string TensorHandler::ReadFromPipe()
 {
     dumpErrorPipe();
-    char buff[BUFF_SIZE];
-    memset(buff, 0, BUFF_SIZE);
+    char buff[BUFF_SIZE * 2];
+    memset(buff, 0, BUFF_SIZE * 2);
     std::string output = "";
     int ret = 0;
     unsigned int offset = 0;

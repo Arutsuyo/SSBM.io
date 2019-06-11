@@ -5,6 +5,7 @@
 
 #include "Config.h"
 #include "DolphinHandle.h"
+#include "GenerationManager.h"
 #include <vector>
 #include <mutex>
 #include <condition_variable>
@@ -13,7 +14,7 @@
 void sigint_handle(int val);
 bool createSigIntAction();
 
-bool exists_test(const std::string& name);
+bool file_exists(const char* path);
 bool dir_exists(const char* path);
 
 enum Pred_Modes
@@ -47,15 +48,14 @@ public:
     static std::string dolphinDefaultUser;
     
     // Tensor Info
+    static VsType vs;
     static std::string PythonCommand;
     static std::string modelName;
-    static Pred_Modes predictionType;
+    static int predictionType;
     static void GetVersionNumber(std::string& parsed);
 
     // Threading Info
     static unsigned Concurent;
-    static VsType vs;
-    
     static std::mutex mut;
     static std::condition_variable cv;
 

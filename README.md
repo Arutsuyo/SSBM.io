@@ -30,7 +30,8 @@ Enviroment setup:
 ```
 conda create --name tf-gpu
 conda activate tf-gpu
-conda install tensorflow-gpu keras-gpu h5py zc.lockfile
+conda install tensorflow-gpu keras-gpu h5py zc.lockfile pip
+pip install gspread oauth2client
 ```
 
 You can test the Anaconda enviroment by using:
