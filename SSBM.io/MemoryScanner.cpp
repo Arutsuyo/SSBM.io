@@ -256,8 +256,9 @@ int MemoryScanner::UpdatedFrame() {
                     }
                     default:
                     {
+                    	 TEMPORARY COMMENT
                         printf("%s:%d\tWARNING::P1 BASE FOUND: 0x%x as offset but not caught\n",
-                            FILENM, __LINE__, val_int);
+                            FILENM, __LINE__, val_int); 
                             
                     }
                 }// Player one switch
@@ -355,7 +356,7 @@ int MemoryScanner::UpdatedFrame() {
                     default:
                     {	
                         printf("%s:%d\tWARNING::P2 BASE FOUND: 0x%x as offset but not caught\n",
-                            FILENM, __LINE__, val_int);
+                            FILENM, __LINE__, val_int); 
                     }
 
                 } // End Player Two switch
@@ -596,6 +597,23 @@ int MemoryScanner::UpdatedFrame() {
 #endif
          	p2.stock = val_int >> 24;
          	break;	
+
+        //suicdie count is a short 16 bit valu
+         case Addresses::PLAYER_ATTRIB::P1_SUICIDE:
+         	val_int = std::stoul(val.c_str(), nullptr, 16);
+#if MEMORY_OUT
+         	printf("Found suicide for p1 : %d\n",val_int >> 16 );
+#endif
+         	p1.suicide = val_int >> 16;
+         	break;
+
+        case Addresses::PLAYER_ATTRIB::P2_SUICIDE:
+         	val_int = std::stoul(val.c_str(), nullptr, 16);
+#if MEMORY_OUT
+         	printf("Found suicide for p2 : %d\n",val_int >> 16 );
+#endif         	
+         	p2.suicide = val_int >> 16;
+         	break;
 
         default:
         {	

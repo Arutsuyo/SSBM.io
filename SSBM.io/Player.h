@@ -10,6 +10,7 @@ struct Player{
 	float cursor_x;
 	float cursor_y;
 	unsigned int stock;
+	unsigned int suicide;
 	/*actions and frames*/
 	unsigned int action;
 	float action_frame;

@@ -57,8 +57,11 @@ namespace Addresses {
         STAGE_SELECT_X1 = 0x0c8ee38,
         STAGE_SELECT_X2 = 0x0c8ee50,
         STAGE_SELECT_Y1 = 0x0C8EE3C,
-        STAGE_SELECT_Y2 = 0x0C8EE60
+        STAGE_SELECT_Y2 = 0x0C8EE60,
 
+        /*suicide count*/
+        P1_SUICIDE = 0x0045310C,
+        P2_SUICIDE = 0x00453F9C,
     };
 
     enum FRAMES{
