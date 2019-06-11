@@ -2,10 +2,10 @@
 #include "Trainer.h"
 #include <string>
 #include <mutex>
-#define FILENM "GM"
 
 // Hyper parameters
-#define SIZE_GEN 200
+// TESING, raise to desired amount (200?)
+#define SIZE_GEN 100
 #define SIZE_CULL_TO 8
 
 // Pathing Info: To be used 

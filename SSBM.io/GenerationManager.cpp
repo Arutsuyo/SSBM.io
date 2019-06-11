@@ -9,8 +9,11 @@
 #include <utility>
 #include <fstream>
 #include <iostream>
+#include <ios>
 #include <chrono>
-#include <conio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#define FILENM "GM"
 
 // Used in culling
 typedef std::pair<int, int> score;
@@ -21,9 +24,9 @@ int GenerationManager::parentCount = -1;
 
 std::string GenerationManager::curParentDir = "";
 std::string GenerationManager::curChildDir = "";
+std::string GenerationManager::modelPath = "";
 
-
-std::mutex Trainer::mut;
+std::mutex GenerationManager::mut;
 bool GenerationManager::initialized = false;
 
 std::string GenerationManager::GetParentFile()
@@ -35,10 +38,19 @@ std::string GenerationManager::GetParentFile()
     }
     std::unique_lock<std::mutex> lk(mut);
 
+    // Check mode
+    if (Trainer::predictionType == Pred_Modes::NEW_MODEL
+        || Trainer::predictionType == Pred_Modes::NEW_PREDICTION)
+        return "";
+
     // Get a randomized parent file 
     // Or get a parent file based off current child numbers, this way we can 
     // equalize the parent training distribution
-    return curParentDir + std::to_string(rand() % SIZE_CULL_TO) + ".h5";
+    std::string pName = curParentDir + std::to_string(rand() % SIZE_CULL_TO) + ".h5";
+
+    printf("%s:%d\tRetrieved: %s\n",
+        FILENM, __LINE__, pName.c_str());
+    return pName;
 }
 
 std::string GenerationManager::GetChildFile()
@@ -50,6 +62,11 @@ std::string GenerationManager::GetChildFile()
     }
     std::unique_lock<std::mutex> lk(mut);
 
+    // Check mode
+    if (Trainer::predictionType == Pred_Modes::PREDICTION_ONLY
+        || Trainer::predictionType == Pred_Modes::NEW_PREDICTION)
+        return "";
+
     // Parse the child file based on the model path, dirCount, and ChildCount
     std::string childFile;
     childCount++;
@@ -60,6 +77,8 @@ std::string GenerationManager::GetChildFile()
     {
         fprintf(stderr, "%s:%d\t--ERROR: Child file already exists, overwriting: %s\n", FILENM, __LINE__, childFile.c_str());
     }
+    printf("%s:%d\tRetrieved: %s\n",
+        FILENM, __LINE__, childFile.c_str());
     return childFile;
 }
 
@@ -73,6 +92,8 @@ bool GenerationManager::GenerationReady()
     std::unique_lock<std::mutex> lk(mut);
 
     // Check if there's enough children to cull
+    printf("%s:%d\tChild Count:%s %d/%d\n",
+        FILENM, __LINE__, curChildDir.c_str(), childCount, SIZE_GEN);
     return childCount >= SIZE_GEN;
 }
 
@@ -88,34 +109,36 @@ bool GenerationManager::CullTheWeak()
     // Warn the user we are going to cull, don't kill the program, and yes, it will be LOUD
     char buff[256];
     memset(buff, 0, 256);
-    sprintf(buff, "%s:%d\tWARNING::%s IS PERFORMING A CULLING, DO NOT CLOSE PROGRAM\N", FILENM, __LINE__, FILENM);
-    printf(buff); printf(buff); printf(buff); printf(buff); printf(buff);
-    printf(buff); printf(buff); printf(buff); printf(buff); printf(buff);
-    fprintf(stderr, buff); fprintf(stderr, buff); fprintf(stderr, buff); fprintf(stderr, buff); fprintf(stderr, buff);
-    fprintf(stderr, buff); fprintf(stderr, buff); fprintf(stderr, buff); fprintf(stderr, buff); fprintf(stderr, buff);
+    sprintf(buff, "%s:%d\tWARNING::%s IS PERFORMING A CULLING, DO NOT CLOSE PROGRAM\n", FILENM, __LINE__, FILENM);
+    printf("%s", buff); printf("%s", buff); printf("%s", buff); printf("%s", buff); printf("%s", buff);
+    printf("%s", buff); printf("%s", buff); printf("%s", buff); printf("%s", buff); printf("%s", buff);
+    fprintf(stderr, "%s", buff); fprintf(stderr, "%s", buff); fprintf(stderr, "%s", buff); fprintf(stderr, "%s", buff); fprintf(stderr, "%s", buff);
+    fprintf(stderr, "%s", buff); fprintf(stderr, "%s", buff); fprintf(stderr, "%s", buff); fprintf(stderr, "%s", buff); fprintf(stderr, "%s", buff);
 
     // Get the top SIZE_CULL_TO
     //                    ID   Score
     std::vector<score> top8;
-    int val;
-    for (int i = 0; i < SIZE_GEN; i++)
+    int val, i = 0;
+    bool exists = true;
+    while (exists)
     {
         // Read the Child Scores
-        sprintf(buff, "%s%d.h5.txt", curChildDir, i++);
+        sprintf(buff, "%s%d.h5.txt", curChildDir.c_str(), i);
         std::fstream fs;
         fs.open(buff, std::fstream::in);
         if (fs.fail())
         {
-            fprintf(stderr, "%s:%d --Error: Could not open score: %s\n", 
+            fprintf(stderr, "%s:%d --Error: Could not open score: %s\n",
                 FILENM, __LINE__, buff);
-            exit(EXIT_FAILURE);
+            // reached the end of the scores
+            break;
         }
         fs >> val;
         fs.close();
 
         if (top8.size() < SIZE_CULL_TO)
         {
-            top8.push_back(score(i, val));
+            top8.push_back(score(i++, val));
             continue;
         }
 
@@ -128,6 +151,7 @@ bool GenerationManager::CullTheWeak()
                 break;
             }
         }
+        i++;
     }
 
     printf("%s:%d\tIdentified Top %d\n",
@@ -139,8 +163,13 @@ bool GenerationManager::CullTheWeak()
     curParentDir += modelPath + DIR_PARENT_BASE;
     sprintf(buff, curParentDir.c_str(), parentCount);
     curParentDir = buff;
-    sprintf(buff, "mkdir %s", curParentDir.c_str());
-    system(buff);
+    sprintf(buff, "mkdir -p ./%s", curParentDir.c_str());
+    if (system(buff) == -1)
+    {
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "--ERROR:system", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
     // Copy top SIZE_CULL_TO into parent
     for (int i = 0; i < SIZE_CULL_TO; i++)
@@ -151,10 +180,20 @@ bool GenerationManager::CullTheWeak()
         sprintf(childName, "%s%d.h5", curChildDir.c_str(), top8[i].first);
 
         // Copy the child to the parent
-        sprintf(buff, "cp %s %s%d.h5", childName, curParentDir, i);
-        system(buff);
-        sprintf(buff, "cp %s.txt %s%d.h5.txt", childName, curParentDir, i);
-        system(buff);
+        sprintf(buff, "cp %s %s%d.h5", childName, curParentDir.c_str(), i);
+        if (system(buff) == -1)
+        {
+            fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+                "--ERROR:system", strerror(errno));
+            return false;
+        }
+        sprintf(buff, "cp %s.txt %s%d.h5.txt", childName, curParentDir.c_str(), i);
+        if (system(buff) == -1)
+        {
+            fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+                "--ERROR:system", strerror(errno));
+            return false;
+        }
     }
 
     printf("%s:%d\tCopied to new parent dir\n",
@@ -167,8 +206,13 @@ bool GenerationManager::CullTheWeak()
     temp += modelPath + DIR_CHILD_BASE;
     sprintf(buff, temp.c_str(), childDirCount);
     curChildDir = buff;
-    sprintf(buff, "mkdir %s", curChildDir.c_str());
-    system(buff);
+    sprintf(buff, "mkdir -p ./%s", curChildDir.c_str());
+    if (system(buff) == -1)
+    {
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "--ERROR:system", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
 
     printf("%s:%d\tReset Child Count\n",
@@ -178,43 +222,42 @@ bool GenerationManager::CullTheWeak()
 
     // Ask the user if they want to start on the next generation
     // This should be a timed prompt, if there's no response, start training
-    printf("%s:%d\tAnswer the following in 10 seconds:\n",
-        FILENM, __LINE__); 
-    printf("%s:%d\tDo you want to Quit: (y or [N]) ",
-        FILENM, __LINE__);
-    std::chrono::time_point<std::chrono::high_resolution_clock> n = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed;
-    std::string response = "";
-    int dot = 1;
-    do 
-    {
-        elapsed =
-            std::chrono::high_resolution_clock::now()
-            - n;
-        if ((10 - elapsed.count()) / dot >= 1)
-        {
-            dot++;
-            printf("%d ", (10-elapsed.count()));
-        }
+    //printf("%s:%d\tAnswer the following in 10 seconds:\n",
+    //    FILENM, __LINE__); 
+    //printf("%s:%d\tDo you want to Quit: (y or [N]) ",
+    //    FILENM, __LINE__);
+    //
+    //// Setup timed response
+    //std::string response = "";
+    //std::chrono::time_point<std::chrono::high_resolution_clock> n = std::chrono::high_resolution_clock::now();
+    //std::chrono::duration<double> elapsed;
+    //int dot = 1;
+    //do 
+    //{
+    //    elapsed =
+    //        std::chrono::high_resolution_clock::now()
+    //        - n;
+    //    if ((10 - elapsed.count()) / dot >= 1)
+    //    {
+    //        dot++;
+    //        printf("%d ", (int)(10-elapsed.count()));
+    //    }
 
-        if (kbhit())
-        {
-            std::cin >> response;
-            break;
-        }
-    } while (elapsed.count() > 10);
+    //    // TODO Check if CIN is empty
 
-    if (response.size())
-    {
-        // Check for Response
-        if (response.find("y") == std::string::npos
-            || response.find("q") == std::string::npos)
-        {
-            printf("%s:%d\tQuitting . . .\n",
-                FILENM, __LINE__);
-            return false;
-        }
-    }
+    //} while (elapsed.count() > 10);
+
+    //if (response.size())
+    //{
+    //    // Check for Response
+    //    if (response.find("y") == std::string::npos
+    //        || response.find("q") == std::string::npos)
+    //    {
+    //        printf("%s:%d\tQuitting . . .\n",
+    //            FILENM, __LINE__);
+    //        return false;
+    //    }
+    //}
     printf("%s:%d\tContinuing . . .\n",
         FILENM, __LINE__);
     return true;
@@ -228,11 +271,11 @@ bool GenerationManager::Initialize(std::string model_path)
     memset(buff, 0, bufflen);
     std::string childFile;
     modelPath = model_path;
+
     printf("%s:%d\tInitilizing GenerationManager\n",
         FILENM, __LINE__);
 
     // Getting Child dir Count
-    bool fresh = true;
     do
     {
         // Increment Child Dir Count
@@ -253,51 +296,35 @@ bool GenerationManager::Initialize(std::string model_path)
                 childDirCount--;
                 sprintf(buff, temp.c_str(), childDirCount);
                 curChildDir = buff;
-                break;
             }
-            else
-            {
-                // Fresh Model
-                fresh = false;
-                break;
-            }
+            break;
         }
     } while (true);
 
     printf("%s:%d\tReading children in: %s\n",
         FILENM, __LINE__, curChildDir.c_str());
 
-    if (fresh)
+    // Count the current number of children. This allows us to persist
+    do
     {
-        printf("%s:%d\tStarting a fresh AI!\n",
-            FILENM, __LINE__);
-        // Fresh AI, make the new folder
-        sprintf(buff, "mkdir %s", curChildDir.c_str());
-        system(buff);
-        childCount = 0;
-        parentCount = 0;
-    }
-    else
-    {
-        // Count the current number of children. This allows us to persist
-        do
-        {
-            childCount++;
-            childFile = curChildDir + std::to_string(childCount);
-            childFile += ".h5";
+        childCount++;
+        childFile = curChildDir + std::to_string(childCount);
+        childFile += ".h5";
 
-        } while (file_exists(childFile.c_str()));
+        printf("%s:%d\tChecking Child: %s\n",
+            FILENM, __LINE__, childFile.c_str());
+    } while (file_exists(childFile.c_str()));
 
-        printf("%s:%d\tCurrent Child Count: %d\n",
-            FILENM, __LINE__, childCount);
-    }
+    printf("%s:%d\tCurrent Child Count: %d\n",
+        FILENM, __LINE__, childCount);
 
     // Parse the Parent Folder
+    parentCount = childDirCount;
     curParentDir = DIR_AI_BASE;
     curParentDir += modelPath + DIR_PARENT_BASE;
-    sprintf(buff, curParentDir.c_str(), childDirCount);
+    sprintf(buff, curParentDir.c_str(), parentCount);
     curParentDir = buff;
-    if (childCount == SIZE_CULL_TO - 1 && dir_exists(buff))
+    if (childCount == SIZE_CULL_TO && dir_exists(buff))
     {
         // Count the number of parents
         int pCount = -1;
@@ -308,12 +335,17 @@ bool GenerationManager::Initialize(std::string model_path)
             childFile += ".h5";
 
         } while (file_exists(childFile.c_str()));
-        if (pCount != SIZE_CULL_TO - 1)
+
+        if (pCount != SIZE_CULL_TO)
         {
-            fprintf(stderr, "%s:%d\t%s Not enough Parent Files, Copying the correct Children\n", FILENM, __LINE__,
-                "--ERROR:GenerationManager", DIR_AI_BASE, modelPath.c_str());
+            fprintf(stderr, "%s:%d\t%s Not enough Parent Files, Copying the correct Children\n", FILENM, __LINE__, "--ERROR:GenerationManager");
             sprintf(buff, "cp %s* %s*", curChildDir.c_str(), curParentDir.c_str());
-            system(buff);
+            if (system(buff) == -1)
+            {
+                fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+                    "--ERROR:system", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
         }
         printf("%s:%d\tFinished Training, ready for next gen!\n",
             FILENM, __LINE__);
@@ -328,32 +360,44 @@ bool GenerationManager::Initialize(std::string model_path)
         curChildDir = buff;
 
         // Make the new folder
-        sprintf(buff, "mkdir %s", curChildDir.c_str());
-        system(buff);
+        sprintf(buff, "mkdir -p ./%s", curChildDir.c_str());
+        if (system(buff) == -1)
+        {
+            fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+                "--ERROR:system", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        childCount = -1;
     }
     else if (childCount < SIZE_GEN)
     {
+        childCount--;
         printf("%s:%d\tDid not finish training, Continuing!\n",
             FILENM, __LINE__);
         // Set the parent dir
-        curParentDir = buff;
+        parentCount--;
+        if (parentCount >= 0)
+        {
+            curParentDir = DIR_AI_BASE;
+            curParentDir += modelPath + DIR_PARENT_BASE;
+            sprintf(buff, curParentDir.c_str(), parentCount);
+            curParentDir = buff;
+        }
+        else
+            Trainer::predictionType += 1;
 
-        // Increment Child Dir Count
-        childDirCount++;
+        printf("%s:%d\tRunning Generation: %d\n",
+            FILENM, __LINE__, childDirCount);
 
-        // Parse the Next Child Folder
-        std::string temp = DIR_AI_BASE;
-        temp += modelPath + DIR_CHILD_BASE;
-        sprintf(buff, temp.c_str(), childDirCount);
-        curChildDir = buff;
     }
     else
     {
-        fprintf(stderr, "%s:%d\t%s Investigate the %s%s folder and fix the code!\n", FILENM, __LINE__,
-            "--ERROR:GenerationManager", DIR_AI_BASE, modelPath.c_str());
-        exit(EXIT_FAILURE);
+        printf("%s:%d\tWE MUST CULL Generation: %s\n",
+            FILENM, __LINE__, curChildDir.c_str());
+        parentCount--;
     }
 
     srand(time(NULL));
     initialized = true;
+    return initialized;
 }

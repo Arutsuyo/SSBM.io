@@ -5,6 +5,7 @@
 
 #include "Config.h"
 #include "DolphinHandle.h"
+#include "GenerationManager.h"
 #include <vector>
 #include <mutex>
 #include <condition_variable>
@@ -50,7 +51,7 @@ public:
     static VsType vs;
     static std::string PythonCommand;
     static std::string modelName;
-    static Pred_Modes predictionType;
+    static int predictionType;
     static void GetVersionNumber(std::string& parsed);
 
     // Threading Info

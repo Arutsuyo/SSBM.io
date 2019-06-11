@@ -33,8 +33,8 @@ std::string Trainer::userDir = "";
 std::string Trainer::dolphinDefaultUser = "";
 
 std::string Trainer::PythonCommand = "python.exe";
-std::string Trainer::modelName = "AI/ssbm";
-Pred_Modes Trainer::predictionType = LOAD_MODEL;
+std::string Trainer::modelName = "ssbm";
+int Trainer::predictionType = LOAD_MODEL;
 
 
 // Used for tracking events in the threads
@@ -110,7 +110,7 @@ void Trainer::KillDolphinHandles()
 
 void Trainer::GetVersionNumber(std::string& parsed)
 {
-    char version[16];
+    char version[32];
     std::fstream fs;
     fs.open("Version/version.txt", std::fstream::in);
     if (fs.fail())
@@ -118,16 +118,20 @@ void Trainer::GetVersionNumber(std::string& parsed)
         fprintf(stderr, "%s:%d --Error: Version/version.txt is missing.\n", FILENM, __LINE__);
         exit(EXIT_FAILURE);
     }
-    fs.getline(version, 16);
+    fs.getline(version, 32);
     fs.close();
-    printf("%s:%d\tModel version: %s\n", FILENM, __LINE__, version);
     Trainer::modelName = parsed + version;
-    Trainer::modelName += ".h5";
     printf("%s:%d\tUsing Model: %s\n", FILENM, __LINE__, modelName.c_str());
 }
 
 void Trainer::runTraining()
 {
+    if (!GenerationManager::Initialize(modelName))
+    {
+        fprintf(stderr, "%s:%d --Error: Couldn't initialize GenerationManager\n", FILENM, __LINE__);
+        exit(EXIT_FAILURE);
+    }
+    //exit(EXIT_SUCCESS);
     printf("%s:%d\tInitializing Training.\n", FILENM, __LINE__);
 
     createSigIntAction();
@@ -147,16 +151,9 @@ void Trainer::runTraining()
         break;
     }
 
-    int numCreate = vs == VsType::Human ? 1 : Concurent;
+    unsigned int numCreate = vs == VsType::Human ? 1 : Concurent;
     //int numCreate = 1;
     printf("%s:%d\tRunning %d Instance%s\n", FILENM, __LINE__, numCreate, numCreate > 1 ? "s" : "");
-    for (int i = 0; i < numCreate; i++)
-    {
-        printf("%s:%d\tCreating Handler %d\n", FILENM, __LINE__, i);
-        DolphinHandle* dh = new DolphinHandle(vs);
-        _Dhandles.push_back(dh);
-    }
-
     // Cycle user folders to allow controllers to close completely.
     unsigned int userFolder = 0;
     printf("%s:%d\tEntering Management Loop\n", FILENM, __LINE__);
@@ -169,10 +166,20 @@ void Trainer::runTraining()
 
         cv.notify_all();
         std::unique_lock<std::mutex> lk(mut);
-        for (int i = 0; i < numCreate; i++)
+
+        bool readyToCull = GenerationManager::GenerationReady();
+        
+        while (!readyToCull && _Dhandles.size() < numCreate)
+        {
+            printf("%s:%d\tCreating Handler %lu\n", FILENM, __LINE__, _Dhandles.size());
+            DolphinHandle* dh = new DolphinHandle(vs);
+            _Dhandles.push_back(dh);
+        }
+
+        for (unsigned int i = 0; i < _Dhandles.size(); i++)
         {
             DolphinHandle* dh = _Dhandles[i];
-            if (!dh->started)
+            if (!dh->started && !readyToCull)
             {
                 lk.unlock();
                 cv.notify_all();
@@ -193,7 +200,7 @@ void Trainer::runTraining()
             break;
 
         printf("%s:%d\tChecking if running\n", FILENM, __LINE__);
-        for (int i = 0; i < numCreate; i++)
+        for (unsigned int i = 0; i < _Dhandles.size(); i++)
         {
             DolphinHandle* dh = _Dhandles[i];
             // Check if the match finished
@@ -212,32 +219,41 @@ void Trainer::runTraining()
                 // Remove the handler, calling the destructor
                 _Dhandles.erase(_Dhandles.begin() + i);
 
-                // We can now load the new model!
-                if (predictionType == NEW_MODEL)
-                    predictionType = LOAD_MODEL;
-                if (predictionType == NEW_PREDICTION)
-                    predictionType = PREDICTION_ONLY;
-
-                // push a new one
-                DolphinHandle* dh = new DolphinHandle(vs);
-                lk.unlock();
-                cv.notify_all();
-                printf("%s:%d\tStarting(1) Dolphin Instance %d\n", FILENM, __LINE__, i);
-                if (!dh->StartDolphin(userFolder++))
+                if (!readyToCull)
                 {
-                    fprintf(stderr, "%s:%d\t--ERROR:Dolphin Failed to start(1)", FILENM, __LINE__);
-                    term = true;
-                    break;
+                    // push a new one
+                    DolphinHandle* dh = new DolphinHandle(vs);
+                    lk.unlock();
+                    cv.notify_all();
+                    printf("%s:%d\tStarting(1) Dolphin Instance %d\n", FILENM, __LINE__, i);
+                    if (!dh->StartDolphin(userFolder++))
+                    {
+                        fprintf(stderr, "%s:%d\t--ERROR:Dolphin Failed to start(1)", FILENM, __LINE__);
+                        term = true;
+                        break;
+                    }
+                    printf("%s:%d\tDolphin Instance %d Started(1)\n", FILENM, __LINE__, i);
+                    _Dhandles.push_back(dh);
+                    cv.notify_all();
+                    lk.lock();
                 }
-                printf("%s:%d\tDolphin Instance %d Started(1)\n", FILENM, __LINE__, i);
-                _Dhandles.push_back(dh);
-                cv.notify_all();
-                lk.lock();
             }
         }
 
         if (term)
             break;
+
+        if (readyToCull && !_Dhandles.size())
+        {
+            term = !GenerationManager::CullTheWeak();
+
+            // We can now load the new model!
+            if (predictionType == NEW_MODEL)
+                predictionType = LOAD_MODEL;
+            if (predictionType == NEW_PREDICTION)
+                predictionType = PREDICTION_ONLY;
+
+        }
 
         printf("%s:%d\tWaiting for notification\n", FILENM, __LINE__);
         // Lock the mutex and wait for the condition variable
@@ -258,7 +274,7 @@ Trainer::Trainer()
             exit(EXIT_FAILURE);
         }
         printf("%s:%d\tTesting for ISO:\n\t%s\n", FILENM, __LINE__, _ssbmisoLocs[_isoidx].c_str());
-    } while (!file_exists(_ssbmisoLocs[_isoidx]));
+    } while (!file_exists(_ssbmisoLocs[_isoidx].c_str()));
     printf("%s:%d\tISO Found: %s\n", FILENM, __LINE__, _ssbmisoLocs[_isoidx].c_str());
 
     if (!cfg)

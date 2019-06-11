@@ -48,13 +48,11 @@ stderr = open(2, "w")
 Argument Updates by Nara
 1:parentFile - if 0, spawn new model
 2:childFile - if 0, load in predict mode
-3:generation
-4:GPU_Partition
+3:GPU_Partition
 """
 parentFile = sys.argv[1]
 childFile = sys.argv[2]
-generation = sys.argv[3]
-GPU_Partition = sys.argv[4]
+GPU_Partition = sys.argv[3]
 
 # This will properly fall through and load the mode we desire!
 modelMode = 0
@@ -314,7 +312,7 @@ while True:
 def SaveModel(filename):
 	stderr.flush()
 	debugPrint("End of file reached. Saving model.\n")
-	scoreFile = filename + "txt"
+	scoreFile = filename + ".txt"
 	e = os.path.isfile(scoreFile)
 	if e:
 		f = open(scoreFile, 'r')
