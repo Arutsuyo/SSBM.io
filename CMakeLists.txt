@@ -9,7 +9,7 @@ find_package(Threads REQUIRED)
 IF(CMAKE_BUILD_TYPE MATCHES Debug) # Debug
 	message("Debug build.")
 	add_definitions(-DDEBUG)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -fsanitize=address -g")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -g")
 	
 	# Controller Printing
 	if(NOT CTRL_OUTPUT)

@@ -31,6 +31,7 @@ class GenerationManager
     static bool initialized;
 public:
     // TensorHandler Functions
+    static float GetEpsilon();
     static std::string GetParentFile();
     static std::string GetChildFile();
 

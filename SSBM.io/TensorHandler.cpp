@@ -124,6 +124,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
             pModel.c_str(),
             cModel.c_str(),
             std::to_string(Trainer::Concurent * 2).c_str(),
+            std::to_string(GenerationManager::GetEpsilon()).c_str(),
             NULL);
 
         fprintf(stderr, "%s:%d\t%s(%d): %s\n", FILENM, __LINE__,
@@ -179,7 +180,6 @@ void TensorHandler::dumpErrorPipe()
     memset(buff, 0, BUFF_SIZE * 2);
     std::string output = "";
     int ret = 0;
-
     int status;
     ret = waitpid(pid, &status, WNOHANG);
     if (ret == pid || pid == -1)

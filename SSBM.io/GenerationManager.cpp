@@ -13,6 +13,7 @@
 #include <chrono>
 #include <unistd.h>
 #include <fcntl.h>
+#include <cmath>
 #define FILENM "GM"
 
 // Used in culling
@@ -28,6 +29,13 @@ std::string GenerationManager::modelPath = "";
 
 std::mutex GenerationManager::mut;
 bool GenerationManager::initialized = false;
+
+float GenerationManager::GetEpsilon()
+{
+    if(parentCount > 0)
+        return pow(0.995f, parentCount);
+    return 0.995f;
+}
 
 std::string GenerationManager::GetParentFile()
 {
@@ -47,11 +55,11 @@ std::string GenerationManager::GetParentFile()
     std::string pName;
     if (childCount % 2)
     {
-        pName = curParentDir + std::to_string(childCount / 4) + ".h5";
+        pName = curParentDir + std::to_string((childCount / SIZE_CULL_TO) % SIZE_CULL_TO) + ".h5";
     }
     else
     {
-        pName = curParentDir + std::to_string(childCount / 16) + ".h5";
+        pName = curParentDir + std::to_string(childCount / (SIZE_CULL_TO * SIZE_CULL_TO)) + ".h5";
     }
     printf("%s:%d\tRetrieved: %s\n",
         FILENM, __LINE__, pName.c_str());
@@ -77,6 +85,10 @@ std::string GenerationManager::GetChildFile()
     childCount++;
     childFile = curChildDir + std::to_string(childCount);
     childFile += ".h5";
+    
+    //Safety check
+    if (childCount == SIZE_GEN)
+        childCount--;
 
     if (file_exists(childFile.c_str()))
     {
@@ -99,7 +111,7 @@ bool GenerationManager::GenerationReady()
     // Check if there's enough children to cull
     printf("%s:%d\tChild Count:%s %d/%d\n",
         FILENM, __LINE__, curChildDir.c_str(), childCount, SIZE_GEN);
-    return childCount >= SIZE_GEN;
+    return childCount >= SIZE_GEN-1;
 }
 
 bool GenerationManager::CullTheWeak()

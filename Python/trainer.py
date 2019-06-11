@@ -312,6 +312,8 @@ while True:
 def SaveModel(filename):
 	stderr.flush()
 	debugPrint("End of file reached. Saving model.\n")
+	stderr.write('\0' + "SAVING MODEL" + '\0')
+	stderr.flush()
 	scoreFile = filename + ".txt"
 	e = os.path.isfile(scoreFile)
 	if e:
@@ -326,6 +328,8 @@ def SaveModel(filename):
 	f.close()
 	agent.save_model(filename)
 	# now for the fun part
+	stderr.write('\0' + "GO GO GOOGLE GADGETS" + '\0')
+	stderr.flush()
 	scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 	creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
 	client = gspread.authorize(creds)
@@ -333,6 +337,8 @@ def SaveModel(filename):
 	s1 = sheet.sheet1
 	row = [agent.game_score, agent.my_dmg, agent.my_hp, agent.my_de, agent.my_kill,time.time() - STARTING_TIME, *[i for i in outval]]
 	s1.append_row(row)
+	stderr.write('\0' + "MISSION COMPLETE" + '\0')
+	stderr.flush()
 
 if modelMode < 2:
 	SaveModel(childFile)
