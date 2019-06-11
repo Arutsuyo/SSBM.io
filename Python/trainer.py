@@ -12,6 +12,9 @@ from tensorflow.keras import backend as kerasBE
 from collections import deque
 import zc.lockfile as lf
 import numpy as np
+
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 from time import sleep
 import random
 """
@@ -26,7 +29,13 @@ used
 https://michaelblogscode.wordpress.com/2017/10/10/reducing-and-profiling-gpu-memory-usage-in-keras-with-tensorflow-backend/
 
 as a GPU limiting witchcraft helper.
+
+used
+https://www.twilio.com/blog/2017/02/an-easy-way-to-read-and-write-to-a-google-spreadsheet-in-python.html
+
+to use google sheets to collect information about training
 """
+STARTING_TIME = time.time()
 
 # Make sure the pipes are open!!!
 # KEEP AT TOP
@@ -38,6 +47,8 @@ stderr = open(2, "w")
 """
 GLOBALS
 """
+TRAINING_SCORES_FILE_NAME = "training_epochs"
+TRAINING_SCORES_FILE_PATH = os.path.join(os.getcwd(), TRAINING_SCORES_FILE_NAME+".csv")
 INPUT_RATE = 4 # This means that if we get input at 60 TPS, we only make predictions for every xth item. 
 FILENAME = sys.argv[1] # To be read latter
 SUICIDE_REWARD = -500 # Negative is bad
@@ -46,7 +57,8 @@ KILL_SCORE = 500 # Actual score for calculating end of round score
 MAX_FRAMES_RECORDING = 120//INPUT_RATE # 120 = 2 seconds saved for inputs if 60 TPS (/divided by input dropout)
 MAX_MEMORY_FRAMES = 120//INPUT_RATE # 60 = 1 second for every batch training if 60 TPS (/divided by input dropout)
 MAX_BATCH_SIZE = 80//INPUT_RATE # Drop half of the examples from memory frames and only train on x of them...
-
+MY_HP_PENALTY = 0.001
+THEIR_HP_REWARD = 10
 # 0:ai.health, 1:ai.dir, 2:ai.pos_x, 3:ai.pos_y, 4:ai.action, 5:ai.action_frame,
 # 6:enemy.health, 7:enemy.dir, 8:enemy.pos_x, 9:enemy.pos_y, 10:enemy.action, 11:enemy.action_frame
 INPUT_SIZE = 12
@@ -134,6 +146,10 @@ class DQN:
 		self.model = self.create_model()
 		# "hack" implemented by DeepMind to improve convergence
 		self.target_model = self.create_model()
+		self.my_dmg = 0
+		self.my_hp = 0
+		self.my_de = 0
+		self.my_kill = 0
 		
 	def get_Score(self, prev_state, new_state):
 		reward = 0
@@ -143,18 +159,25 @@ class DQN:
 		if prev_state[MY_HP_IDX] > new_state[MY_HP_IDX] and new_state[MY_HP_IDX] == 0:
 			reward = reward - SUICIDE_REWARD # Died, get a reward of -500
 		else:
-			reward = reward - (new_state[MY_HP_IDX] - prev_state[MY_HP_IDX])*.1*new_state[MY_HP_IDX] # So reward penalty gets worse for getting hit
-			reward = reward + (new_state[ENEMY_HP_IDX] - prev_state[ENEMY_HP_IDX])*.5*new_state[ENEMY_HP_IDX] # Reward if hitting!
+			reward = reward - (new_state[MY_HP_IDX] - prev_state[MY_HP_IDX])*MY_HP_PENALTY*new_state[MY_HP_IDX] # So reward penalty gets worse for getting hit
+			reward = reward + (new_state[ENEMY_HP_IDX] - prev_state[ENEMY_HP_IDX])*THEIR_HP_REWARD*new_state[ENEMY_HP_IDX] # Reward if hitting!
 		reward = reward - ((abs(new_state[MY_X] - new_state[ENEMY_X]) * .25) + (abs(new_state[MY_Y] - new_state[ENEMY_Y])*.1)) # Slight penalty for going away from the user.
 		self.add_OverallScore(prev_state[MY_HP_IDX] > new_state[MY_HP_IDX], prev_state[ENEMY_HP_IDX] > new_state[ENEMY_HP_IDX], new_state[MY_HP_IDX]-prev_state[MY_HP_IDX], new_state[ENEMY_HP_IDX]-prev_state[ENEMY_HP_IDX])
 		return reward
 	def add_OverallScore(self, hasDied, otherDied, myHP, theirHP):
 		self.game_score = self.game_score + (-SUICIDE_REWARD if hasDied == 1 else 0) + (KILL_SCORE if otherDied == 1 else 0)
+		self.my_de = self.my_de + (1 if hasDied == 1 else 0)
+		self.my_kill = self.my_kill + (1 if otherDied == 1 else 0)
 		#(-myHP * .2) + (theirHP * .15)
 		if not hasDied:
-			self.game_score = self.game_score + (-myHP * .2)
+			self.game_score = self.game_score + (-myHP * MY_HP_PENALTY)
+			self.my_hp = self.my_hp + myHP
 		if not otherDied:
-			self.game_score = self.game_score + (myHP * .15)
+			self.game_score = self.game_score + (theirHP * THEIR_HP_REWARD)
+			self.my_dmg = self.my_dmg + theirHP
+		
+		
+		
 	def create_model(self):
 		model = Sequential()
 		model.add(fallbackLSTM(MODEL_PARAMETERS[1],input_shape=MODEL_PARAMETERS[MY_HP_IDX], activation='tanh', return_sequences=True))
@@ -242,6 +265,8 @@ timeout_timer = 0
 for i in range(MAX_FRAMES_RECORDING):
 	pa.append([0 for i in range(INPUT_SIZE)])
 	kill_me.append([0 for i in range(INPUT_SIZE)])
+outcount = 0
+outval = [0,0,0,0,0,0,0]
 while True:
 	try:
 		input_k = getInput(256)
@@ -252,6 +277,8 @@ while True:
 	action = agent.act(np.reshape(np.array(pa), (1,MAX_FRAMES_RECORDING,INPUT_SIZE)))
 	# It is 6 values, brute force
 	PipePrint((action[0]+1)/2,(action[1]+1)/2,action[2],action[3],action[4],action[5],action[6])
+	outval = [(outval[i] * outcount + action[i])/(float(outcount + 1)) for i in range(7)]
+	outcount = outcount + 1
 	stderr.flush()
 	# Output action....
 	
@@ -295,6 +322,14 @@ if "2" not in choice and "3" not in choice:
 			f.write(str(agent.game_score) + "")
 			f.close()
 			agent.save_model(export_dir)
+			# now for the fun part
+			scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+			creds = ServiceAccountCredentials.from_json_keyfile_name('../../../client_secret.json', scope)
+			client = gspread.authorize(creds)
+			sheet = client.open("SSBM.io Statistics")
+			s1 = sheet.sheet1
+			row = [agent.game_score, agent.my_dmg, agent.my_hp, agent.my_de, agent.my_kill,time.time() - STARTING_TIME, *[i for i in outval]]
+			s1.append_row(row)
 			lock.close()
 			break
 		except lf.LockError:
