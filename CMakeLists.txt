@@ -107,6 +107,10 @@ add_executable(SSBM ${SOURCES} ${HEADERS})
 target_link_libraries(SSBM Threads::Threads)
 
 configure_file(
+	"${CMAKE_SOURCE_DIR}/Python/client_secret.json"
+	"${CMAKE_BINARY_DIR}/client_secret.json" 
+	COPYONLY)
+configure_file(
 	"${CMAKE_SOURCE_DIR}/Python/trainer.py"
 	"${CMAKE_BINARY_DIR}/trainer.py" 
 	COPYONLY)

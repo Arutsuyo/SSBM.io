@@ -345,3 +345,5 @@ build/
 b/
 
 Python/SPOILER_client_secret\.json
+
+Python/client_secret\.json

@@ -125,7 +125,7 @@ void ParseArgs(int argc, char* argv[])
             Trainer::GetVersionNumber(parsed);
             getVer = true;
 
-            if (!exists_test(parsed))
+            if (!file_exists(parsed))
             {
                 fprintf(stderr, "%s:%d Model Override failed to parse: %s does not exist.\n", FILENM, __LINE__, parsed.c_str());
                 exit(EXIT_FAILURE);

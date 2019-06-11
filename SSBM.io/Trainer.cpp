@@ -46,9 +46,9 @@ VsType Trainer::vs = VsType::Self;
 
 
 /* Helper Functions */
-bool exists_test(const std::string& name)
+bool file_exists(const char* path)
 {
-    if (FILE * file = fopen(name.c_str(), "r")) {
+    if (FILE * file = fopen(path, "r")) {
         fclose(file);
         return true;
     }
@@ -258,7 +258,7 @@ Trainer::Trainer()
             exit(EXIT_FAILURE);
         }
         printf("%s:%d\tTesting for ISO:\n\t%s\n", FILENM, __LINE__, _ssbmisoLocs[_isoidx].c_str());
-    } while (!exists_test(_ssbmisoLocs[_isoidx]));
+    } while (!file_exists(_ssbmisoLocs[_isoidx]));
     printf("%s:%d\tISO Found: %s\n", FILENM, __LINE__, _ssbmisoLocs[_isoidx].c_str());
 
     if (!cfg)

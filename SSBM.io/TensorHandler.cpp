@@ -40,7 +40,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
     memset(buff, 0, BUFF_SIZE);
 
     // First, we need to figure out if the model exists
-    if (exists_test(Trainer::modelName))
+    if (file_exists(Trainer::modelName))
     {
         if (Trainer::predictionType == LOAD_MODEL || Trainer::predictionType == PREDICTION_ONLY)
             printf("%s:%d\tFile Exists, loading model\n",

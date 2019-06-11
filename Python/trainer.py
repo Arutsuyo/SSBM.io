@@ -48,11 +48,13 @@ stderr = open(2, "w")
 Argument Updates by Nara
 1:parentFile - if 0, spawn new model
 2:childFile - if 0, load in predict mode
-3:GPU_Partition
+3:generation
+4:GPU_Partition
 """
 parentFile = sys.argv[1]
 childFile = sys.argv[2]
-GPU_Partition = sys.argv[3]
+generation = sys.argv[3]
+GPU_Partition = sys.argv[4]
 
 # This will properly fall through and load the mode we desire!
 modelMode = 0
@@ -327,7 +329,7 @@ def SaveModel(filename):
 	agent.save_model(filename)
 	# now for the fun part
 	scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-	creds = ServiceAccountCredentials.from_json_keyfile_name('../../../client_secret.json', scope)
+	creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
 	client = gspread.authorize(creds)
 	sheet = client.open("SSBM.io Statistics")
 	s1 = sheet.sheet1
