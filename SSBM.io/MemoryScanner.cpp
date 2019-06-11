@@ -23,9 +23,15 @@ MemoryScanner::MemoryScanner(std::string inUserDir)
     /*initialize structs to default/trash values*/
     p1.health = 0; p2.health = 0;
     p1.dir = 10; p2.dir = 10;
+<<<<<<< HEAD
     p1.pos_y = -1024; p1.pos_x = -1024;
     p2.pos_y = -1024; p2.pos_x = -1024;
     p1.stock = 4; p2.stock = 4;
+=======
+    p1.pos_x = 60; p2.pos_x = -60;
+    p1.pos_y = 10; p2.pos_y = 10;
+
+>>>>>>> a023ce04dfe72121e0432533862bb2b841feb2c1
     userPath = inUserDir;
     success = init_socket();
 
