@@ -262,8 +262,8 @@ void TensorHandler::SendToPipe(Player ai, Player enemy)
 std::string TensorHandler::ReadFromPipe()
 {
     dumpErrorPipe();
-    char buff[BUFF_SIZE];
-    memset(buff, 0, BUFF_SIZE);
+    char buff[BUFF_SIZE * 2];
+    memset(buff, 0, BUFF_SIZE * 2);
     std::string output = "";
     int ret = 0;
     unsigned int offset = 0;
