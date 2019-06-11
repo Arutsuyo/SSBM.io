@@ -155,8 +155,6 @@ bool TensorHandler::CreatePipes(Controller* ai)
         exit(EXIT_FAILURE);
     }
 
-    Trainer::AddToKillList(pid);
-
     if (close(pipeToPy[0]) == -1)
     {
         fprintf(stderr, "%s:%d\t%s: %s\n", FILENM, __LINE__,
