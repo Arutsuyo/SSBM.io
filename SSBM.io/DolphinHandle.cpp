@@ -106,7 +106,6 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     printf("%s:%d-T%d\tChild successfully launched\n",
         FILENM, __LINE__, *ta._pid);
-    Trainer::AddToKillList(*ta._pid);
 
     // Do this AFTER launching Dolphin, otherwise it will block
     printf("%s:%d-T%d\tOpening controllers\n",
@@ -274,8 +273,10 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
 
     printf("%s:%d-T%d\tReady for input!\n",
         FILENM, __LINE__, *ta._pid);
-    bool openSocket = true, openPipe = true;
-    while (*ta._running && openPipe && openSocket && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
+    bool openPipe = true;
+    while (*ta._running 
+        && openPipe 
+        && mem.CurrentStage() != Addresses::MENUS::POSTGAME)
     {
         for (unsigned int i = 0; i < tHandles.size(); i++)
             openPipe = tHandles[i]->MakeExchange(&mem);
@@ -305,7 +306,11 @@ bool DolphinHandle::ReadMemory(MemoryScanner *mem, bool *running)
             *running = false;
             return false;
         }
+
+        if (mem->CurrentStage() == Addresses::MENUS::ERROR_STAGE)
+            break;
     }
+    *running = false;
     return true;
 }
 

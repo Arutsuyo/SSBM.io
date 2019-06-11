@@ -59,9 +59,6 @@ public:
     static std::mutex mut;
     static std::condition_variable cv;
 
-    static void AddToKillList(int pid);
-    static void KillAllpids();
-
     void KillDolphinHandles();
     void runTraining();
     Trainer();
