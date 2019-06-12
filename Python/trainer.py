@@ -66,13 +66,13 @@ GLOBALS
 """
 INPUT_RATE = 4 # This means that if we get input at 60 TPS, we only make predictions for every xth item. 
 #FILENAME = sys.argv[1] # To be read latter
-SUICIDE_REWARD = -500 # Negative is bad
-KILL_REWARD = 100 # Reward score for calculating instant scores (should be less than suicide to prevent suiciding for score)
-KILL_SCORE = 500 # Actual score for calculating end of round score
+SUICIDE_REWARD = -50 # Negative is bad
+KILL_REWARD = 1 # Reward score for calculating instant scores (should be less than suicide to prevent suiciding for score)
+KILL_SCORE = 50 # Actual score for calculating end of round score
 MAX_FRAMES_RECORDING = 120//INPUT_RATE # 120 = 2 seconds saved for inputs if 60 TPS (/divided by input dropout)
 MAX_MEMORY_FRAMES = 120//INPUT_RATE # 60 = 1 second for every batch training if 60 TPS (/divided by input dropout)
 MAX_BATCH_SIZE = 80//INPUT_RATE # Drop half of the examples from memory frames and only train on x of them...
-MY_HP_PENALTY = 0.001
+MY_HP_PENALTY = 0.1
 THEIR_HP_REWARD = 10
 # 0:ai.health, 1:ai.dir, 2:ai.pos_x, 3:ai.pos_y, 4:ai.action, 5:ai.action_frame,
 # 6:enemy.health, 7:enemy.dir, 8:enemy.pos_x, 9:enemy.pos_y, 10:enemy.action, 11:enemy.action_frame
