@@ -161,12 +161,11 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         FILENM, __LINE__, *ta._pid);
     //wait until the character stage is detected
     TPoint lastSent = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed;
     while (mem.CurrentStage() != Addresses::MENUS::CHARACTER_SELECT
         && *ta._running)
     {
-        std::chrono::duration<double> elapsed =
-            std::chrono::high_resolution_clock::now()
-            - lastSent;
+        elapsed = std::chrono::high_resolution_clock::now() - lastSent;
         if (elapsed.count() > 3) // wait for 3 seconds
         {
             lastSent = std::chrono::high_resolution_clock::now();
@@ -191,9 +190,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     while (mem.CurrentStage() != Addresses::MENUS::STAGE_SELECT
         && *ta._running)
     {
-        std::chrono::duration<double> elapsed =
-            std::chrono::high_resolution_clock::now()
-            - lastSent;
+        elapsed = std::chrono::high_resolution_clock::now() - lastSent;
         if (elapsed.count() > 3) // wait for 3 seconds
         {
             lastSent = std::chrono::high_resolution_clock::now();
@@ -217,14 +214,19 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         return false;
     }
 
+    TPoint stageDelay = std::chrono::high_resolution_clock::now();
+    do 
+    {
+        // Wait 3 seconds before doing anything for stages to load
+        elapsed = std::chrono::high_resolution_clock::now() - stageDelay;
+    } while (elapsed.count() < 3);
+
     printf("%s:%d-T%d\tSelecting Stage\n",
         FILENM, __LINE__, *ta._pid);
     while (mem.CurrentStage() != Addresses::IN_GAME && *ta._running)
     {
-        std::chrono::duration<double> elapsed =
-            std::chrono::high_resolution_clock::now()
-            - lastSent;
-        if (elapsed.count() > 3) // wait for 3 seconds
+        elapsed = std::chrono::high_resolution_clock::now() - lastSent;
+        if (elapsed.count() > 3) // wait for 3 seconds between prints
         {
             lastSent = std::chrono::high_resolution_clock::now();
             printf("%s:%d-T%d\tSelecting Stage(%d): %d\n",
@@ -249,9 +251,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
         FILENM, __LINE__, *ta._pid);
     while (*ta._running && !mem.print())
     {
-        std::chrono::duration<double> elapsed =
-            std::chrono::high_resolution_clock::now()
-            - lastSent;
+        elapsed = std::chrono::high_resolution_clock::now() - lastSent;
         if (elapsed.count() > 3) // wait for 3 seconds
         {
             lastSent = std::chrono::high_resolution_clock::now();
