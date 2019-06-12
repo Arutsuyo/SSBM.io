@@ -116,6 +116,9 @@ bool TensorHandler::CreatePipes(Controller* ai)
             exit(EXIT_FAILURE);
         }
 
+        float dEpsilon = Trainer::predictionType > 1
+            ? 0 : GenerationManager::GetEpsilon();
+
         /* Launch Python (EXE IS REQUIRED FOR WSL)*/
         execlp(
             Trainer::PythonCommand.c_str(),
@@ -124,7 +127,7 @@ bool TensorHandler::CreatePipes(Controller* ai)
             pModel.c_str(),
             cModel.c_str(),
             std::to_string(Trainer::Concurent * 2).c_str(),
-            std::to_string(GenerationManager::GetEpsilon()).c_str(),
+            std::to_string(dEpsilon).c_str(),
             NULL);
 
         fprintf(stderr, "%s:%d\t%s(%d): %s\n", FILENM, __LINE__,

@@ -246,8 +246,6 @@ void Trainer::runTraining()
             // We can now load the new model!
             if (predictionType == NEW_MODEL)
                 predictionType = LOAD_MODEL;
-            if (predictionType == NEW_PREDICTION)
-                predictionType = PREDICTION_ONLY;
 
             // Purge the old, in with the new
             char buff[256];

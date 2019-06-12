@@ -123,6 +123,14 @@ bool GenerationManager::CullTheWeak()
     }
     std::unique_lock<std::mutex> lk(mut);
 
+    // Special Case
+    if (Trainer::predictionType > 1)
+    {
+        childCount = -1;
+
+        return true;
+    }
+
     // Warn the user we are going to cull, don't kill the program, and yes, it will be LOUD
     char buff[256];
     memset(buff, 0, 256);
@@ -254,44 +262,6 @@ bool GenerationManager::CullTheWeak()
     // Make sure variables are set right
     childCount = -1;
 
-    // Ask the user if they want to start on the next generation
-    // This should be a timed prompt, if there's no response, start training
-    //printf("%s:%d\tAnswer the following in 10 seconds:\n",
-    //    FILENM, __LINE__); 
-    //printf("%s:%d\tDo you want to Quit: (y or [N]) ",
-    //    FILENM, __LINE__);
-    //
-    //// Setup timed response
-    //std::string response = "";
-    //std::chrono::time_point<std::chrono::high_resolution_clock> n = std::chrono::high_resolution_clock::now();
-    //std::chrono::duration<double> elapsed;
-    //int dot = 1;
-    //do 
-    //{
-    //    elapsed =
-    //        std::chrono::high_resolution_clock::now()
-    //        - n;
-    //    if ((10 - elapsed.count()) / dot >= 1)
-    //    {
-    //        dot++;
-    //        printf("%d ", (int)(10-elapsed.count()));
-    //    }
-
-    //    // TODO Check if CIN is empty
-
-    //} while (elapsed.count() > 10);
-
-    //if (response.size())
-    //{
-    //    // Check for Response
-    //    if (response.find("y") == std::string::npos
-    //        || response.find("q") == std::string::npos)
-    //    {
-    //        printf("%s:%d\tQuitting . . .\n",
-    //            FILENM, __LINE__);
-    //        return false;
-    //    }
-    //}
     printf("%s:%d\tContinuing . . .\n",
         FILENM, __LINE__);
     return true;
