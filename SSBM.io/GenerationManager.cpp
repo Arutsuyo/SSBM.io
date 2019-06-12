@@ -110,7 +110,7 @@ bool GenerationManager::GenerationReady()
 
     // Check if there's enough children to cull
     printf("%s:%d\tChild Count:%s %d/%d\n",
-        FILENM, __LINE__, curChildDir.c_str(), childCount, SIZE_GEN);
+        FILENM, __LINE__, curChildDir.c_str(), childCount+1, SIZE_GEN);
     return childCount >= SIZE_GEN-1;
 }
 
@@ -211,6 +211,23 @@ bool GenerationManager::CullTheWeak()
                 "--ERROR:system", strerror(errno));
             return false;
         }
+    }
+
+    // Delete the bad children
+    sprintf(buff, "rm %s*", curChildDir.c_str());
+    if (system(buff) == -1)
+    {
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "--ERROR:system", strerror(errno));
+        return false;
+    }
+    // Copy the good ones back in
+    sprintf(buff, "cp %s* %s*", curParentDir.c_str(), curChildDir.c_str());
+    if (system(buff) == -1)
+    {
+        fprintf(stderr, "%s:%d: %s: %s\n", FILENM, __LINE__,
+            "--ERROR:system", strerror(errno));
+        return false;
     }
 
     printf("%s:%d\tCopied to new parent dir\n",
