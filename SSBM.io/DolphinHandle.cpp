@@ -219,7 +219,7 @@ bool DolphinHandle::dolphin_thread(ThreadArgs* targ)
     {
         // Wait 3 seconds before doing anything for stages to load
         elapsed = std::chrono::high_resolution_clock::now() - stageDelay;
-    } while (elapsed.count() < 1);
+    } while (elapsed.count() < 2);
 
     printf("%s:%d-T%d\tSelecting Stage\n",
         FILENM, __LINE__, *ta._pid);
